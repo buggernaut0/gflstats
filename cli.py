@@ -1,14 +1,20 @@
 """Command-line entry point.
 
 Usage:
-    python cli.py init-db
-    python cli.py scrape --source gfl --season 2025
-    python cli.py parse  --source gfl --season 2025
+    python cli.py init-db                 create gflstats.db from db/schema.sql
+    python cli.py scrape [--season 2025]  download GFL games into data/raw/
+    python cli.py parse  [--season 2025]  load the downloaded games into gflstats.db
+    python cli.py update [--season 2025]  scrape + parse
+
+Without --season, all seasons on the site are used.
 """
 
 import argparse
 import sqlite3
 from pathlib import Path
+
+from parsers import statsnscore as statsnscore_parser
+from scrapers import statsnscore as statsnscore_scraper
 
 ROOT = Path(__file__).parent
 DB_PATH = ROOT / "gflstats.db"
@@ -22,13 +28,18 @@ def init_db(args):
 
 
 def scrape(args):
-    # Will dispatch to scrapers/<source>.py once the first scraper exists.
-    raise SystemExit(f"No scraper for '{args.source}' yet.")
+    statsnscore_scraper.scrape(args.season, args.refresh)
 
 
 def parse(args):
-    # Will dispatch to parsers/<source>.py once the first parser exists.
-    raise SystemExit(f"No parser for '{args.source}' yet.")
+    init_db(args)
+    with sqlite3.connect(DB_PATH) as conn:
+        statsnscore_parser.parse(conn, args.season)
+
+
+def update(args):
+    scrape(args)
+    parse(args)
 
 
 def main():
@@ -38,13 +49,15 @@ def main():
     commands.add_parser("init-db", help="create the database from db/schema.sql").set_defaults(func=init_db)
 
     for name, func, help_text in [
-        ("scrape", scrape, "download raw pages into data/raw/"),
-        ("parse", parse, "read raw pages and load them into the database"),
+        ("scrape", scrape, "download GFL games into data/raw/"),
+        ("parse", parse, "load the downloaded games into the database"),
+        ("update", update, "scrape, then parse"),
     ]:
         cmd = commands.add_parser(name, help=help_text)
-        cmd.add_argument("--source", required=True, help="website to use, e.g. gfl")
-        cmd.add_argument("--season", type=int, required=True, help="season year, e.g. 2025")
-        cmd.set_defaults(func=func)
+        cmd.add_argument("--season", type=int, help="only this season, e.g. 2025 (default: all)")
+        if name != "parse":
+            cmd.add_argument("--refresh", action="store_true", help="download games again even if already saved")
+        cmd.set_defaults(func=func, refresh=False)
 
     args = parser.parse_args()
     args.func(args)

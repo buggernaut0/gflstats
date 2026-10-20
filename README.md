@@ -1,27 +1,27 @@
 # gflstats
 
-Archive, sort and filter player stats of the GFL (German Football League), pulled from different stats websites.
+Every GFL (German Football League) team, its players and their stats per game and per season, from [statsnscore.online](https://statsnscore.online). Covers regular season and playoff games from 2023 on.
 
 ## How it works
 
 ```
-websites → scrapers → data/raw/ → parsers → gflstats.db → Datasette
+statsnscore.online → scrapers/ → data/raw/ → parsers/ → gflstats.db → Datasette
 ```
 
-1. **Scrape**: download the stats pages and save them unchanged in `data/raw/`.
-2. **Parse**: read the saved pages and load the stats into the SQLite database.
+1. **Scrape**: download each game's player stats and save them in `data/raw/statsnscore/` (compressed, photo/logo links removed).
+2. **Parse**: load the saved files into the SQLite database `gflstats.db`.
 3. **Browse**: open the database in Datasette to sort, filter and search.
 
-## Layout
+## What's in the database
 
-| Path | Purpose |
+| Table / view | Contents |
 |---|---|
-| `scrapers/` | one module per website; only downloads pages |
-| `parsers/` | one module per website; turns saved pages into database rows |
-| `db/schema.sql` | the database tables |
-| `data/raw/<source>/<season>/` | the downloaded pages (the archive) |
-| `gflstats.db` | the SQLite database (created by `init-db`) |
-| `cli.py` | runs everything |
+| `team_rosters` | every team's players per season, with games played |
+| `player_season_stats` | each player's stats totaled per season and team |
+| `player_game_stats_full` | each player's stats for every game, with date, team and opponent |
+| `teams`, `players`, `games`, `player_game_stats` | the underlying tables |
+
+Stat columns use the site's own names (`run`, `runyards`, `catched`, `tackletotal`, ...). `position` is empty for now: the site doesn't publish positions.
 
 ## Setup
 
@@ -29,13 +29,14 @@ websites → scrapers → data/raw/ → parsers → gflstats.db → Datasette
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python cli.py init-db
 ```
 
 ## Usage
 
 ```bash
-python cli.py scrape --source gfl --season 2025
-python cli.py parse --source gfl --season 2025
-datasette gflstats.db
+python cli.py update                 # download new games and load everything
+python cli.py update --season 2026   # only one season
+datasette gflstats.db                # browse at http://localhost:8001
 ```
+
+`scrape` and `parse` can also be run on their own. Games already downloaded are skipped; add `--refresh` to download them again.

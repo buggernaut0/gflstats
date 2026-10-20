@@ -1,60 +1,25 @@
--- GFL stats database schema (first draft).
--- Stat columns will grow once we know what the source websites actually provide.
-
-CREATE TABLE IF NOT EXISTS sources (
-    id          INTEGER PRIMARY KEY,
-    name        TEXT NOT NULL UNIQUE,      -- e.g. 'gfl.info'
-    base_url    TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS seasons (
-    id          INTEGER PRIMARY KEY,
-    year        INTEGER NOT NULL,
-    league      TEXT NOT NULL,             -- 'GFL' or 'GFL2'
-    UNIQUE (year, league)
-);
+-- GFL player stats from statsnscore.online.
+-- Stat column names are kept exactly as the site names them.
 
 CREATE TABLE IF NOT EXISTS teams (
     id          INTEGER PRIMARY KEY,
-    name        TEXT NOT NULL UNIQUE,      -- canonical name, e.g. 'Schwäbisch Hall Unicorns'
-    city        TEXT
+    name        TEXT NOT NULL UNIQUE
 );
 
--- Other spellings/older names of a team as they appear on different sites.
-CREATE TABLE IF NOT EXISTS team_aliases (
-    alias       TEXT PRIMARY KEY,
-    team_id     INTEGER NOT NULL REFERENCES teams(id)
-);
-
+-- Players are identified by name only: the site has no player IDs.
 CREATE TABLE IF NOT EXISTS players (
     id          INTEGER PRIMARY KEY,
-    first_name  TEXT,
-    last_name   TEXT NOT NULL
-);
-
--- Other spellings of a player's name per source ('M. Müller' vs 'Max Mueller').
-CREATE TABLE IF NOT EXISTS player_aliases (
-    source_id   INTEGER NOT NULL REFERENCES sources(id),
-    alias       TEXT NOT NULL,
-    player_id   INTEGER NOT NULL REFERENCES players(id),
-    PRIMARY KEY (source_id, alias)
-);
-
--- Which team a player was on in a season, with jersey number and position.
-CREATE TABLE IF NOT EXISTS rosters (
-    player_id   INTEGER NOT NULL REFERENCES players(id),
-    season_id   INTEGER NOT NULL REFERENCES seasons(id),
-    team_id     INTEGER NOT NULL REFERENCES teams(id),
-    number      INTEGER,
-    position    TEXT,
-    PRIMARY KEY (player_id, season_id, team_id)
+    name        TEXT NOT NULL UNIQUE,
+    position    TEXT                       -- not on the site; filled in later
 );
 
 CREATE TABLE IF NOT EXISTS games (
-    id           INTEGER PRIMARY KEY,
-    season_id    INTEGER NOT NULL REFERENCES seasons(id),
-    week         INTEGER,
-    date         TEXT,                     -- ISO date, 'YYYY-MM-DD'
+    id           TEXT PRIMARY KEY,         -- statsnscore game id
+    season       INTEGER NOT NULL,
+    gametype     TEXT NOT NULL,            -- 'Regular' or 'Playoff'
+    date         TEXT,                     -- 'YYYY-MM-DD'
+    starttime    TEXT,
+    name         TEXT,                     -- e.g. 'Unicorns vs Cowboys'
     home_team_id INTEGER NOT NULL REFERENCES teams(id),
     away_team_id INTEGER NOT NULL REFERENCES teams(id),
     home_score   INTEGER,
@@ -63,41 +28,256 @@ CREATE TABLE IF NOT EXISTS games (
 
 -- One row per player per game.
 CREATE TABLE IF NOT EXISTS player_game_stats (
-    player_id      INTEGER NOT NULL REFERENCES players(id),
-    game_id        INTEGER NOT NULL REFERENCES games(id),
-    team_id        INTEGER NOT NULL REFERENCES teams(id),
-    source_id      INTEGER NOT NULL REFERENCES sources(id),
-    -- passing
-    pass_att       INTEGER,
-    pass_cmp       INTEGER,
-    pass_yds       INTEGER,
-    pass_td        INTEGER,
-    pass_int       INTEGER,
-    -- rushing
-    rush_att       INTEGER,
-    rush_yds       INTEGER,
-    rush_td        INTEGER,
-    -- receiving
-    rec            INTEGER,
-    rec_yds        INTEGER,
-    rec_td         INTEGER,
-    -- defense
-    tackles        REAL,                   -- REAL because assisted tackles may count as 0.5
-    sacks          REAL,
-    def_int        INTEGER,
-    -- kicking
-    fg_att         INTEGER,
-    fg_made        INTEGER,
-    xp_att         INTEGER,
-    xp_made        INTEGER,
-    PRIMARY KEY (player_id, game_id)
+    game_id     TEXT NOT NULL REFERENCES games(id),
+    player_id   INTEGER NOT NULL REFERENCES players(id),
+    team_id     INTEGER NOT NULL REFERENCES teams(id),
+    run                         INTEGER,
+    runyards                    INTEGER,
+    runyardsgain                INTEGER,
+    runyardsloss                INTEGER,
+    longestrun                  INTEGER,
+    touchdownrun                INTEGER,
+    fumbled                     INTEGER,
+    fumbledandlost              INTEGER,
+    fumbledandrecovered         INTEGER,
+    fumbledanddefenserecovered  INTEGER,
+    pass                        INTEGER,
+    complete                    INTEGER,
+    passingyards                INTEGER,
+    longestpass                 INTEGER,
+    touchdownpass               INTEGER,
+    interception                INTEGER,
+    passbrokenup                INTEGER,
+    passincomplete              INTEGER,
+    passuncatchable             INTEGER,
+    passspiked                  INTEGER,
+    passwasdropped              INTEGER,
+    qbhurry                     INTEGER,
+    catched                     INTEGER,
+    yac                         INTEGER,
+    intended                    INTEGER,
+    droppedpass                 INTEGER,
+    receivingyards              INTEGER,
+    longestcatch                INTEGER,
+    touchdowncatch              INTEGER,
+    penalty                     INTEGER,
+    penaltyyards                INTEGER,
+    tackletotal                 REAL,
+    sacktotal                   REAL,
+    tackle                      INTEGER,
+    tackleforloss               INTEGER,
+    tacklesum                   REAL,
+    sack                        INTEGER,
+    sackassist                  INTEGER,
+    sackforloss                 INTEGER,
+    sacksum                     REAL,
+    forcedsafety                INTEGER,
+    forcedsafetyforloss         INTEGER,
+    forcedfumble                INTEGER,
+    intercepted                 INTEGER,
+    interceptionreturnyards     INTEGER,
+    fumblereturnyards           INTEGER,
+    brokenuppass                INTEGER,
+    blockedfieldgoal            INTEGER,
+    puntblock                   INTEGER,
+    qbhurrybydefense            INTEGER,
+    tackleassist                INTEGER,
+    tackleassistforloss         INTEGER,
+    assistsum                   REAL,
+    forcedsafetyassist          INTEGER,
+    forcedsafetyassistforloss   INTEGER,
+    forcedsafetytotal           INTEGER,
+    punt                        INTEGER,
+    puntyards                   INTEGER,
+    longestpunt                 INTEGER,
+    punttouchback               INTEGER,
+    puntinside20                INTEGER,
+    kickoff                     INTEGER,
+    kickoffoutofbounds          INTEGER,
+    kickofftouchback            INTEGER,
+    onside                      INTEGER,
+    onsidesuccess               INTEGER,
+    onsiderecovered             INTEGER,
+    kickingyards                INTEGER,
+    longestkick                 INTEGER,
+    kickoffreturn               INTEGER,
+    kickoffreturntouchdown      INTEGER,
+    kickoffreturnyards          INTEGER,
+    longestkickoffreturn        INTEGER,
+    puntreturn                  INTEGER,
+    puntreturntouchdown         INTEGER,
+    puntreturnyards             INTEGER,
+    longestpuntreturn           INTEGER,
+    fieldgoalshort              INTEGER,
+    fieldgoalblocked            INTEGER,
+    fieldgoalmissed             INTEGER,
+    fieldgoalgood               INTEGER,
+    fieldgoaltry                INTEGER,
+    fieldgoalyards              INTEGER,
+    longestfieldgoal            INTEGER,
+    patkickgood                 INTEGER,
+    patkickmissed               INTEGER,
+    patkickblocked              INTEGER,
+    patrungood                  INTEGER,
+    patrunnogood                INTEGER,
+    patpasscatchedgood          INTEGER,
+    patpassnogood               INTEGER,
+    fieldgoal                   INTEGER,
+    patkick                     INTEGER,
+    fieldgoalpat                INTEGER,
+    kick                        INTEGER,
+    kickall                     INTEGER,
+    returnall                   INTEGER,
+    patreturntouchdown          INTEGER,
+    patkickreturntouchdown      INTEGER,
+    fieldgoalreturntouchdown    INTEGER,
+    interceptionreturntouchdown INTEGER,
+    fumblereturntouchdown       INTEGER,
+    touchdown                   INTEGER,
+    points                      INTEGER,
+    PRIMARY KEY (game_id, player_id, team_id)
 );
 
--- Every page we downloaded, so each row can be traced back to its origin.
-CREATE TABLE IF NOT EXISTS fetches (
-    id          INTEGER PRIMARY KEY,
-    source_id   INTEGER NOT NULL REFERENCES sources(id),
-    url         TEXT NOT NULL,
-    file_path   TEXT NOT NULL,             -- where the raw page is saved under data/raw/
-    fetched_at  TEXT NOT NULL              -- ISO timestamp
-);
+-- Per-game stats with names, dates and opponent filled in, for browsing.
+CREATE VIEW IF NOT EXISTS player_game_stats_full AS
+SELECT
+    g.season, g.gametype, g.date,
+    t.name  AS team,
+    CASE WHEN g.home_team_id = s.team_id THEN a.name ELSE h.name END AS opponent,
+    p.name  AS player,
+    p.position,
+    s.*
+FROM player_game_stats s
+JOIN games g   ON g.id = s.game_id
+JOIN teams t   ON t.id = s.team_id
+JOIN teams h   ON h.id = g.home_team_id
+JOIN teams a   ON a.id = g.away_team_id
+JOIN players p ON p.id = s.player_id;
+
+-- Season totals per player and team (regular season and playoffs together).
+-- Counts are summed; 'longest...' columns take the season best.
+CREATE VIEW IF NOT EXISTS player_season_stats AS
+SELECT
+    g.season,
+    t.name AS team,
+    p.name AS player,
+    p.position,
+    COUNT(*) AS games,
+    SUM(s.run) AS run,
+    SUM(s.runyards) AS runyards,
+    SUM(s.runyardsgain) AS runyardsgain,
+    SUM(s.runyardsloss) AS runyardsloss,
+    MAX(s.longestrun) AS longestrun,
+    SUM(s.touchdownrun) AS touchdownrun,
+    SUM(s.fumbled) AS fumbled,
+    SUM(s.fumbledandlost) AS fumbledandlost,
+    SUM(s.fumbledandrecovered) AS fumbledandrecovered,
+    SUM(s.fumbledanddefenserecovered) AS fumbledanddefenserecovered,
+    SUM(s.pass) AS pass,
+    SUM(s.complete) AS complete,
+    SUM(s.passingyards) AS passingyards,
+    MAX(s.longestpass) AS longestpass,
+    SUM(s.touchdownpass) AS touchdownpass,
+    SUM(s.interception) AS interception,
+    SUM(s.passbrokenup) AS passbrokenup,
+    SUM(s.passincomplete) AS passincomplete,
+    SUM(s.passuncatchable) AS passuncatchable,
+    SUM(s.passspiked) AS passspiked,
+    SUM(s.passwasdropped) AS passwasdropped,
+    SUM(s.qbhurry) AS qbhurry,
+    SUM(s.catched) AS catched,
+    SUM(s.yac) AS yac,
+    SUM(s.intended) AS intended,
+    SUM(s.droppedpass) AS droppedpass,
+    SUM(s.receivingyards) AS receivingyards,
+    MAX(s.longestcatch) AS longestcatch,
+    SUM(s.touchdowncatch) AS touchdowncatch,
+    SUM(s.penalty) AS penalty,
+    SUM(s.penaltyyards) AS penaltyyards,
+    SUM(s.tackletotal) AS tackletotal,
+    SUM(s.sacktotal) AS sacktotal,
+    SUM(s.tackle) AS tackle,
+    SUM(s.tackleforloss) AS tackleforloss,
+    SUM(s.tacklesum) AS tacklesum,
+    SUM(s.sack) AS sack,
+    SUM(s.sackassist) AS sackassist,
+    SUM(s.sackforloss) AS sackforloss,
+    SUM(s.sacksum) AS sacksum,
+    SUM(s.forcedsafety) AS forcedsafety,
+    SUM(s.forcedsafetyforloss) AS forcedsafetyforloss,
+    SUM(s.forcedfumble) AS forcedfumble,
+    SUM(s.intercepted) AS intercepted,
+    SUM(s.interceptionreturnyards) AS interceptionreturnyards,
+    SUM(s.fumblereturnyards) AS fumblereturnyards,
+    SUM(s.brokenuppass) AS brokenuppass,
+    SUM(s.blockedfieldgoal) AS blockedfieldgoal,
+    SUM(s.puntblock) AS puntblock,
+    SUM(s.qbhurrybydefense) AS qbhurrybydefense,
+    SUM(s.tackleassist) AS tackleassist,
+    SUM(s.tackleassistforloss) AS tackleassistforloss,
+    SUM(s.assistsum) AS assistsum,
+    SUM(s.forcedsafetyassist) AS forcedsafetyassist,
+    SUM(s.forcedsafetyassistforloss) AS forcedsafetyassistforloss,
+    SUM(s.forcedsafetytotal) AS forcedsafetytotal,
+    SUM(s.punt) AS punt,
+    SUM(s.puntyards) AS puntyards,
+    MAX(s.longestpunt) AS longestpunt,
+    SUM(s.punttouchback) AS punttouchback,
+    SUM(s.puntinside20) AS puntinside20,
+    SUM(s.kickoff) AS kickoff,
+    SUM(s.kickoffoutofbounds) AS kickoffoutofbounds,
+    SUM(s.kickofftouchback) AS kickofftouchback,
+    SUM(s.onside) AS onside,
+    SUM(s.onsidesuccess) AS onsidesuccess,
+    SUM(s.onsiderecovered) AS onsiderecovered,
+    SUM(s.kickingyards) AS kickingyards,
+    MAX(s.longestkick) AS longestkick,
+    SUM(s.kickoffreturn) AS kickoffreturn,
+    SUM(s.kickoffreturntouchdown) AS kickoffreturntouchdown,
+    SUM(s.kickoffreturnyards) AS kickoffreturnyards,
+    MAX(s.longestkickoffreturn) AS longestkickoffreturn,
+    SUM(s.puntreturn) AS puntreturn,
+    SUM(s.puntreturntouchdown) AS puntreturntouchdown,
+    SUM(s.puntreturnyards) AS puntreturnyards,
+    MAX(s.longestpuntreturn) AS longestpuntreturn,
+    SUM(s.fieldgoalshort) AS fieldgoalshort,
+    SUM(s.fieldgoalblocked) AS fieldgoalblocked,
+    SUM(s.fieldgoalmissed) AS fieldgoalmissed,
+    SUM(s.fieldgoalgood) AS fieldgoalgood,
+    SUM(s.fieldgoaltry) AS fieldgoaltry,
+    SUM(s.fieldgoalyards) AS fieldgoalyards,
+    MAX(s.longestfieldgoal) AS longestfieldgoal,
+    SUM(s.patkickgood) AS patkickgood,
+    SUM(s.patkickmissed) AS patkickmissed,
+    SUM(s.patkickblocked) AS patkickblocked,
+    SUM(s.patrungood) AS patrungood,
+    SUM(s.patrunnogood) AS patrunnogood,
+    SUM(s.patpasscatchedgood) AS patpasscatchedgood,
+    SUM(s.patpassnogood) AS patpassnogood,
+    SUM(s.fieldgoal) AS fieldgoal,
+    SUM(s.patkick) AS patkick,
+    SUM(s.fieldgoalpat) AS fieldgoalpat,
+    SUM(s.kick) AS kick,
+    SUM(s.kickall) AS kickall,
+    SUM(s.returnall) AS returnall,
+    SUM(s.patreturntouchdown) AS patreturntouchdown,
+    SUM(s.patkickreturntouchdown) AS patkickreturntouchdown,
+    SUM(s.fieldgoalreturntouchdown) AS fieldgoalreturntouchdown,
+    SUM(s.interceptionreturntouchdown) AS interceptionreturntouchdown,
+    SUM(s.fumblereturntouchdown) AS fumblereturntouchdown,
+    SUM(s.touchdown) AS touchdown,
+    SUM(s.points) AS points
+FROM player_game_stats s
+JOIN games g   ON g.id = s.game_id
+JOIN teams t   ON t.id = s.team_id
+JOIN players p ON p.id = s.player_id
+GROUP BY g.season, s.team_id, s.player_id;
+
+-- Every team's players per season.
+CREATE VIEW IF NOT EXISTS team_rosters AS
+SELECT g.season, t.name AS team, p.name AS player, p.position, COUNT(*) AS games
+FROM player_game_stats s
+JOIN games g   ON g.id = s.game_id
+JOIN teams t   ON t.id = s.team_id
+JOIN players p ON p.id = s.player_id
+GROUP BY g.season, s.team_id, s.player_id;
