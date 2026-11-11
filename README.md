@@ -23,7 +23,20 @@ statsnscore.online → scrapers/ → data/raw/ → parsers/ → gflstats.db → 
 
 Stat columns use the site's own names (`run`, `runyards`, `catched`, `tackletotal`, ...). `position` is empty for now: the site doesn't publish positions.
 
-## Setup
+## Windows: quick start
+
+1. Install [Python](https://www.python.org/downloads/) (tick **"Add python.exe to PATH"**) and [Git](https://git-scm.com/download/win).
+2. Open PowerShell and get the project onto your Desktop:
+   ```powershell
+   cd "$([Environment]::GetFolderPath('Desktop'))"
+   git clone https://github.com/buggernaut0/gflstats.git
+   ```
+3. In the new `gflstats` folder on your Desktop, double-click:
+   - **`setup.bat`**: one-time setup
+   - **`start.bat`**: opens the stats in your browser (close the window to stop)
+   - **`update.bat`**: gets the latest stats from GitHub
+
+## Setup (Mac/Linux)
 
 ```bash
 python3 -m venv .venv
