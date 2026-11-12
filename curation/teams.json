@@ -1,0 +1,28 @@
+{
+  "_info": "Ordnet die Teamnamen aus der Datenbank stabilen Franchise-IDs zu. 'names' = alle Schreibweisen, die in den Daten vorkommen. 'short' = Kurzname für Tabellen. 'colors' und 'logo' werden in einem späteren Schritt aus offiziellen Quellen ergänzt (mit Quellenangabe in 'sources').",
+  "franchises": [
+    {"id": "allgaeu-comets", "name": "Allgäu Comets", "short": "Comets", "abbr": "ALL", "names": ["Allgäu Comets"], "colors": null, "logo": null, "sources": []},
+    {"id": "berlin-adler", "name": "Berlin Adler", "short": "Adler", "abbr": "BAD", "names": ["Berlin Adler"], "colors": null, "logo": null, "sources": []},
+    {"id": "berlin-rebels", "name": "Berlin Rebels", "short": "Rebels", "abbr": "BRE", "names": ["Berlin Rebels"], "colors": null, "logo": null, "sources": []},
+    {"id": "braunschweig-lions", "name": "Braunschweig Lions", "short": "Lions", "abbr": "BSL", "names": ["New Yorker Lions Braunschweig", "Braunschweig Lions", "New Yorker Lions"], "colors": null, "logo": null, "sources": [],
+     "note": "Bis 2025 als 'New Yorker Lions Braunschweig' geführt, ab 2026 als 'Braunschweig Lions'. Gleiche statsnscore-Team-ID 6460f1a3e5baf517a73fe2c6."},
+    {"id": "dresden-monarchs", "name": "Dresden Monarchs", "short": "Monarchs", "abbr": "DRE", "names": ["Dresden Monarchs"], "colors": null, "logo": null, "sources": []},
+    {"id": "duesseldorf-panther", "name": "Düsseldorf Panther", "short": "Panther", "abbr": "DUE", "names": ["Düsseldorf Panther"], "colors": null, "logo": null, "sources": []},
+    {"id": "hamburg-pioneers", "name": "Hamburg Pioneers", "short": "Pioneers", "abbr": "HHP", "names": ["Hamburg Pioneers"], "colors": null, "logo": null, "sources": [],
+     "note": "Nur in Relegationsspielen vertreten."},
+    {"id": "hildesheim-invaders", "name": "Hildesheim Invaders", "short": "Invaders", "abbr": "HIL", "names": ["Hildesheim Invaders"], "colors": null, "logo": null, "sources": []},
+    {"id": "ingolstadt-dukes", "name": "Ingolstadt Dukes", "short": "Dukes", "abbr": "ING", "names": ["Ingolstadt Dukes"], "colors": null, "logo": null, "sources": []},
+    {"id": "kiel-baltic-hurricanes", "name": "Kiel Baltic Hurricanes", "short": "Baltic Hurricanes", "abbr": "KIE", "names": ["Kiel Baltic Hurricanes"], "colors": null, "logo": null, "sources": []},
+    {"id": "kirchdorf-wildcats", "name": "Kirchdorf Wildcats", "short": "Wildcats", "abbr": "KIR", "names": ["Kirchdorf Wildcats"], "colors": null, "logo": null, "sources": []},
+    {"id": "marburg-mercenaries", "name": "Marburg Mercenaries", "short": "Mercenaries", "abbr": "MAR", "names": ["Marburg Mercenaries"], "colors": null, "logo": null, "sources": []},
+    {"id": "munich-cowboys", "name": "Munich Cowboys", "short": "Cowboys", "abbr": "MUC", "names": ["Munich Cowboys"], "colors": null, "logo": null, "sources": []},
+    {"id": "paderborn-dolphins", "name": "Paderborn Dolphins", "short": "Dolphins", "abbr": "PAD", "names": ["Paderborn Dolphins"], "colors": null, "logo": null, "sources": []},
+    {"id": "pforzheim-wilddogs", "name": "Pforzheim Wilddogs", "short": "Wilddogs", "abbr": "PFO", "names": ["Pforzheim Wilddogs"], "colors": null, "logo": null, "sources": []},
+    {"id": "potsdam-royals", "name": "Potsdam Royals", "short": "Royals", "abbr": "POT", "names": ["Potsdam Royals"], "colors": null, "logo": null, "sources": []},
+    {"id": "regensburg-phoenix", "name": "Regensburg Phoenix", "short": "Phoenix", "abbr": "REG", "names": ["Regensburg Phoenix"], "colors": null, "logo": null, "sources": []},
+    {"id": "saarland-hurricanes", "name": "Saarland Hurricanes", "short": "Hurricanes", "abbr": "SAA", "names": ["Saarland Hurricanes"], "colors": null, "logo": null, "sources": []},
+    {"id": "schwaebisch-hall-unicorns", "name": "Schwäbisch Hall Unicorns", "short": "Unicorns", "abbr": "SHU", "names": ["Schwäbisch Hall Unicorns"], "colors": null, "logo": null, "sources": []},
+    {"id": "straubing-spiders", "name": "Straubing Spiders", "short": "Spiders", "abbr": "STR", "names": ["Straubing Spiders"], "colors": null, "logo": null, "sources": []},
+    {"id": "ravensburg-razorbacks", "name": "Ravensburg Razorbacks", "short": "Razorbacks", "abbr": "RAV", "names": ["ifm Razorbacks Ravensburg"], "colors": null, "logo": null, "sources": []}
+  ]
+}

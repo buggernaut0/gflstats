@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/*
+ * Design-Tokens. Dunkel ist Standard ("Stadion bei Nacht"), hell per Umschalter.
+ * Einzige Akzentfarbe: das Gelb der First-Down-Linie.
+ * Siegfarbe/Niederlagefarbe sind Statusfarben und werden nie fuer anderes genutzt.
+ */
+:root,
+[data-theme="dark"] {
+  --bg: #0c1420;
+  --surface: #121c2b;
+  --surface-2: #192536;
+  --line: #233148;
+  --line-strong: #31415c;
+  --ink: #e9eef5;
+  --ink-2: #a3b0c2;
+  --ink-3: #74839a;
+  --accent: #f5c63c;
+  --accent-ink: #0c1420;
+  --accent-text: #f5c63c;
+  --accent-soft: rgb(245 198 60 / 0.13);
+  --bar: rgb(245 198 60 / 0.55);
+  --bar-track: rgb(163 176 194 / 0.12);
+  --win: #45c486;
+  --loss: #ef6b66;
+  --focus: #f5c63c;
+  /* Radar-Serien (validiert gegen --surface, siehe components/Radar.tsx) */
+  --series-1: #1fa86a;
+  --series-2: #e05a59;
+  --series-3: #3987e5;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #eceff4;
+  --line: #d8dee7;
+  --line-strong: #bcc5d2;
+  --ink: #0f1826;
+  --ink-2: #47546a;
+  --ink-3: #6d7a8f;
+  --accent: #e8b31d;
+  --accent-ink: #0f1826;
+  --accent-text: #8a6300;
+  --accent-soft: rgb(232 179 29 / 0.16);
+  --bar: rgb(214 160 10 / 0.6);
+  --bar-track: rgb(15 24 38 / 0.07);
+  --win: #1d8a55;
+  --loss: #c4403b;
+  --focus: #8a6300;
+  --series-1: #14895a;
+  --series-2: #d24a49;
+  --series-3: #2a78d6;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-win: var(--win);
+  --color-loss: var(--loss);
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Zahlen stehen in Tabellen sauber untereinander */
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.display {
+  font-family: var(--font-display);
+  letter-spacing: -0.005em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Yard-Linien: dezentes Raster hinter der Kopfzeile der Startseite */
+.yardlines {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent calc(10% - 1px),
+    var(--line) calc(10% - 1px),
+    var(--line) 10%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

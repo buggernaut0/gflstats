@@ -1,0 +1,5 @@
+{
+  "_info": "Highlight-Videos je Spieler. Ein Eintrag pro Video. 'player' = Spieler-ID aus der Website-Adresse (z. B. /spieler/montigo-moss). 'platform' = youtube oder instagram. Instagram wird als Link angezeigt, YouTube eingebettet.",
+  "_example": {"player": "montigo-moss", "platform": "youtube", "url": "https://www.youtube.com/watch?v=XXXXXXXXXXX", "title": "Season Highlights 2026", "added": "2026-11-12"},
+  "videos": []
+}

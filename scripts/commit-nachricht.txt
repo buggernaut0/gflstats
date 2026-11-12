@@ -1,0 +1,14 @@
+Website: Datenschicht, Korrekturen, Profile, Suchen und Radar-Vergleich
+
+- scripts/build_data.py liest gflstats.db und data/raw/ nur lesend, wendet
+  curation/ an und prueft jede Summe gegen die Datenbank
+- web/: statische Next.js-Seite mit Saisonuebersicht, Spieler- und
+  Teamprofilen, Box Scores, League Leaders, Player/Game/Team Search,
+  Radar-Vergleich, Rekorden, Breakouts und Methodik-Seite
+- .github/workflows/pages.yml: veroeffentlicht die Seite auf GitHub Pages,
+  sobald der Branch nach main gemergt ist
+
+Die Originaldaten (data/, db/, gflstats.db) sind unveraendert.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012HRvxcBj5aQDjuzP2xFRy5

@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+# Erzeugt von scripts/build_data.py - wird bei jedem Build neu geschrieben
+public/data/
+# Lokale Vorschau (vorschau.bat): fertiger Build, wird bei Bedarf neu erzeugt
+vorschau/

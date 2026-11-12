@@ -1,0 +1,33 @@
+{
+  "name": "gfl-analytics",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GFL Analytics & Scouting Platform - Website",
+  "scripts": {
+    "data": "python ../scripts/build_data.py",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "npx serve out",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "next": "^15.5.29",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

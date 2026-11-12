@@ -1,0 +1,17 @@
+{
+  "_info": "Spiele aus gflstats.db, die die Website nicht mitzählt. Die Datenbank selbst bleibt unverändert.",
+  "games": [
+    {
+      "id": "693f9feef0131decc8aac268",
+      "label": "Xxx444, 16.12.2025, Straubing Spiders - Munich Cowboys 0:7",
+      "reason": "Testeintrag der Quelle: Spielname 'Xxx444', Datum nach Saisonende, nur 5 Spieler im Statistikbogen.",
+      "checked": "2026-11-12"
+    },
+    {
+      "id": "66df16703b3bc1ba22006669",
+      "label": "Schwäbisch Hall Unicorns - Hildesheim Invaders 28:31, 01.10.2024",
+      "reason": "Doppelte Erfassung des Viertelfinals vom 21.09.2024 (gleiches Ergebnis 28:31). Das Halbfinale Dresden - Hildesheim fand bereits am 28.09.2024 statt. Behalten wird der vollständigere Eintrag vom 21.09.2024 (47 statt 39 Spieler).",
+      "checked": "2026-11-12"
+    }
+  ]
+}
