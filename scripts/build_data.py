@@ -142,7 +142,40 @@ def load_curation():
                           for r in read_csv(CURATION / "player_keep_separate.csv")},
         "role_overrides": read_csv(CURATION / "role_overrides.csv"),
         "videos": load_json(CURATION / "videos.json")["videos"],
+        "game_videos": load_json(CURATION / "game_videos.json")["videos"],
     }
+
+
+# --------------------------------------------------------------------------- game highlight videos
+
+YOUTUBE_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
+
+
+def attach_game_videos(games, videos):
+    """Haengt geprueft zugeordnete Highlight-Videos (curation/game_videos.json) an die Spiele.
+
+    Bricht ab, wenn ein Eintrag nicht eindeutig zu den Daten passt: unbekannte Game-ID, ungueltige
+    YouTube-ID, doppelt verwendetes Video oder ein Lesehinweis 'game', dessen Datum/Teams abweichen.
+    """
+    seen = {}
+    for gid, v in videos.items():
+        g = games.get(gid)
+        if g is None:
+            raise SystemExit(f"game_videos.json: Spiel {gid} gibt es nicht (oder es ist ausgeschlossen)")
+        yid = v.get("youtubeId", "")
+        if not YOUTUBE_ID.match(yid):
+            raise SystemExit(f"game_videos.json: ungueltige YouTube-ID bei Spiel {gid}: {yid!r}")
+        if yid in seen:
+            raise SystemExit(f"game_videos.json: Video {yid} ist zwei Spielen zugeordnet ({seen[yid]}, {gid})")
+        seen[yid] = gid
+        hint = v.get("game")
+        if hint:
+            m = re.match(r"^(\d{4}-\d{2}-\d{2}) (\S+) @ (\S+)", hint)
+            if not m or (m.group(1), m.group(2), m.group(3)) != (g["date"], g["away"], g["home"]):
+                raise SystemExit(f"game_videos.json: Hinweis {hint!r} passt nicht zu Spiel {gid} "
+                                 f"({g['date']} {g['away']} @ {g['home']})")
+        g["video"] = {"youtubeId": yid, "title": v.get("title") or "Game Highlights",
+                      "channel": v.get("channel"), "published": v.get("published")}
 
 
 # --------------------------------------------------------------------------- team stats per game
@@ -231,6 +264,7 @@ def build(write=True):
             "teamStats": {hid: team_stats.get(hid, {}), aid: team_stats.get(aid, {})},
             "statsSource": "presto" if src.get("imported") == "presto" else "statsnscore",
         }
+    attach_game_videos(games, cur["game_videos"])
     if swapped:
         report["corrections"].append({"type": "Heim/Gast getauscht", "id": "Saison 2023",
                                       "detail": f"{swapped} Spiele", "reason": cur["swaps"][0]["reason"]})

@@ -5,8 +5,9 @@ import TeamLogo from "@/components/TeamLogo";
 import { teamsAttr } from "@/lib/favorite";
 import TeamView, { type RosterRow, type TeamSeasonView } from "@/components/TeamView";
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
-import { FIELDS, getGames, getPlayerGames, getTeamSeasons, getTeams, playerMap, teamMap, teamNameIn } from "@/lib/data";
+import { getGames, getPlayerGames, getTeamSeasons, getTeams, playerMap, teamMap, teamNameIn } from "@/lib/data";
 import { TEAM_METRICS, teamRank, teamSeasonMetrics, type TeamSeasonMetrics } from "@/lib/team";
+import { addStats } from "@/lib/stats";
 import type { Scope } from "@/lib/types";
 
 export const dynamicParams = false;
@@ -21,7 +22,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 let metricsCache: TeamSeasonMetrics[] | null = null;
-const MAX = new Set(FIELDS.filter((f) => f.agg === "max").map((f) => f.key));
 
 export default async function TeamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -49,7 +49,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
       const p = players.get(r.p)!;
       const e = roster.get(r.p) ?? { player: r.p, name: p.name, role: p.seasons.find((s) => s.season === season)?.role ?? null, games: 0, stats: {} };
       e.games += 1;
-      for (const [k, v] of Object.entries(r.s)) e.stats[k] = MAX.has(k) ? Math.max(e.stats[k] ?? 0, v) : Math.round(((e.stats[k] ?? 0) + v) * 100) / 100;
+      addStats(e.stats, r.s);
       roster.set(r.p, e);
     }
     const schedule = games
@@ -57,7 +57,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
       .sort((a, b) => a.date.localeCompare(b.date))
       .map((g) => {
         const home = g.home === id;
-        return { id: g.id, date: g.date, playoff: g.type === "playoff", home, opponent: home ? g.away : g.home, teamScore: home ? g.homeScore : g.awayScore, oppScore: home ? g.awayScore : g.homeScore, name: g.name };
+        return { id: g.id, date: g.date, playoff: g.type === "playoff", home, opponent: home ? g.away : g.home, teamScore: home ? g.homeScore : g.awayScore, oppScore: home ? g.awayScore : g.homeScore, name: g.name, video: !!g.video };
       });
     return {
       season,

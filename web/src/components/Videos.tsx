@@ -1,4 +1,5 @@
 import type { Player } from "@/lib/types";
+import VideoPlayer from "./VideoPlayer";
 
 /** YouTube-Adresse -> Video-ID (watch?v=, youtu.be/, shorts/, embed/). */
 export function youtubeId(url: string): string | null {
@@ -7,8 +8,8 @@ export function youtubeId(url: string): string | null {
 }
 
 /**
- * Highlight-Videos: YouTube wird ueber den offiziellen Einbettungs-Player (datensparsame
- * Variante youtube-nocookie.com) gezeigt; Instagram und andere Quellen als Link, weil
+ * Highlight-Videos: YouTube wird per Klick ueber den offiziellen Einbettungs-Player (datensparsame
+ * Variante youtube-nocookie.com, siehe VideoPlayer) gezeigt; Instagram und andere Quellen als Link, weil
  * Instagram-Beitraege nicht frei einbettbar sind.
  */
 export default function Videos({ videos }: { videos: Player["videos"] }) {
@@ -27,19 +28,7 @@ export default function Videos({ videos }: { videos: Player["videos"] }) {
       {videos.map((v) => {
         const id = v.platform === "youtube" ? youtubeId(v.url) : null;
         return id ? (
-          <figure key={v.url} className="overflow-hidden rounded-xl border border-line bg-surface">
-            <div className="aspect-video">
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${id}`}
-                title={v.title ?? "Highlight-Video"}
-                loading="lazy"
-                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="h-full w-full"
-              />
-            </div>
-            {v.title && <figcaption className="px-4 py-2.5 text-[13.5px] text-ink-2">{v.title}</figcaption>}
-          </figure>
+          <VideoPlayer key={v.url} youtubeId={id} title={v.title ?? "Highlight-Video"} />
         ) : (
           <a key={v.url} href={v.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-4 hover:border-line-strong">
             <span>

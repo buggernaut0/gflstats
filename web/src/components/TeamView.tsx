@@ -10,6 +10,7 @@ import type { Scope, Stats } from "@/lib/types";
 import ScopeToggle from "./ScopeToggle";
 import SourceTag from "./SourceTag";
 import TeamTag from "./TeamTag";
+import { VideoMark } from "./VideoPlayer";
 
 export interface RosterRow {
   player: string;
@@ -24,7 +25,7 @@ export interface TeamSeasonView {
   hasPlayoffs: boolean;
   metrics: Record<Scope, { games: number; wins: number; losses: number; ties: number; values: Record<string, number | null>; ranks: Record<string, { rank: number; of: number } | null> } | null>;
   roster: RosterRow[];
-  schedule: { id: string; date: string; playoff: boolean; home: boolean; opponent: string; teamScore: number; oppScore: number; name: string }[];
+  schedule: { id: string; date: string; playoff: boolean; home: boolean; opponent: string; teamScore: number; oppScore: number; name: string; video?: boolean }[];
 }
 
 const ROSTER_COLS = ["passingyards", "touchdownpass", "runyards", "touchdownrun", "catched", "receivingyards", "touchdowncatch", "tackletotal", "sacktotal", "intercepted"];
@@ -182,6 +183,7 @@ export default function TeamView({ seasons, teams }: { seasons: TeamSeasonView[]
                     </td>
                     <td className="num py-2 pr-4 text-right">
                       <Link href={`/spiele/${g.id}/`} className="hover:underline hover:underline-offset-4">
+                        {g.video && <span className="mr-3 align-middle"><VideoMark label="" /></span>}
                         <span className={`mr-2 font-semibold ${won ? "text-win" : g.teamScore === g.oppScore ? "text-ink-2" : "text-loss"}`}>{won ? "S" : g.teamScore === g.oppScore ? "U" : "N"}</span>
                         <span className="text-ink">
                           {g.teamScore}:{g.oppScore}

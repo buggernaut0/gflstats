@@ -74,3 +74,28 @@ test("Beste Einzelleistung ist wirklich das Maximum", { skip: !has && "keine Dat
   const max = Math.max(...pg.filter((r: { p: string }) => !(players.get(r.p) as { shared: boolean }).shared).map((r: { s: Record<string, number> }) => r.s.passingyards ?? 0));
   assert.equal(perf.value, max);
 });
+
+test("Playoff-Runde nur, wenn der Spielname sie nennt", async () => {
+  const { playoffRound } = await import("../src/lib/dashboard.ts");
+  assert.equal(playoffRound({ type: "playoff", name: "GFL Bowl 2024" }), "GFL Bowl");
+  assert.equal(playoffRound({ type: "playoff", name: "GFL Halbfinale Potsdam vs. Munich" }), "Halbfinale");
+  assert.equal(playoffRound({ type: "playoff", name: "Saarland Hurricanes at Dresden Monarchs" }), undefined);
+  assert.equal(playoffRound({ type: "regular", name: "GFL Bowl" }), undefined);
+});
+
+test("Saison-Highlights: nur Spiele mit Video, Playoffs zuerst, dann knappste Spiele", async () => {
+  const { seasonHighlights } = await import("../src/lib/dashboard.ts");
+  const g = (id: string, type: string, date: string, hs: number, as: number, video = true) =>
+    ({ id, season: 2026, type, date, name: "", home: "a", away: "b", homeScore: hs, awayScore: as, teamStats: {}, statsSource: "statsnscore", ...(video ? { video: { youtubeId: "x".repeat(11), title: "t", channel: null, published: null } } : {}) }) as never;
+  const list = [g("r-weit", "regular", "2026-05-01", 40, 7), g("r-knapp", "regular", "2026-05-02", 21, 20), g("po-frueh", "playoff", "2026-09-12", 30, 10), g("po-spaet", "playoff", "2026-10-03", 27, 19), g("ohne", "playoff", "2026-09-19", 1, 0, false)];
+  assert.deepEqual(seasonHighlights(list, 2026, 3).map((x: { id: string }) => x.id), ["po-spaet", "po-frueh", "r-knapp"]);
+  assert.deepEqual(seasonHighlights(list, 2025), []);
+});
+
+test("Echte Daten: jedes Highlight-Video hat eine gueltige YouTube-ID und ist nur einmal vergeben", () => {
+  const games = JSON.parse(fs.readFileSync(new URL("../public/data/games.json", import.meta.url), "utf8")) as { id: string; video?: { youtubeId: string } }[];
+  const ids = games.filter((x) => x.video).map((x) => x.video!.youtubeId);
+  assert.ok(ids.length > 0);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const id of ids) assert.match(id, /^[A-Za-z0-9_-]{11}$/);
+});

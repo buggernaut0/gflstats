@@ -190,3 +190,13 @@ export function median(xs: number[]): number | null {
 }
 
 export type { Role };
+
+// ---------------------------------------------------------------- Summen
+
+/** Felder, die als Maximum zusammengefasst werden ("Laengster ..."), nicht als Summe. */
+export const MAX_FIELDS = new Set(FIELD_DEFS.filter((f) => f.agg === "max").map((f) => f.key));
+
+/** Addiert Statistikwerte in target (Maximum bei "Laengster ..."), auf zwei Nachkommastellen gerundet. */
+export function addStats(target: Stats, s: Stats): void {
+  for (const [k, v] of Object.entries(s)) target[k] = MAX_FIELDS.has(k) ? Math.max(target[k] ?? 0, v) : Math.round(((target[k] ?? 0) + v) * 100) / 100;
+}

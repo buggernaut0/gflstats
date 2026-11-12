@@ -10,11 +10,12 @@ import TeamLogo from "@/components/TeamLogo";
 import TeamTag from "@/components/TeamTag";
 import Videos from "@/components/Videos";
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
-import { FIELDS, gameMap, getMeta, getPlayers, getPlayerSeasons, getTeams, leagueRank, playerGameRows, playerMap, teamNameIn } from "@/lib/data";
+import { gameMap, getMeta, getPlayers, getTeams, leagueRank, playerGameRows, playerMap, teamNameIn } from "@/lib/data";
 import { teamsAttr } from "@/lib/favorite";
 import { fmt } from "@/lib/format";
-import { axesFor, comparisonGroup, entries, qualified, type Entry } from "@/lib/profile";
-import { ROLE_HEADLINE, ROLE_LABELS, ROLE_MIN, formatStat, stat, statAvailable, value } from "@/lib/stats";
+import { axesFor, comparisonGroup, qualified, type Entry } from "@/lib/profile";
+import { allEntries } from "@/lib/serverCache";
+import { ROLE_HEADLINE, ROLE_LABELS, ROLE_MIN, addStats, formatStat, stat, statAvailable, value } from "@/lib/stats";
 import { GAMELOG_COLS } from "@/lib/tables";
 import type { Scope, Stats } from "@/lib/types";
 
@@ -27,14 +28,6 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   return { title: playerMap().get(id)?.name ?? "Spieler" };
-}
-
-let entryCache: Entry[] | null = null;
-const allEntries = () => (entryCache ??= entries(getPlayerSeasons(), getPlayers()));
-const MAX = new Set(FIELDS.filter((f) => f.agg === "max").map((f) => f.key));
-
-function addStats(target: Stats, s: Stats) {
-  for (const [k, v] of Object.entries(s)) target[k] = MAX.has(k) ? Math.max(target[k] ?? 0, v) : Math.round(((target[k] ?? 0) + v) * 100) / 100;
 }
 
 export default async function PlayerPage({ params }: { params: Promise<{ id: string }> }) {

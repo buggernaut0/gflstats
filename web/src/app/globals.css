@@ -29,6 +29,11 @@
   --series-2: #e05a59;
   --series-3: #3987e5;
   /* Lieblingsteam: Violett, bewusst abseits von Akzent (Gelb) und Radar-Reihen (Gruen/Rot/Blau) */
+  --radar-floor-in: #17243a;
+  --radar-floor-out: #0f1a2b;
+  --radar-band: rgba(255, 255, 255, 0.028);
+  --radar-edge: #070d17;
+  --radar-shadow: rgba(0, 0, 0, 0.5);
   --fav: #a78bfa;
   --fav-tint: rgba(167, 139, 250, 0.1);
   color-scheme: dark;
@@ -55,6 +60,11 @@
   --series-1: #14895a;
   --series-2: #d24a49;
   --series-3: #2a78d6;
+  --radar-floor-in: #ffffff;
+  --radar-floor-out: #eef1f6;
+  --radar-band: rgba(20, 40, 80, 0.035);
+  --radar-edge: #d3dae5;
+  --radar-shadow: rgba(30, 45, 80, 0.22);
   --fav: #7c3aed;
   --fav-tint: rgba(124, 58, 237, 0.07);
   color-scheme: light;
@@ -138,4 +148,12 @@ body {
 /* Kennzeichen "Dein Team": standardmaessig unsichtbar, eingeblendet ueber favoriteCss(). */
 .fav-badge {
   display: none;
+}
+
+/* Plakat fuer Videos vor dem Laden: dunkles Feld mit Yard-Linien (unabhaengig vom hellen/dunklen Design). */
+.video-poster {
+  background-color: #0e1a2b;
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.35)),
+    repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 1px), rgba(255, 255, 255, 0.07) calc(10% - 1px), rgba(255, 255, 255, 0.07) 10%);
 }

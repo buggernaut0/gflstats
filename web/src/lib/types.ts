@@ -81,6 +81,15 @@ export interface Game {
   awayScore: number;
   teamStats: Record<string, TeamGameStats>;
   statsSource: "presto" | "statsnscore";
+  /** Geprueft zugeordnetes Highlight-Video (curation/game_videos.json) */
+  video?: GameVideo;
+}
+
+export interface GameVideo {
+  youtubeId: string;
+  title: string;
+  channel: string | null;
+  published: string | null;
 }
 
 export interface PlayerSeason {

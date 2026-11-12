@@ -14,6 +14,7 @@ Alle angewendeten Korrekturen erscheinen auf der Website unter „Methodik und K
 | `player_keep_separate.csv` | Namenspaare, die nie zusammengeführt werden dürfen |
 | `role_overrides.csv` | Rolle eines Spielers in einer Saison von Hand festlegen |
 | `videos.json` | Highlight-Videos je Spieler |
+| `game_videos.json` | Highlight-Videos je Spiel (Game-ID → YouTube-Video), nur geprüfte Zuordnungen |
 
 ## Automatische Namensbereinigung
 
@@ -34,3 +35,17 @@ In `videos.json` unter `"videos"` einen Eintrag ergänzen:
 
 `player` ist der letzte Teil der Profiladresse (`/spieler/montigo-moss/`).
 YouTube wird eingebettet, Instagram als Link angezeigt.
+
+## Spiel-Highlights hinzufügen
+
+In `game_videos.json` unter `"videos"` einen Eintrag mit der Game-ID als Schlüssel ergänzen
+(die ID ist der letzte Teil der Adresse `/spiele/<id>/`):
+
+```json
+"69b6956b9227192b30413b7b": {"youtubeId": "WazXlAhkv9k", "title": "Titel bei YouTube", "channel": "Sporteurope.TV", "published": "2026-06-27", "game": "2026-06-27 gast-id @ heim-id 24:22"}
+```
+
+`youtubeId` sind die 11 Zeichen nach `watch?v=`. `game` ist optional, wird aber beim Build geprüft
+(Datum, Gast, Heim) und schützt vor Verwechslungen zwischen Hin- und Rückspiel oder Saisons.
+Der Build bricht ab bei unbekannter Game-ID, ungültiger YouTube-ID oder doppelt vergebenem Video.
+Regel: Ein Video wird nur eingetragen, wenn Teams, Saison und Datum eindeutig passen. Nie IDs raten.

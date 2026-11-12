@@ -1,5 +1,5 @@
 /** Gemeinsame Zeilen-Logik fuer Leaders und Player Search (laeuft im Browser). */
-import { FIELD_DEFS, GROUP_LABELS, STATS, stat, statAvailable, value, type StatDef } from "./stats.ts";
+import { GROUP_LABELS, STATS, addStats, stat, statAvailable, value, type StatDef } from "./stats.ts";
 import type { Condition, Logic } from "./query";
 import type { Player, PlayerSeason, Scope, Stats } from "./types";
 
@@ -15,8 +15,6 @@ export interface PRow {
   games: number;
   stats: Stats;
 }
-
-const MAX = new Set(FIELD_DEFS.filter((f) => f.agg === "max").map((f) => f.key));
 
 export function seasonRows(ps: PlayerSeason[], players: Map<string, Player>, scope: Scope): PRow[] {
   return ps
@@ -45,7 +43,7 @@ export function careerRows(ps: PlayerSeason[], players: Map<string, Player>, sco
     e.games += r.games;
     e.seasons.push(r.season);
     for (const t of r.teams) if (!e.teams.includes(t)) e.teams.push(t);
-    for (const [k, v] of Object.entries(r.stats)) e.stats[k] = MAX.has(k) ? Math.max(e.stats[k] ?? 0, v) : Math.round(((e.stats[k] ?? 0) + v) * 100) / 100;
+    addStats(e.stats, r.stats);
     e.role = r.role ?? e.role;
     m.set(r.player, e);
   }

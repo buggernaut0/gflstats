@@ -82,6 +82,15 @@ Oben rechts in der Kopfleiste („Mein Team“) lässt sich ein Team wählen. Di
   keine Hydration-Unterschiede, und die Markierung bleibt beim Sortieren und Filtern erhalten.
 - Neue Tabellen: `ResultTable` hat dafür die Eigenschaft `rowTeams`; eigene Zeilen bekommen `{...teamsAttr(team)}`.
 
+## Game Highlights
+
+Highlight-Videos je Spiel stehen in `curation/game_videos.json` (Game-ID → YouTube-ID, Titel, Kanal, Datum).
+`scripts/build_data.py` prüft die Einträge und hängt sie als `video` an das Spiel in `games.json`.
+Anzeige: Spielseite (Bereich „Game Highlights“), Spielübersicht (Symbol und Filter „nur mit Highlights“,
+Adresse `?highlights=1`), Spielplan der Teamseite (Symbol) und „Highlights <Saison>“ auf der Startseite.
+`components/VideoPlayer.tsx` lädt den YouTube-Player (youtube-nocookie.com) erst nach einem Klick; vorher
+wird nichts von YouTube geladen, das Plakat besteht aus den Teamlogos. Derselbe Player zeigt die Spieler-Videos.
+
 ## Teamlogos
 
 Offizielle Logos liegen in `public/logos/` (Quellen in `public/logos/QUELLEN.md`). Pfad und Quelle stehen zentral in

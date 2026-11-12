@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import GamePoster from "@/components/GamePoster";
 import SourceTag from "@/components/SourceTag";
+import VideoPlayer from "@/components/VideoPlayer";
+import TeamLogo from "@/components/TeamLogo";
+import { playoffRound, toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { gameMap, getGames, getMeta, getPlayerGames, playerMap, teamMap, teamNameIn } from "@/lib/data";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, fmtShortDate } from "@/lib/format";
 import { formatStat, stat } from "@/lib/stats";
 import type { PlayerGame, TeamGameStats } from "@/lib/types";
 import { teamsAttr } from "@/lib/favorite";
@@ -18,7 +22,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const g = gameMap().get(id);
   const t = teamMap();
-  return { title: g ? `${t.get(g.away)?.name} @ ${t.get(g.home)?.name}, ${g.date}` : "Spiel" };
+  if (!g) return { title: "Spiel" };
+  const nm = (id: string) => (t.get(id) ? teamNameIn(t.get(id)!, g.season) : id);
+  return { title: `${nm(g.away)} @ ${nm(g.home)} ${g.awayScore}:${g.homeScore}, ${fmtShortDate(g.date)}${g.season}` };
 }
 
 const SECTIONS: { title: string; when: string[]; cols: string[] }[] = [
@@ -52,52 +58,68 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   };
   const avail = (k: string) => stat(k).needs.every((f) => meta.availability[f]?.includes(g.season));
   const homeWon = g.homeScore > g.awayScore;
+  const lite = (t: string) => (teams.get(t) ? toTeamLite(teams.get(t)!, name(t)) : undefined);
 
   return (
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
       <p className="text-[14px] text-ink-3">
         {fmtDate(g.date)}, {g.type === "playoff" ? "Playoffs" : "Regular Season"} {g.season}
-        {g.name && !/ (at|vs\.?) /.test(g.name) && <>, {g.name}</>}
+        {playoffRound(g) && <>, {playoffRound(g)}</>}
       </p>
-      <section className="mt-3 grid max-w-[760px] grid-cols-[1fr_auto_1fr] items-center gap-6 rounded-xl border border-line-strong bg-surface px-6 py-5" aria-label="Endstand">
-        <TeamScore id={g.away} name={name(g.away)} score={g.awayScore} won={!homeWon && g.awayScore !== g.homeScore} label="Gast" />
-        <span className="display text-[22px] text-ink-3">@</span>
-        <TeamScore id={g.home} name={name(g.home)} score={g.homeScore} won={homeWon} label="Heim" right />
-      </section>
-
-      <section className="mt-12" aria-labelledby="team-h">
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <h2 id="team-h" className="display text-[26px] font-bold leading-none tracking-tight text-ink">
-            Teamstatistik
-          </h2>
-          <SourceTag kind="original" detail="Teamstatistik der Quelle je Spiel" />
-        </div>
-        <div className="max-w-[760px] overflow-x-auto rounded-xl border border-line bg-surface">
-          <table className="w-full border-collapse text-[14px]">
-            <thead>
-              <tr className="border-b border-line text-[12px] text-ink-3">
-                <th scope="col" className="py-2 pl-4 text-left font-medium">Kennzahl</th>
-                <th scope="col" className="py-2 text-right font-medium">{teams.get(g.away)?.abbr}</th>
-                <th scope="col" className="py-2 pr-4 text-right font-medium">{teams.get(g.home)?.abbr}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {TEAM_ROWS.map((r) => {
-                const a = r.get(g.teamStats[g.away] ?? {});
-                const h = r.get(g.teamStats[g.home] ?? {});
-                if (a === null && h === null) return null;
-                return (
-                  <tr key={r.label} className="border-b border-line last:border-0">
-                    <td className="py-2 pl-4 text-ink-2">{r.label}</td>
-                    <td className="num py-2 text-right text-ink">{a ?? "–"}</td>
-                    <td className="num py-2 pr-4 text-right text-ink">{h ?? "–"}</td>
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] items-start gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div>
+          <section className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-line-strong bg-surface px-4 py-5 sm:gap-6 sm:px-6" aria-label="Endstand">
+            <TeamScore id={g.away} team={lite(g.away)} name={name(g.away)} score={g.awayScore} won={!homeWon && g.awayScore !== g.homeScore} label="Gast" />
+            <span className="display text-[22px] text-ink-3">@</span>
+            <TeamScore id={g.home} team={lite(g.home)} name={name(g.home)} score={g.homeScore} won={homeWon} label="Heim" right />
+          </section>
+          <section className="mt-10" aria-labelledby="team-h">
+            <div className="mb-3 flex items-end justify-between gap-3">
+              <h2 id="team-h" className="display text-[26px] font-bold leading-none tracking-tight text-ink">
+                Teamstatistik
+              </h2>
+              <SourceTag kind="original" detail="Teamstatistik der Quelle je Spiel" />
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+              <table className="w-full border-collapse text-[14px]">
+                <thead>
+                  <tr className="border-b border-line text-[12px] text-ink-3">
+                    <th scope="col" className="py-2 pl-4 text-left font-medium">Kennzahl</th>
+                    <th scope="col" className="py-2 text-right font-medium">{teams.get(g.away)?.abbr}</th>
+                    <th scope="col" className="py-2 pr-4 text-right font-medium">{teams.get(g.home)?.abbr}</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {TEAM_ROWS.map((r) => {
+                    const a = r.get(g.teamStats[g.away] ?? {});
+                    const h = r.get(g.teamStats[g.home] ?? {});
+                    if (a === null && h === null) return null;
+                    return (
+                      <tr key={r.label} className="border-b border-line last:border-0">
+                        <td className="py-2 pl-4 text-ink-2">{r.label}</td>
+                        <td className="num py-2 text-right text-ink">{a ?? "–"}</td>
+                        <td className="num py-2 pr-4 text-right text-ink">{h ?? "–"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
-      </section>
+          <section className="max-w-[600px]" aria-labelledby="hl-h">
+            <h2 id="hl-h" className="display mb-3 text-[26px] font-bold leading-none tracking-tight text-ink">
+              Game Highlights
+            </h2>
+            {g.video ? (
+              <VideoPlayer youtubeId={g.video.youtubeId} title={g.video.title} channel={g.video.channel} meta={g.video.published ? `veröffentlicht ${fmtShortDate(g.video.published)}${g.video.published.slice(0, 4)}` : undefined}>
+                <GamePoster away={lite(g.away)} home={lite(g.home)} label="Highlights" />
+              </VideoPlayer>
+            ) : (
+              <p className="rounded-xl border border-dashed border-line px-4 py-3 text-[13.5px] text-ink-3">Für dieses Spiel ist noch kein Highlight-Video hinterlegt.</p>
+            )}
+          </section>
+      </div>
 
       <div className="mt-12 grid gap-10 xl:grid-cols-2">
         {[g.away, g.home].map((t) => (
@@ -119,14 +141,15 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   );
 }
 
-function TeamScore({ id, name, score, won, label, right }: { id: string; name: string; score: number; won: boolean; label: string; right?: boolean }) {
+function TeamScore({ id, team, name, score, won, label, right }: { id: string; team?: TeamLite; name: string; score: number; won: boolean; label: string; right?: boolean }) {
   return (
     <div className={right ? "text-right" : ""}>
       <p className="text-[12px] text-ink-3">{label}</p>
-      <Link href={`/teams/${id}/`} className={`display block text-[22px] leading-tight hover:underline hover:underline-offset-4 ${won ? "font-semibold text-ink" : "text-ink-2"}`}>
-        {name}
+      <Link href={`/teams/${id}/`} className={`display mt-1 flex items-center gap-2.5 text-[18px] leading-tight sm:gap-3 sm:text-[22px] hover:underline hover:underline-offset-4 ${right ? "flex-row-reverse" : ""} ${won ? "font-semibold text-ink" : "text-ink-2"}`}>
+        <TeamLogo team={team} size={40} />
+        <span className="min-w-0 [overflow-wrap:anywhere]">{name}</span>
       </Link>
-      <p className={`num display text-[48px] font-bold leading-none ${won ? "text-ink" : "text-ink-3"}`}>{score}</p>
+      <p className={`num display mt-2 text-[52px] font-bold leading-none ${won ? "text-ink" : "text-ink-3"}`}>{score}</p>
     </div>
   );
 }

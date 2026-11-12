@@ -2,8 +2,10 @@ import Link from "next/link";
 import {
   DASHBOARD_CATEGORIES,
   leaders,
+  playoffRound,
   seasonFacts,
   seasonFinal,
+  seasonHighlights,
   teamTable,
   toTeamLite,
   topPerformances,
@@ -11,9 +13,11 @@ import {
 } from "@/lib/dashboard";
 import { getGames, getMeta, getPlayerGames, getPlayerSeasons, getTeamSeasons, getTeams, isAvailable, playerMap, teamNameIn } from "@/lib/data";
 import { fmt, fmtDate, fmtDec, fmtStamp } from "@/lib/format";
-import type { Scope } from "@/lib/types";
+import type { Game, Scope } from "@/lib/types";
 import DashboardBody, { type DashboardData } from "./DashboardBody";
+import GamePoster from "./GamePoster";
 import { BreakoutSection, RoleIndexSection } from "./ModelSections";
+import { VideoMark } from "./VideoPlayer";
 import { breakouts, roleIndexRows } from "@/lib/insights";
 import { allEntries } from "@/lib/serverCache";
 
@@ -87,6 +91,8 @@ export default function SeasonDashboard({ season }: { season: number }) {
         <DashboardBody data={data} />
       </div>
 
+      <SeasonVideos games={seasonHighlights(games, season)} teams={teams} season={season} />
+
       <div className="mt-14 flex flex-col gap-14">
         <RoleIndexSection rows={roleIndexRows(allEntries(), season, meta.availability)} names={names} teams={teams} season={season} />
         {meta.seasons.includes(season - 1) && <BreakoutSection items={breakouts(allEntries(), season, meta.availability)} names={names} teams={teams} season={season} />}
@@ -103,6 +109,47 @@ export default function SeasonDashboard({ season }: { season: number }) {
         </p>
       </aside>
     </main>
+  );
+}
+
+/** Ausgewaehlte Spiele der Saison mit Highlight-Video; fuehrt zur Spielseite (dort laeuft das Video). */
+function SeasonVideos({ games, teams, season }: { games: Game[]; teams: Record<string, TeamLite>; season: number }) {
+  if (!games.length) return null;
+  return (
+    <section className="mt-14" aria-labelledby="sv-h">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="sv-h" className="display text-[28px] font-bold leading-none tracking-tight text-ink">Highlights {season}</h2>
+          <p className="mt-2 text-[13.5px] text-ink-2">Playoff-Spiele und die knappsten Partien der Regular Season mit Highlight-Video.</p>
+        </div>
+        <Link href={`/spiele/?saison=${season}&highlights=1`} className="rounded-md border border-line px-3 py-1.5 text-[13.5px] font-medium text-ink-2 hover:border-line-strong hover:text-ink">
+          Alle Spiele mit Highlights
+        </Link>
+      </div>
+      <ul className="grid gap-4 md:grid-cols-3">
+        {games.map((g) => (
+          <li key={g.id}>
+            <Link href={`/spiele/${g.id}/`} className="group block overflow-hidden rounded-xl border border-line bg-surface hover:border-line-strong">
+              <span className="relative block aspect-[16/7]">
+                <GamePoster away={teams[g.away]} home={teams[g.home]} size={56} />
+                <span className="absolute bottom-2.5 right-3 text-white/85"><VideoMark label="Highlights" /></span>
+              </span>
+              <span className="flex items-baseline justify-between gap-3 px-4 py-2.5">
+                <span className="min-w-0 truncate text-[14px] text-ink">
+                  {teams[g.away]?.short} @ {teams[g.home]?.short}
+                </span>
+                <span className="num display shrink-0 text-[18px] font-semibold text-ink">
+                  {g.awayScore}:{g.homeScore}
+                </span>
+              </span>
+              <span className="block px-4 pb-3 text-[12.5px] text-ink-3">
+                {playoffRound(g) ?? (g.type === "playoff" ? "Playoffs" : "Regular Season")}, {fmtDate(g.date)}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -124,7 +171,7 @@ function Scorebug({ final, teams }: { final: NonNullable<ReturnType<typeof seaso
   return (
     <figure className="rounded-xl border border-line-strong bg-surface shadow-[0_1px_0_var(--line)]">
       <figcaption className="flex items-center justify-between border-b border-line px-4 py-2.5 text-[13px]">
-        <span className="font-semibold text-ink">{final.label}</span>
+        <Link href={`/spiele/${final.id}/`} className="font-semibold text-ink hover:underline hover:underline-offset-4">{final.label}</Link>
         <span className="text-ink-3">{fmtDate(final.date)}</span>
       </figcaption>
       {rows.map((r) => (

@@ -82,6 +82,45 @@ class TeamLogos(unittest.TestCase):
                 self.assertTrue(t["logoSource"].startswith("https://"), t["id"])
 
 
+class GameVideos(unittest.TestCase):
+    """Highlight-Videos: nur gueltige, eindeutig zugeordnete Eintraege."""
+
+    GAMES = {"g1": {"id": "g1", "date": "2026-06-27", "home": "potsdam-royals", "away": "dresden-monarchs"}}
+
+    def games(self):
+        return {k: dict(v) for k, v in self.GAMES.items()}
+
+    def test_attaches_video(self):
+        g = self.games()
+        b.attach_game_videos(g, {"g1": {"youtubeId": "WazXlAhkv9k", "title": "T", "channel": "C", "published": "2026-06-27",
+                                        "game": "2026-06-27 dresden-monarchs @ potsdam-royals 24:22"}})
+        self.assertEqual(g["g1"]["video"]["youtubeId"], "WazXlAhkv9k")
+
+    def test_rejects_unknown_game_bad_id_duplicate_and_wrong_hint(self):
+        ok = {"youtubeId": "WazXlAhkv9k"}
+        with self.assertRaises(SystemExit):
+            b.attach_game_videos(self.games(), {"gibt-es-nicht": ok})
+        with self.assertRaises(SystemExit):
+            b.attach_game_videos(self.games(), {"g1": {"youtubeId": "zu-kurz"}})
+        two = self.games()
+        two["g2"] = dict(two["g1"], id="g2")
+        with self.assertRaises(SystemExit):
+            b.attach_game_videos(two, {"g1": ok, "g2": ok})
+        with self.assertRaises(SystemExit):
+            b.attach_game_videos(self.games(), {"g1": dict(ok, game="2025-06-27 dresden-monarchs @ potsdam-royals 1:2")})
+
+    def test_curation_file_is_consistent(self):
+        import json
+
+        root = Path(__file__).resolve().parent.parent
+        videos = json.loads((root / "curation" / "game_videos.json").read_text(encoding="utf-8"))["videos"]
+        ids = [v["youtubeId"] for v in videos.values()]
+        self.assertEqual(len(ids), len(set(ids)))
+        for gid, v in videos.items():
+            self.assertRegex(v["youtubeId"], r"^[A-Za-z0-9_-]{11}$", gid)
+            self.assertTrue(v.get("title") and v.get("channel"), gid)
+
+
 class FullBuild(unittest.TestCase):
     def test_build_matches_database(self):
         """Kompletter Lauf ohne Schreiben: bricht ab, falls eine Summe von der Datenbank abweicht."""

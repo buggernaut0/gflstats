@@ -106,6 +106,7 @@ export function teamTable(teamSeasons: TeamSeason[], season: number, scope: Scop
 }
 
 export interface FinalGame {
+  id: string;
   label: string;
   date: string;
   winner: { team: string; score: number };
@@ -119,11 +120,36 @@ export function seasonFinal(games: Game[], season: number): FinalGame | null {
   const g = playoffs.find((x) => /bowl/i.test(x.name)) ?? playoffs[playoffs.length - 1];
   const homeWon = g.homeScore >= g.awayScore;
   return {
+    id: g.id,
     label: /bowl/i.test(g.name) ? "GFL Bowl" : "Finale",
     date: g.date,
     winner: { team: homeWon ? g.home : g.away, score: homeWon ? g.homeScore : g.awayScore },
     loser: { team: homeWon ? g.away : g.home, score: homeWon ? g.awayScore : g.homeScore },
   };
+}
+
+/** Playoff-Runde, soweit der Spielname der Quelle sie nennt (sonst undefined, nichts wird geraten). */
+export function playoffRound(g: Pick<Game, "type" | "name">): string | undefined {
+  if (g.type !== "playoff") return undefined;
+  if (/bowl/i.test(g.name)) return "GFL Bowl";
+  if (/halbfinal/i.test(g.name)) return "Halbfinale";
+  if (/viertelfinal/i.test(g.name)) return "Viertelfinale";
+  if (/relegation/i.test(g.name)) return "Relegation";
+  return undefined;
+}
+
+/**
+ * Spiele einer Saison mit Highlight-Video fuer die Startseite: zuerst Playoffs (spaeteste zuerst),
+ * dann die knappsten Spiele der Regular Season (bei gleichem Abstand das punktereichere).
+ */
+export function seasonHighlights(games: Game[], season: number, limit = 3): Game[] {
+  const withVideo = games.filter((g) => g.season === season && g.video);
+  const margin = (g: Game) => Math.abs(g.homeScore - g.awayScore);
+  const playoffs = withVideo.filter((g) => g.type === "playoff").sort((a, b) => b.date.localeCompare(a.date));
+  const regular = withVideo
+    .filter((g) => g.type !== "playoff")
+    .sort((a, b) => margin(a) - margin(b) || b.homeScore + b.awayScore - (a.homeScore + a.awayScore) || a.date.localeCompare(b.date));
+  return [...playoffs, ...regular].slice(0, limit);
 }
 
 export interface SeasonFacts {
