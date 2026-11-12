@@ -1,0 +1,836 @@
+{
+ "fields": [
+  {
+   "key": "pass",
+   "label": "Passversuche",
+   "abbr": "Att",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Geworfene Pässe"
+  },
+  {
+   "key": "complete",
+   "label": "Completions",
+   "abbr": "Cmp",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Gefangene Pässe"
+  },
+  {
+   "key": "passingyards",
+   "label": "Passing Yards",
+   "abbr": "Pass Yds",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Raumgewinn durch Pässe"
+  },
+  {
+   "key": "touchdownpass",
+   "label": "Passing TD",
+   "abbr": "Pass TD",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Touchdown-Pässe"
+  },
+  {
+   "key": "interception",
+   "label": "Interceptions geworfen",
+   "abbr": "INT",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Abgefangene Pässe (als Passgeber)"
+  },
+  {
+   "key": "longestpass",
+   "label": "Längster Pass",
+   "abbr": "Lng",
+   "group": "passing",
+   "agg": "max",
+   "description": "Längster Pass in Yards"
+  },
+  {
+   "key": "passincomplete",
+   "label": "Unvollständige Pässe",
+   "abbr": "Inc",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Nicht gefangene Pässe"
+  },
+  {
+   "key": "passbrokenup",
+   "label": "Pässe abgewehrt (Offense)",
+   "abbr": "PBU",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Vom Gegner abgewehrte Pässe"
+  },
+  {
+   "key": "passuncatchable",
+   "label": "Nicht fangbare Pässe",
+   "abbr": "Unc",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Als nicht fangbar gewertete Pässe"
+  },
+  {
+   "key": "passwasdropped",
+   "label": "Gedroppte Pässe (QB)",
+   "abbr": "Drp",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Pässe, die der Receiver fallen ließ"
+  },
+  {
+   "key": "passspiked",
+   "label": "Spikes",
+   "abbr": "Spk",
+   "group": "passing",
+   "agg": "sum",
+   "description": "Gespikte Pässe"
+  },
+  {
+   "key": "qbhurry",
+   "label": "Unter Druck gesetzt",
+   "abbr": "Hur",
+   "group": "passing",
+   "agg": "sum",
+   "description": "QB-Hurries erlitten"
+  },
+  {
+   "key": "run",
+   "label": "Carries",
+   "abbr": "Car",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Laufversuche"
+  },
+  {
+   "key": "runyards",
+   "label": "Rushing Yards",
+   "abbr": "Rush Yds",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Netto-Raumgewinn durch Läufe"
+  },
+  {
+   "key": "runyardsgain",
+   "label": "Rushing Yards brutto",
+   "abbr": "Gain",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Raumgewinn ohne Verluste"
+  },
+  {
+   "key": "runyardsloss",
+   "label": "Rushing Yards Verlust",
+   "abbr": "Loss",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Raumverlust bei Läufen"
+  },
+  {
+   "key": "touchdownrun",
+   "label": "Rushing TD",
+   "abbr": "Rush TD",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Lauf-Touchdowns"
+  },
+  {
+   "key": "longestrun",
+   "label": "Längster Lauf",
+   "abbr": "Lng",
+   "group": "rushing",
+   "agg": "max",
+   "description": "Längster Lauf in Yards"
+  },
+  {
+   "key": "fumbled",
+   "label": "Fumbles",
+   "abbr": "Fum",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Ball verloren (gesamt)"
+  },
+  {
+   "key": "fumbledandlost",
+   "label": "Fumbles verloren",
+   "abbr": "FL",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Fumbles mit Ballverlust"
+  },
+  {
+   "key": "fumbledandrecovered",
+   "label": "Fumbles selbst gesichert",
+   "abbr": "FR",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Fumbles, die das eigene Team sicherte"
+  },
+  {
+   "key": "fumbledanddefenserecovered",
+   "label": "Fumbles von Defense gesichert",
+   "abbr": "FDR",
+   "group": "rushing",
+   "agg": "sum",
+   "description": "Fumbles, die die gegnerische Defense sicherte"
+  },
+  {
+   "key": "catched",
+   "label": "Receptions",
+   "abbr": "Rec",
+   "group": "receiving",
+   "agg": "sum",
+   "description": "Gefangene Pässe"
+  },
+  {
+   "key": "receivingyards",
+   "label": "Receiving Yards",
+   "abbr": "Rec Yds",
+   "group": "receiving",
+   "agg": "sum",
+   "description": "Raumgewinn nach Fang"
+  },
+  {
+   "key": "touchdowncatch",
+   "label": "Receiving TD",
+   "abbr": "Rec TD",
+   "group": "receiving",
+   "agg": "sum",
+   "description": "Touchdowns durch Fang"
+  },
+  {
+   "key": "longestcatch",
+   "label": "Längster Catch",
+   "abbr": "Lng",
+   "group": "receiving",
+   "agg": "max",
+   "description": "Längster Fang in Yards"
+  },
+  {
+   "key": "intended",
+   "label": "Nicht gefangene Anspiele",
+   "abbr": "NgA",
+   "group": "receiving",
+   "agg": "sum",
+   "description": "Anspiele ohne Fang (Deutung wird noch geprüft)"
+  },
+  {
+   "key": "yac",
+   "label": "Yards after Catch",
+   "abbr": "YAC",
+   "group": "receiving",
+   "agg": "sum",
+   "description": "Raumgewinn nach dem Fang"
+  },
+  {
+   "key": "droppedpass",
+   "label": "Drops",
+   "abbr": "Drop",
+   "group": "receiving",
+   "agg": "sum",
+   "description": "Fallen gelassene Pässe"
+  },
+  {
+   "key": "tackletotal",
+   "label": "Tackles",
+   "abbr": "Tkl",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Tackles gesamt; ab 2025 = Solo + halbe Assists, 2023/24 laut Quelle"
+  },
+  {
+   "key": "tackle",
+   "label": "Solo-Tackles",
+   "abbr": "Solo",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Allein gesetzte Tackles"
+  },
+  {
+   "key": "tackleassist",
+   "label": "Assist-Tackles",
+   "abbr": "Ast",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Tackles mit Beteiligung"
+  },
+  {
+   "key": "tacklesum",
+   "label": "Tackles (2023/24-Zählung)",
+   "abbr": "TklS",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Tackle-Summe im Format 2023/24"
+  },
+  {
+   "key": "assistsum",
+   "label": "Assists (2023/24-Zählung)",
+   "abbr": "AstS",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Assist-Summe im Format 2023/24"
+  },
+  {
+   "key": "tackleforloss",
+   "label": "Tackles for Loss",
+   "abbr": "TFL",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Tackles hinter der Line of Scrimmage"
+  },
+  {
+   "key": "tackleassistforloss",
+   "label": "Assist-Tackles for Loss",
+   "abbr": "ATFL",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Assist-Tackles hinter der Line of Scrimmage"
+  },
+  {
+   "key": "sacktotal",
+   "label": "Sacks",
+   "abbr": "Sck",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Sacks gesamt, halbe Sacks möglich"
+  },
+  {
+   "key": "sack",
+   "label": "Solo-Sacks",
+   "abbr": "SSck",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Allein erzielte Sacks"
+  },
+  {
+   "key": "sackassist",
+   "label": "Sack-Assists",
+   "abbr": "SAst",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Sacks mit Beteiligung"
+  },
+  {
+   "key": "sackforloss",
+   "label": "Sacks mit Raumverlust",
+   "abbr": "SckL",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Sacks mit Raumverlust"
+  },
+  {
+   "key": "sacksum",
+   "label": "Sacks (2023/24-Zählung)",
+   "abbr": "SckS",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Sack-Summe im Format 2023/24"
+  },
+  {
+   "key": "intercepted",
+   "label": "Interceptions",
+   "abbr": "INT",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Abgefangene Pässe (als Verteidiger)"
+  },
+  {
+   "key": "interceptionreturnyards",
+   "label": "INT-Return-Yards",
+   "abbr": "IntYds",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Raumgewinn nach Interception"
+  },
+  {
+   "key": "interceptionreturntouchdown",
+   "label": "INT-Return-TD",
+   "abbr": "IntTD",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Touchdowns nach Interception"
+  },
+  {
+   "key": "brokenuppass",
+   "label": "Pässe abgewehrt",
+   "abbr": "PD",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Abgewehrte Pässe"
+  },
+  {
+   "key": "forcedfumble",
+   "label": "Forced Fumbles",
+   "abbr": "FF",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Erzwungene Fumbles"
+  },
+  {
+   "key": "fumblereturnyards",
+   "label": "Fumble-Return-Yards",
+   "abbr": "FumYds",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Raumgewinn nach Fumble"
+  },
+  {
+   "key": "fumblereturntouchdown",
+   "label": "Fumble-Return-TD",
+   "abbr": "FumTD",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Touchdowns nach Fumble"
+  },
+  {
+   "key": "qbhurrybydefense",
+   "label": "QB-Hurries",
+   "abbr": "QBH",
+   "group": "defense",
+   "agg": "sum",
+   "description": "QB unter Druck gesetzt"
+  },
+  {
+   "key": "forcedsafety",
+   "label": "Safeties",
+   "abbr": "Sfty",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Erzwungene Safeties"
+  },
+  {
+   "key": "forcedsafetyforloss",
+   "label": "Safeties mit Raumverlust",
+   "abbr": "SftyL",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Erzwungene Safeties mit Raumverlust"
+  },
+  {
+   "key": "forcedsafetyassist",
+   "label": "Safety-Assists",
+   "abbr": "SftyA",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Safeties mit Beteiligung"
+  },
+  {
+   "key": "forcedsafetyassistforloss",
+   "label": "Safety-Assists mit Raumverlust",
+   "abbr": "SftyAL",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Safety-Assists mit Raumverlust"
+  },
+  {
+   "key": "forcedsafetytotal",
+   "label": "Safeties gesamt",
+   "abbr": "SftyT",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Safeties gesamt"
+  },
+  {
+   "key": "blockedfieldgoal",
+   "label": "Geblockte Field Goals",
+   "abbr": "BlkFG",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Geblockte Field-Goal-Versuche"
+  },
+  {
+   "key": "puntblock",
+   "label": "Geblockte Punts",
+   "abbr": "BlkP",
+   "group": "defense",
+   "agg": "sum",
+   "description": "Geblockte Punts"
+  },
+  {
+   "key": "fieldgoalgood",
+   "label": "Field Goals gut",
+   "abbr": "FGM",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Erfolgreiche Field Goals"
+  },
+  {
+   "key": "fieldgoaltry",
+   "label": "Field-Goal-Versuche",
+   "abbr": "FGA",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Versuchte Field Goals"
+  },
+  {
+   "key": "fieldgoalmissed",
+   "label": "Field Goals verfehlt",
+   "abbr": "FGX",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Verfehlte Field Goals"
+  },
+  {
+   "key": "fieldgoalblocked",
+   "label": "Field Goals geblockt",
+   "abbr": "FGB",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Geblockte eigene Field Goals"
+  },
+  {
+   "key": "fieldgoalshort",
+   "label": "Field Goals zu kurz",
+   "abbr": "FGS",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Zu kurze Field Goals"
+  },
+  {
+   "key": "fieldgoalyards",
+   "label": "Field-Goal-Yards",
+   "abbr": "FGYds",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Summe der Distanzen erfolgreicher Field Goals"
+  },
+  {
+   "key": "longestfieldgoal",
+   "label": "Längstes Field Goal",
+   "abbr": "Lng",
+   "group": "kicking",
+   "agg": "max",
+   "description": "Längstes Field Goal in Yards"
+  },
+  {
+   "key": "fieldgoal",
+   "label": "Field Goals",
+   "abbr": "FG",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Field Goals laut Quelle"
+  },
+  {
+   "key": "patkickgood",
+   "label": "PAT-Kicks gut",
+   "abbr": "XPM",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Erfolgreiche Extrapunkt-Kicks"
+  },
+  {
+   "key": "patkickmissed",
+   "label": "PAT-Kicks verfehlt",
+   "abbr": "XPX",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Verfehlte Extrapunkt-Kicks"
+  },
+  {
+   "key": "patkickblocked",
+   "label": "PAT-Kicks geblockt",
+   "abbr": "XPB",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Geblockte Extrapunkt-Kicks"
+  },
+  {
+   "key": "patkick",
+   "label": "PAT-Kicks",
+   "abbr": "XP",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Extrapunkt-Kicks laut Quelle"
+  },
+  {
+   "key": "fieldgoalpat",
+   "label": "FG und PAT",
+   "abbr": "FGXP",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Field Goals und PATs laut Quelle"
+  },
+  {
+   "key": "patrungood",
+   "label": "2-Punkte-Lauf gut",
+   "abbr": "2PR",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Erfolgreiche 2-Punkte-Läufe"
+  },
+  {
+   "key": "patrunnogood",
+   "label": "2-Punkte-Lauf nicht gut",
+   "abbr": "2PRX",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Gescheiterte 2-Punkte-Läufe"
+  },
+  {
+   "key": "patpasscatchedgood",
+   "label": "2-Punkte-Pass gut",
+   "abbr": "2PP",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Erfolgreiche 2-Punkte-Pässe"
+  },
+  {
+   "key": "patpassnogood",
+   "label": "2-Punkte-Pass nicht gut",
+   "abbr": "2PPX",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Gescheiterte 2-Punkte-Pässe"
+  },
+  {
+   "key": "kickoff",
+   "label": "Kickoffs",
+   "abbr": "KO",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Kickoffs"
+  },
+  {
+   "key": "kickingyards",
+   "label": "Kickoff-Yards",
+   "abbr": "KOYds",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Kickoff-Distanz gesamt"
+  },
+  {
+   "key": "longestkick",
+   "label": "Längster Kickoff",
+   "abbr": "Lng",
+   "group": "kicking",
+   "agg": "max",
+   "description": "Längster Kickoff in Yards"
+  },
+  {
+   "key": "kickofftouchback",
+   "label": "Kickoff-Touchbacks",
+   "abbr": "KOTB",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Kickoffs mit Touchback"
+  },
+  {
+   "key": "kickoffoutofbounds",
+   "label": "Kickoffs im Aus",
+   "abbr": "KOOB",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Kickoffs ins Seitenaus"
+  },
+  {
+   "key": "onside",
+   "label": "Onside Kicks",
+   "abbr": "Ons",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Onside-Kick-Versuche"
+  },
+  {
+   "key": "onsidesuccess",
+   "label": "Onside Kicks erfolgreich",
+   "abbr": "OnsS",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Erfolgreiche Onside Kicks"
+  },
+  {
+   "key": "onsiderecovered",
+   "label": "Onside Kicks gesichert",
+   "abbr": "OnsR",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Gesicherte Onside Kicks"
+  },
+  {
+   "key": "kick",
+   "label": "Kicks",
+   "abbr": "K",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Kicks laut Quelle"
+  },
+  {
+   "key": "kickall",
+   "label": "Kicks gesamt",
+   "abbr": "KAll",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Alle Kicks laut Quelle"
+  },
+  {
+   "key": "punt",
+   "label": "Punts",
+   "abbr": "Pnt",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Punts"
+  },
+  {
+   "key": "puntyards",
+   "label": "Punt-Yards",
+   "abbr": "PntYds",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Punt-Distanz gesamt"
+  },
+  {
+   "key": "longestpunt",
+   "label": "Längster Punt",
+   "abbr": "Lng",
+   "group": "kicking",
+   "agg": "max",
+   "description": "Längster Punt in Yards"
+  },
+  {
+   "key": "punttouchback",
+   "label": "Punt-Touchbacks",
+   "abbr": "PTB",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Punts mit Touchback"
+  },
+  {
+   "key": "puntinside20",
+   "label": "Punts in die 20",
+   "abbr": "In20",
+   "group": "kicking",
+   "agg": "sum",
+   "description": "Punts innerhalb der gegnerischen 20"
+  },
+  {
+   "key": "kickoffreturn",
+   "label": "Kickoff-Returns",
+   "abbr": "KR",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Kickoff-Returns"
+  },
+  {
+   "key": "kickoffreturnyards",
+   "label": "Kickoff-Return-Yards",
+   "abbr": "KRYds",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Raumgewinn bei Kickoff-Returns"
+  },
+  {
+   "key": "kickoffreturntouchdown",
+   "label": "Kickoff-Return-TD",
+   "abbr": "KRTD",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Touchdowns bei Kickoff-Returns"
+  },
+  {
+   "key": "longestkickoffreturn",
+   "label": "Längster Kickoff-Return",
+   "abbr": "Lng",
+   "group": "returns",
+   "agg": "max",
+   "description": "Längster Kickoff-Return"
+  },
+  {
+   "key": "puntreturn",
+   "label": "Punt-Returns",
+   "abbr": "PR",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Punt-Returns"
+  },
+  {
+   "key": "puntreturnyards",
+   "label": "Punt-Return-Yards",
+   "abbr": "PRYds",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Raumgewinn bei Punt-Returns"
+  },
+  {
+   "key": "puntreturntouchdown",
+   "label": "Punt-Return-TD",
+   "abbr": "PRTD",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Touchdowns bei Punt-Returns"
+  },
+  {
+   "key": "longestpuntreturn",
+   "label": "Längster Punt-Return",
+   "abbr": "Lng",
+   "group": "returns",
+   "agg": "max",
+   "description": "Längster Punt-Return"
+  },
+  {
+   "key": "returnall",
+   "label": "Returns gesamt",
+   "abbr": "Ret",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Alle Returns laut Quelle"
+  },
+  {
+   "key": "fieldgoalreturntouchdown",
+   "label": "FG-Return-TD",
+   "abbr": "FGRTD",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Touchdowns nach Field-Goal-Return"
+  },
+  {
+   "key": "patreturntouchdown",
+   "label": "PAT-Return-TD",
+   "abbr": "XPRTD",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Touchdowns nach PAT-Return"
+  },
+  {
+   "key": "patkickreturntouchdown",
+   "label": "PAT-Kick-Return-TD",
+   "abbr": "XPKRTD",
+   "group": "returns",
+   "agg": "sum",
+   "description": "Touchdowns nach PAT-Kick-Return"
+  },
+  {
+   "key": "touchdown",
+   "label": "Touchdowns",
+   "abbr": "TD",
+   "group": "scoring",
+   "agg": "sum",
+   "description": "Alle Touchdowns des Spielers"
+  },
+  {
+   "key": "points",
+   "label": "Punkte",
+   "abbr": "Pkt",
+   "group": "scoring",
+   "agg": "sum",
+   "description": "Vom Spieler erzielte Punkte laut Quelle"
+  },
+  {
+   "key": "penalty",
+   "label": "Strafen",
+   "abbr": "Pen",
+   "group": "scoring",
+   "agg": "sum",
+   "description": "Strafen gegen den Spieler"
+  },
+  {
+   "key": "penaltyyards",
+   "label": "Strafyards",
+   "abbr": "PenYds",
+   "group": "scoring",
+   "agg": "sum",
+   "description": "Strafyards gegen den Spieler"
+  }
+ ]
+}

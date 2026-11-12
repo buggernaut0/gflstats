@@ -1,0 +1,12 @@
+{
+  "_info": "Korrekturen an Spieldaten, die beim Erzeugen der Website-Daten angewendet werden. Die Datenbank bleibt unverändert.",
+  "swap_home_away": [
+    {
+      "season": 2023,
+      "when": "Spielname hat die Form 'A at B' und A ist in der Datenbank als Heimteam geführt",
+      "reason": "In den 2023er Daten ist das Gastteam als Heimteam eingetragen. Beleg: Am 20.05.2023 spielte Potsdam bei den Schwäbisch Hall Unicorns (Spielname 'Potsdam Royals at Schwäbisch Hall Unicorns'), die Datenbank führt Potsdam als Heimteam. Ab 2024 stimmen Spielname und Heimteam überein.",
+      "evidence": "https://www.americanfootballinternational.com/?p=163801",
+      "checked": "2026-11-12"
+    }
+  ]
+}

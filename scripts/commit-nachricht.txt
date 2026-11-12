@@ -1,0 +1,60 @@
+Website: GFL Analytics & Scouting Platform (Datenschicht, Korrekturen, Website, Veröffentlichung)
+
+Fügt eine statische Analytics-Website auf Basis von gflstats.db hinzu. Die
+Originaldaten (data/, db/, gflstats.db, scrapers/, parsers/, cli.py) bleiben
+unverändert; alle Bereinigungen liegen nachvollziehbar in curation/.
+
+Datenschicht (scripts/)
+- build_data.py liest gflstats.db im Nur-Lese-Modus und gamelist.json.gz,
+  wendet curation/ an und schreibt web/public/data/ (nicht im Git, wird bei
+  jedem Build neu erzeugt). Nur Python-Standardbibliothek.
+- Abgleich: jede Statistiksumme, Zeilen- und Spielzahl wird gegen die
+  Datenbank geprüft (106 Prüfungen); bei Abweichung bricht der Build ab.
+- Spielernamen ohne IDs: Bereinigung von Leer-/Sonderzeichen, Umlaut-
+  Umschrift, Tippfehler (max. 2 Zeichen, gleiches Team, nie im selben
+  Spiel) und Alias-Liste; 2.210 Schreibweisen -> 2.007 Spieler, jede
+  Zusammenführung mit Begründung protokolliert.
+- Rollen (QB, RB, WR/TE, DEF, K, P) aus den Statistiken abgeleitet, da die
+  Quelle keine Positionen enthält.
+- Feldverfügbarkeit je Saison nach Erfassungsformat (2023/24 importiert,
+  ab 2025 direkt erfasst): "nicht erfasst" statt falscher Nullen.
+- Teamstatistiken je Spiel (3rd/4th Down, Red Zone, Lauf/Pass) aus den
+  Rohdaten erschlossen.
+- test_build_data.py: Tests für Namensbereinigung und kompletter Lauf.
+
+Korrekturen (curation/)
+- excluded_games.json: Testspiel "Xxx444" (2025) und doppelt erfasstes
+  Viertelfinale Hall-Hildesheim (01.10.2024) ausgeschlossen.
+- game_corrections.json: Heim/Gast 2023 getauscht (Beleg verlinkt).
+- teams.json: Franchise-IDs, u. a. New Yorker Lions Braunschweig =
+  Braunschweig Lions; Felder für Farben/Logos mit Quellenangabe.
+- player_aliases.csv, player_keep_separate.csv, role_overrides.csv,
+  videos.json mit README.
+
+Website (web/, Next.js 15, TypeScript, Tailwind CSS, statischer Export)
+- Saisonübersicht: Finale, League Leaders, sortierbare Teamtabelle, beste
+  Einzelleistungen, stärkste Spieler je Rolle, Breakouts.
+- Spielerprofile: Karriere mit Liga-Rang, Perzentil-Radar, Entwicklung,
+  Saisontabellen nach Phase/Team, Spielprotokoll, Highlight-Videos.
+- Teamseiten mit Team Analytics und Liga-Rang, Kader-Filter, Spielplan;
+  Spielliste und Box Scores.
+- League Leaders für jede Kennzahl (Saison, beste Saisons, Karriere).
+- Advanced Player/Game/Team Search mit UND/ODER, "zwischen", Vorlagen;
+  Abfragen stehen in der Adresse und sind teilbar.
+- Radar-Vergleich für bis zu 3 Spieler (Perzentil in Saison, über alle
+  Saisons oder Anteil am Bestwert); Farben validiert, zusätzlich
+  Linienart/Punktform für Rot-Grün-Schwäche.
+- Rekorde, Rollen-Index und Breakout-Erkennung als offen gelegte Modelle.
+- Methodik-Seite mit allen Formeln, Korrekturen und Datenlücken; jede Zahl
+  ist als Original, Berechnet, Ranking oder Modell gekennzeichnet.
+- Dunkles und helles Design, responsiv, globale Suche.
+- Tests: Rechenlogik, Perzentile, Abfragen, Abgleich mit den Daten.
+- start-web.bat (mit Node.js) und vorschau.bat (nur Python) für Windows.
+
+Veröffentlichung
+- .github/workflows/pages.yml baut die Seite bei jedem Push auf main
+  (Daten erzeugen, prüfen, testen, bauen) und stellt sie auf GitHub Pages
+  bereit. Einmalig nötig: Settings -> Pages -> Source "GitHub Actions".
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012HRvxcBj5aQDjuzP2xFRy5
