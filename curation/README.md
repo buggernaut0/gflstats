@@ -7,13 +7,14 @@ Alle angewendeten Korrekturen erscheinen auf der Website unter „Methodik und K
 
 | Datei | Zweck |
 | --- | --- |
-| `teams.json` | Teamnamen → feste Team-ID (z. B. New Yorker Lions Braunschweig = Braunschweig Lions), Kürzel, offizielles Logo mit Quelle (`logo`: Bild-URL, Quellseite, Dateiname in `web/public/logos/`); Farben noch offen |
+| `teams.json` | Teamnamen → feste Team-ID (z. B. New Yorker Lions Braunschweig = Braunschweig Lions), Kürzel, offizielles Logo mit Quelle (`logo`: Bild-URL, Quellseite, Dateiname in `web/public/logos/`); `colors` (primary/secondary) nur mit Quelle, sonst leer |
 | `excluded_games.json` | Spiele, die nicht gezählt werden (Testeinträge, Doppelerfassungen) |
 | `game_corrections.json` | Regeln für Spieldaten, z. B. Heim/Gast-Tausch 2023 |
 | `player_aliases.csv` | Schreibweise → richtiger Name, wenn die automatische Erkennung nicht reicht (Spitznamen, vertauschte Namen) |
 | `player_keep_separate.csv` | Namenspaare, die nie zusammengeführt werden dürfen |
 | `role_overrides.csv` | Rolle eines Spielers in einer Saison von Hand festlegen |
 | `videos.json` | Highlight-Videos je Spieler |
+| `rosters.json` | Offizieller Kader je Saison und Team (Rückennummer, Positionsgruppe, Quelle) für das Starting Lineup |
 | `game_videos.json` | Highlight-Videos je Spiel (Game-ID → YouTube-Video), nur geprüfte Zuordnungen |
 
 ## Automatische Namensbereinigung
@@ -49,3 +50,22 @@ In `game_videos.json` unter `"videos"` einen Eintrag mit der Game-ID als Schlüs
 (Datum, Gast, Heim) und schützt vor Verwechslungen zwischen Hin- und Rückspiel oder Saisons.
 Der Build bricht ab bei unbekannter Game-ID, ungültiger YouTube-ID oder doppelt vergebenem Video.
 Regel: Ein Video wird nur eingetragen, wenn Teams, Saison und Datum eindeutig passen. Nie IDs raten.
+
+## Kader für das Starting Lineup hinzufügen
+
+In `rosters.json` unter `"rosters" → "<Saison>" → "<team-id>"` einen Block mit `source` (Adresse des
+offiziellen Kaders), `retrieved` (Abrufdatum) und `players` ergänzen:
+
+```json
+{"number": 87, "name": "Tim MÜLLER", "position": "WR", "player": "tim-muller"}
+```
+
+`position` ist eine der Gruppen QB, RB, WR, TE, OL, DL, LB, DB, K, P; `player` ist die Spieler-ID der Website
+(letzter Teil von `/spieler/<id>/`) oder fehlt, wenn der Spieler in keinem Statistikbogen steht.
+Der Build bricht ab bei unbekanntem Team, unbekannter Spieler-ID, doppelt zugeordnetem Spieler oder
+ungültiger Position/Nummer. Regel: Nummern und Positionen nur aus dem offiziellen Kader, nie raten.
+
+Ohne Kader zeigt die Teamseite eine **vorläufige** Aufstellung nur aus der Statistik (abgeleitete Rollen, keine
+Nummern, Receiver und Defense nicht feiner getrennt). Sobald hier ein Kader steht, wechselt das Team automatisch
+auf die Aufstellung mit Positionen und Rückennummern. Ohne belegte Farben in `teams.json` (`colors.primary` mit
+`source`) tragen die Figuren ein neutrales Trikot; das Logo auf dem Rasen kommt aus `teams.json` (`logo`).

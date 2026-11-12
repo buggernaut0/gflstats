@@ -323,7 +323,12 @@
       "names": [
         "ifm Razorbacks Ravensburg"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#18223C",
+        "secondary": "#CE152F",
+        "source": "https://ifm-razorbacks.de/wp-content/uploads/2024/03/ifm-Razorbacks-CI-StyleGuide.pdf",
+        "note": "Razorbacks-Blau (Primärfarbe 1) und Razorbacks-Rot (Primärfarbe 2) laut CI-Styleguide des Vereins, abgerufen 12.11.2026. Markenfarben, kein Abbild des tatsächlichen Trikots."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/RVR.png",
         "sourcePage": "https://gfl.info/teams/ifm-razorbacks-ravensburg/",

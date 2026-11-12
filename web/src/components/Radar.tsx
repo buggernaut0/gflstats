@@ -2,14 +2,28 @@
 
 /**
  * Radar-/Spider-Chart auf Perzentil-Skala (0-100). Bei sechs Achsen ein Hexagon.
- * Tiefe entsteht nur durch Schichtung: abgesenkter Boden mit Ringbaendern, darueber die Profile als
- * leicht angehobene Platten mit Schlagschatten. Die Geometrie bleibt flach und unverzerrt - eine
- * gekippte 3D-Ansicht wuerde Achsen perspektivisch verkuerzen und Werte unvergleichbar machen.
+ * 2D-Ansicht (Standard): Tiefe entsteht nur durch Schichtung - abgesenkter Boden mit Ringbaendern, darueber
+ * die Profile als leicht angehobene Platten mit Schlagschatten. Die Geometrie bleibt flach und unverzerrt.
+ * Die zuschaltbare 3D-Ansicht (Radar3D.tsx) zeigt dieselben Werte dreh- und kippbar; weil Perspektive
+ * Strecken verkuerzt, bleibt 2D die Ansicht fuer den genauen Vergleich.
  * Farben laut Vorgabe: Spieler 1 gruen, Spieler 2 rot, Spieler 3 blau (validiert);
  * weil Gruen/Rot bei Rot-Gruen-Schwaeche schwer unterscheidbar ist, traegt jeder Spieler
  * zusaetzlich eine eigene Linienart und Punktform.
  */
-import { useId, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useId, useState } from "react";
+
+const Radar3D = dynamic(() => import("./Radar3D"), { ssr: false, loading: () => <div className="radar3d grid place-items-center text-[13px] text-ink-3">3D-Ansicht wird geladen …</div> });
+const VIEW_KEY = "gfl-radar-view";
+
+function webglAvailable(): boolean {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
 
 export const SERIES_STYLE = [
   { color: "var(--series-1)", dash: "", marker: "circle", label: "durchgezogen" },
@@ -26,20 +40,86 @@ export interface RadarSeries {
   hidden?: boolean;
 }
 
-export default function Radar({
-  axes,
-  series,
-  medianLabel = "Median der Vergleichsgruppe",
-  size = 460,
-  median,
-}: {
+interface RadarProps {
   axes: string[];
   series: RadarSeries[];
   medianLabel?: string;
   size?: number;
   /** Lage des Medians je Achse auf der 0-100-Skala (Standard: 50 = Perzentil-Median) */
   median?: (number | null)[];
-}) {
+}
+
+/**
+ * Radar mit Umschalter 2D/3D. 2D ist Standard und immer vorhanden; 3D wird erst auf Wunsch geladen
+ * (eigener three.js-Chunk) und nur angeboten, wenn der Browser WebGL kann. Die Wahl wird gemerkt.
+ */
+export default function Radar(props: RadarProps) {
+  const [mode, setMode] = useState<"2d" | "3d">("2d");
+  const [can3d, setCan3d] = useState(false);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!webglAvailable()) return;
+    setCan3d(true);
+    try {
+      if (localStorage.getItem(VIEW_KEY) === "3d") setMode("3d");
+    } catch {
+      /* ohne Speicher bleibt es bei 2D */
+    }
+  }, []);
+  const choose = (m: "2d" | "3d") => {
+    setMode(m);
+    try {
+      localStorage.setItem(VIEW_KEY, m);
+    } catch {
+      /* Wahl gilt dann nur fuer diese Seite */
+    }
+  };
+  const show3d = mode === "3d" && can3d && !failed;
+  return (
+    <div>
+      {can3d && !failed && (
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div role="radiogroup" aria-label="Ansicht des Radars" className="inline-flex rounded-lg border border-line bg-surface p-0.5">
+            {(["2d", "3d"] as const).map((m) => (
+              <button key={m} type="button" role="radio" aria-checked={mode === m} onClick={() => choose(m)} className={`rounded-md px-3 py-1 text-[13px] font-medium ${mode === m ? "bg-surface-2 text-ink shadow-[inset_0_-2px_0_var(--accent)]" : "text-ink-2 hover:text-ink"}`}>
+                {m === "2d" ? "2D" : "3D"}
+              </button>
+            ))}
+          </div>
+          {show3d && <p className="text-right text-[12px] text-ink-3">Ziehen dreht die Ansicht. Höhe und Abstand zeigen denselben Wert.</p>}
+        </div>
+      )}
+      {failed && <p className="mb-2 text-[12.5px] text-ink-3">Die 3D-Ansicht kann in diesem Browser nicht dargestellt werden, es wird die 2D-Ansicht gezeigt.</p>}
+      {show3d ? (
+        <>
+          <Radar3D axes={props.axes} series={props.series} median={props.median} onFail={() => setFailed(true)} />
+          <MedianKey label={props.medianLabel ?? "Median der Vergleichsgruppe"} />
+        </>
+      ) : (
+        <Radar2D {...props} />
+      )}
+    </div>
+  );
+}
+
+function MedianKey({ label }: { label: string }) {
+  return (
+    <p className="mt-1 flex items-center justify-center gap-2 text-[12.5px] text-ink-3">
+      <svg width="26" height="8" aria-hidden="true">
+        <line x1="0" y1="4" x2="26" y2="4" stroke="var(--ink-3)" strokeWidth="1.2" strokeDasharray="3 4" />
+      </svg>
+      {label}
+    </p>
+  );
+}
+
+function Radar2D({
+  axes,
+  series,
+  medianLabel = "Median der Vergleichsgruppe",
+  size = 460,
+  median,
+}: RadarProps) {
   const [hover, setHover] = useState<{ s: number; a: number } | null>(null);
   const uid = useId().replace(/:/g, "");
   const n = axes.length;
@@ -137,12 +217,7 @@ export default function Radar({
           <p className="text-ink-3">{tip.pct[hover.a] === null ? "nicht erfasst" : `${Math.round(tip.pct[hover.a]!)}. Perzentil`}</p>
         </div>
       )}
-      <p className="mt-1 flex items-center justify-center gap-2 text-[12.5px] text-ink-3">
-        <svg width="26" height="8" aria-hidden="true">
-          <line x1="0" y1="4" x2="26" y2="4" stroke="var(--ink-3)" strokeWidth="1.2" strokeDasharray="3 4" />
-        </svg>
-        {medianLabel}
-      </p>
+      <MedianKey label={medianLabel} />
     </div>
   );
 }

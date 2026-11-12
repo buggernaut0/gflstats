@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FavBadge } from "@/components/FavoriteTeam";
+import LineupSection from "@/components/lineup/LineupSection";
 import TeamLogo from "@/components/TeamLogo";
 import { teamsAttr } from "@/lib/favorite";
 import TeamView, { type RosterRow, type TeamSeasonView } from "@/components/TeamView";
@@ -109,6 +110,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
         </dl>
       </section>
       {team.note && <p className="mb-6 max-w-[70ch] text-[13px] text-ink-3">{team.note}</p>}
+      <LineupSection team={team} season={latest} />
       <TeamView seasons={views} teams={teams} />
     </main>
   );

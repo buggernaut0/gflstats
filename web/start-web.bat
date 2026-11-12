@@ -10,10 +10,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if not exist node_modules (
-    echo Erster Start: installiere Pakete, das dauert eine Minute...
-    call npm install || goto :failed
-)
+rem Pakete installieren oder nachziehen (schnell, wenn nichts fehlt)
+echo Pruefe Pakete...
+call npm install --no-audit --no-fund || goto :failed
 
 if exist ..\.venv\Scripts\python.exe (
     ..\.venv\Scripts\python ..\scripts\build_data.py || goto :failed

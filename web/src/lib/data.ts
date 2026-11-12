@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import fieldsJson from "@/config/fields.json";
 import type { FieldDef, Game, Meta, Player, PlayerGame, PlayerSeason, Team, TeamSeason } from "./types";
+import type { TeamRoster } from "./lineup";
 
 const DATA_DIR = path.join(process.cwd(), "public", "data");
 const cache = new Map<string, unknown>();
@@ -23,6 +24,8 @@ function read<T>(file: string): T {
 
 export const getMeta = () => read<Meta>("meta.json");
 export const getTeams = () => read<Team[]>("teams.json");
+/** Offizielle Kader: Saison -> Team -> Kader (curation/rosters.json) */
+export const getRosters = () => read<Record<string, Record<string, TeamRoster>>>("rosters.json");
 export const getPlayers = () => read<Player[]>("players.json");
 export const getGames = () => read<Game[]>("games.json");
 export const getPlayerSeasons = () => read<PlayerSeason[]>("player_seasons.json");

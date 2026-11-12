@@ -143,7 +143,44 @@ def load_curation():
         "role_overrides": read_csv(CURATION / "role_overrides.csv"),
         "videos": load_json(CURATION / "videos.json")["videos"],
         "game_videos": load_json(CURATION / "game_videos.json")["videos"],
+        "rosters": load_json(CURATION / "rosters.json")["rosters"],
     }
+
+
+# --------------------------------------------------------------------------- official rosters
+
+ROSTER_POSITIONS = {"QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K", "P"}
+
+
+def build_rosters(rosters, player_ids, team_ids):
+    """Prueft curation/rosters.json und gibt sie fuer die Website aus (Saison -> Team -> Kader).
+
+    Bricht ab bei unbekanntem Team, unbekannter Spieler-ID, doppelt zugeordnetem Spieler,
+    unbekannter Positionsgruppe oder einer Nummer ausserhalb 0-99.
+    """
+    out = {}
+    for season, teams in rosters.items():
+        for team, r in teams.items():
+            if team not in team_ids:
+                raise SystemExit(f"rosters.json: Team {team} gibt es nicht")
+            seen = set()
+            players = []
+            for e in r["players"]:
+                if e["position"] not in ROSTER_POSITIONS:
+                    raise SystemExit(f"rosters.json: unbekannte Position {e['position']!r} bei {e['name']}")
+                if not isinstance(e["number"], int) or not 0 <= e["number"] <= 99:
+                    raise SystemExit(f"rosters.json: ungueltige Nummer bei {e['name']}")
+                pid = e.get("player")
+                if pid is not None:
+                    if pid not in player_ids:
+                        raise SystemExit(f"rosters.json: Spieler {pid} gibt es nicht ({e['name']})")
+                    if pid in seen:
+                        raise SystemExit(f"rosters.json: Spieler {pid} steht doppelt im Kader {team} {season}")
+                    seen.add(pid)
+                players.append({"player": pid, "name": e["name"], "number": e["number"], "position": e["position"]})
+            out.setdefault(str(season), {})[team] = {"source": r["source"], "retrieved": r.get("retrieved"),
+                                                      "note": r.get("note"), "players": players}
+    return out
 
 
 # --------------------------------------------------------------------------- game highlight videos
@@ -528,6 +565,8 @@ def build(write=True):
                           "logoPage": logo.get("sourcePage") if logo_file and logo_file.exists() else None,
                           "sources": t.get("sources", []), "note": t.get("note")})
 
+    out_rosters = build_rosters(cur["rosters"], {p["id"] for p in out_players}, {t["id"] for t in out_teams})
+
     meta = {
         "builtAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": {"database": "gflstats.db", "databaseSha256": sha256(DB_PATH),
@@ -566,6 +605,7 @@ def build(write=True):
 
     dump("meta.json", meta)
     dump("teams.json", out_teams)
+    dump("rosters.json", out_rosters)
     dump("players.json", out_players)
     dump("games.json", sorted(games.values(), key=lambda g: (g["date"] or "", g["id"])))
     dump("player_seasons.json", sorted(

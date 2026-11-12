@@ -226,6 +226,11 @@ export default function MethodikPage() {
             {Object.entries(ROLE_AXES).map(([r, axes]) => `${ROLE_LABELS[r]}: ${axes.map((k) => STATS.find((d) => d.key === k)?.abbr).join(", ")}`).join(". ")}.
           </p>
           <p>
+            <span className="font-medium text-ink">3D-Ansicht des Radars:</span> zeigt dieselben Werte wie die 2D-Ansicht, nichts kommt hinzu. Der Abstand eines Eckpunkts von der
+            Mitte ist der normalisierte Wert (0–100), und derselbe Wert bestimmt zusätzlich seine Höhe. Weil eine gekippte Ansicht Strecken perspektivisch verkürzt, bleibt 2D die
+            Standardansicht für den genauen Vergleich; die exakten Zahlen stehen in der Tabelle neben dem Radar.
+          </p>
+          <p>
             <span className="font-medium text-ink">Anteil am Bestwert</span> (Alternative im Vergleich): Wert / bester Wert der Gruppe aller Saisons × 100; bei „weniger ist besser“
             bester Wert / Wert × 100.
           </p>

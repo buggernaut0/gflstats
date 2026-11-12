@@ -91,6 +91,26 @@ Adresse `?highlights=1`), Spielplan der Teamseite (Symbol) und „Highlights <Sa
 `components/VideoPlayer.tsx` lädt den YouTube-Player (youtube-nocookie.com) erst nach einem Klick; vorher
 wird nichts von YouTube geladen, das Plakat besteht aus den Teamlogos. Derselbe Player zeigt die Spieler-Videos.
 
+## Radar in 3D
+
+Das Radar (Spielerprofil und `/vergleich/`) hat einen Umschalter 2D/3D. 2D ist Standard; die 3D-Ansicht (`src/components/Radar3D.tsx`,
+three.js) wird erst beim Umschalten geladen und nur angeboten, wenn der Browser WebGL kann. Sie zeigt dieselben Werte: Abstand von
+der Mitte und Höhe eines Eckpunkts sind beide der normalisierte Wert (0–100). Ziehen oder Pfeiltasten drehen und kippen die Ansicht;
+die Wahl wird im Browser gemerkt (`gfl-radar-view`).
+
+## Starting Lineup (3D)
+
+Jede Teamseite zeigt für die aktuelle Saison eine interaktive 3D-Aufstellung (Offense/Defense) mit dem Teamlogo auf dem Rasen.
+- Mit Kader in `curation/rosters.json` (derzeit: Ravensburg Razorbacks 2026): Positionen und Rückennummern aus dem offiziellen Kader (`startingLineup`).
+- Ohne Kader: vorläufige Aufstellung nur aus der abgeleiteten Rolle (`provisionalLineup`): QB, RB, 3 Receiver (WR/TE gemeinsam), 11 × „DEF“
+  (Anordnung nach Statistikprofil, keine Positionsangabe), keine Nummern, Offensive Line frei. Auf der Seite als vorläufig gekennzeichnet.
+- Elf Offense-Plätze: QB, RB, 2 WR, TE, 5 OL und ein elfter Platz, der nach Statistik an den zweiten RB oder den dritten WR geht
+  (Mindestvolumen vor Kulanz, sonst Yards from Scrimmage; `applyFlex` in `src/lib/lineup.ts`).
+- Trikotfarben nur aus `curation/teams.json` (`colors` mit Quelle), sonst neutrales Trikot.
+Auswahl der Starter: `src/lib/lineup.ts` (Einsatzschwelle, Mindestvolumen, Kulanzregel für Stammkräfte; unbelegte Plätze bleiben leer).
+Darstellung: `src/components/lineup/` mit three.js, erst beim Scrollen in den Sichtbereich geladen; ohne WebGL
+erscheint dieselbe Aufstellung als flaches Feld. Die Anordnung ist schematisch, keine Aussage über das Spielsystem.
+
 ## Teamlogos
 
 Offizielle Logos liegen in `public/logos/` (Quellen in `public/logos/QUELLEN.md`). Pfad und Quelle stehen zentral in
