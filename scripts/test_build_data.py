@@ -48,6 +48,40 @@ class Levenshtein(unittest.TestCase):
         self.assertGreater(b.levenshtein("christian", "christopher", 2), 2)
 
 
+class TeamLogos(unittest.TestCase):
+    """Logos kommen ausschliesslich aus curation/teams.json und muessen eine Quelle haben."""
+
+    def setUp(self):
+        import json
+
+        root = Path(__file__).resolve().parent.parent
+        self.root = root
+        self.teams = json.loads((root / "curation" / "teams.json").read_text(encoding="utf-8"))["franchises"]
+
+    def test_every_logo_has_source_and_unique_file(self):
+        files = []
+        for t in self.teams:
+            logo = t.get("logo")
+            if not logo:
+                continue
+            self.assertTrue(logo["url"].startswith("https://"), t["id"])
+            self.assertTrue(logo.get("sourcePage", "").startswith("https://"), t["id"])
+            self.assertRegex(logo["file"], r"^[a-z0-9-]+\.(png|svg|webp|jpg)$")
+            files.append(logo["file"])
+        self.assertEqual(len(files), len(set(files)))
+
+    def test_build_emits_logo_only_for_existing_files(self):
+        import json
+
+        out = self.root / "web" / "public" / "data" / "teams.json"
+        if not out.exists():
+            self.skipTest("public/data noch nicht gebaut")
+        for t in json.loads(out.read_text(encoding="utf-8")):
+            if t["logo"]:
+                self.assertTrue((self.root / "web" / "public" / t["logo"]).exists(), t["id"])
+                self.assertTrue(t["logoSource"].startswith("https://"), t["id"])
+
+
 class FullBuild(unittest.TestCase):
     def test_build_matches_database(self):
         """Kompletter Lauf ohne Schreiben: bricht ab, falls eine Summe von der Datenbank abweicht."""

@@ -5,6 +5,7 @@ import {
   seasonFacts,
   seasonFinal,
   teamTable,
+  toTeamLite,
   topPerformances,
   type TeamLite,
 } from "@/lib/dashboard";
@@ -26,7 +27,7 @@ export default function SeasonDashboard({ season }: { season: number }) {
   const players = playerMap();
   const teamsFull = getTeams();
   const teams: Record<string, TeamLite> = Object.fromEntries(
-    teamsFull.map((t) => [t.id, { id: t.id, name: teamNameIn(t, season), short: t.short, abbr: t.abbr, colors: t.colors }]),
+    teamsFull.map((t) => [t.id, toTeamLite(t, teamNameIn(t, season))]),
   );
   const gameMap = new Map(games.map((g) => [g.id, g]));
   const pg = getPlayerGames(season);

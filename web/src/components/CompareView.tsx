@@ -10,6 +10,7 @@ import { Loading } from "./Loading";
 import { Field, selectCls } from "./QueryBuilder";
 import Radar, { SERIES_STYLE, SeriesKey } from "./Radar";
 import SourceTag from "./SourceTag";
+import { teamsAttr } from "@/lib/favorite";
 
 type Mode = "season" | "all" | "max";
 interface Slot { player: string; season: number }
@@ -214,7 +215,7 @@ function SlotPicker({ index, slot, players, all, teams, onChange, disabled, hidd
   const hits = q.length >= 2 ? players.filter((x) => !x.shared && norm(x.name).includes(norm(q))).slice(0, 8) : [];
   const seasons = p ? all.filter((e) => e.player === p.id).map((e) => e.season) : [];
   return (
-    <div className={`rounded-xl border bg-surface p-3 ${disabled ? "border-dashed border-line opacity-60" : "border-line"}`}>
+    <div {...teamsAttr(slot ? all.find((e) => e.player === slot.player && e.season === slot.season)?.teams : undefined)} className={`rounded-xl border bg-surface p-3 ${disabled ? "border-dashed border-line opacity-60" : "border-line"}`}>
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 text-[12.5px] text-ink-3">
           <SeriesKey index={index} /> Spieler {index + 1} ({SERIES_STYLE[index].label})
@@ -250,7 +251,7 @@ function SlotPicker({ index, slot, players, all, teams, onChange, disabled, hidd
               {hits.map((h) => {
                 const last = h.seasons[h.seasons.length - 1];
                 return (
-                  <li key={h.id}>
+                  <li key={h.id} {...teamsAttr(last.teams)}>
                     <button type="button" onMouseDown={(e) => { e.preventDefault(); onChange({ player: h.id, season: last.season }); setQ(""); }} className="flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left hover:bg-surface-2">
                       <span className="truncate text-[14px] text-ink">{h.name}</span>
                       <span className="shrink-0 text-[12px] text-ink-3">{last.role ?? ""} {last.teams.map((t) => teams[t]?.abbr).join("/")} {last.season}</span>

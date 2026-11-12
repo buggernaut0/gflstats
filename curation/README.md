@@ -7,7 +7,7 @@ Alle angewendeten Korrekturen erscheinen auf der Website unter „Methodik und K
 
 | Datei | Zweck |
 | --- | --- |
-| `teams.json` | Teamnamen → feste Team-ID (z. B. New Yorker Lions Braunschweig = Braunschweig Lions), Kürzel, später Farben und Logo mit Quelle |
+| `teams.json` | Teamnamen → feste Team-ID (z. B. New Yorker Lions Braunschweig = Braunschweig Lions), Kürzel, offizielles Logo mit Quelle (`logo`: Bild-URL, Quellseite, Dateiname in `web/public/logos/`); Farben noch offen |
 | `excluded_games.json` | Spiele, die nicht gezählt werden (Testeinträge, Doppelerfassungen) |
 | `game_corrections.json` | Regeln für Spieldaten, z. B. Heim/Gast-Tausch 2023 |
 | `player_aliases.csv` | Schreibweise → richtiger Name, wenn die automatische Erkennung nicht reicht (Spitznamen, vertauschte Namen) |

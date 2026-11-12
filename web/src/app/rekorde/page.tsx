@@ -1,5 +1,6 @@
+import AnalyticsCrumb from "@/components/AnalyticsCrumb";
 import RecordsView, { type RecordItem } from "@/components/RecordsView";
-import type { TeamLite } from "@/lib/dashboard";
+import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { gameMap, getMeta, getPlayerGames, getTeams, playerMap } from "@/lib/data";
 import { fmtShortDate } from "@/lib/format";
 import { RECORD_FIELDS, careerRecords, gameRecords, seasonRecords } from "@/lib/insights";
@@ -12,7 +13,7 @@ export default function RecordsPage() {
   const players = playerMap();
   const games = gameMap();
   const teamsList = getTeams();
-  const teams: Record<string, TeamLite> = Object.fromEntries(teamsList.map((t) => [t.id, { id: t.id, name: t.name, short: t.short, abbr: t.abbr, colors: t.colors }]));
+  const teams: Record<string, TeamLite> = Object.fromEntries(teamsList.map((t) => [t.id, toTeamLite(t)]));
   const rows = meta.seasons.flatMap((s) => getPlayerGames(s));
   const shared = new Set([...players.values()].filter((p) => p.shared).map((p) => p.id));
   const entries = allEntries().filter((e) => !shared.has(e.player));
@@ -33,6 +34,7 @@ export default function RecordsPage() {
 
   return (
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
+      <AnalyticsCrumb current="Rekorde" />
       <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink">Rekorde</h1>
       <p className="mb-8 mt-3 max-w-[72ch] text-[14px] text-ink-2">
         Bestwerte seit {meta.seasons[0]}, dem Beginn der Daten: in einem Spiel, in einer Saison (Regular Season und Playoffs) und über die Karriere. Ältere Spielzeiten sind nicht

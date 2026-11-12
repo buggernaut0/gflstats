@@ -1,5 +1,6 @@
 /** Gemeinsame Zeilen-Logik fuer Leaders und Player Search (laeuft im Browser). */
-import { FIELD_DEFS, GROUP_LABELS, STATS, stat, statAvailable, value, type StatDef } from "./stats";
+import { FIELD_DEFS, GROUP_LABELS, STATS, stat, statAvailable, value, type StatDef } from "./stats.ts";
+import type { Condition, Logic } from "./query";
 import type { Player, PlayerSeason, Scope, Stats } from "./types";
 
 export interface PRow {
@@ -56,10 +57,15 @@ export function careerRows(ps: PlayerSeason[], players: Map<string, Player>, sco
  * null, wenn die Kennzahl in keiner der Saisons der Zeile erfasst ist.
  */
 export function rowValue(def: StatDef, row: PRow, availability: Record<string, number[]>, perGame = false): number | null {
-  if (!row.seasons.some((s) => statAvailable(def, s, availability))) return null;
+  if (!rowRecorded(def, row, availability)) return null;
   const x = value(def, row.stats, row.games);
   if (x === null) return null;
   return perGame && def.kind === "original" && !def.key.startsWith("longest") ? x / Math.max(1, row.games) : x;
+}
+
+/** Ist die Kennzahl in mindestens einer Saison der Zeile erfasst? Sonst zeigt die Oberflaeche "n. e.". */
+export function rowRecorded(def: StatDef, row: PRow, availability: Record<string, number[]>): boolean {
+  return row.seasons.some((s) => statAvailable(def, s, availability));
 }
 
 export const STAT_OPTIONS = STATS.map((s) => ({
@@ -72,3 +78,11 @@ export const STAT_OPTIONS = STATS.map((s) => ({
 export const GAME_STAT_OPTIONS = STAT_OPTIONS.filter((o) => !stat(o.key).perGame);
 
 export const ROLES = ["QB", "RB", "WR/TE", "DEF", "K", "P"];
+
+/** Suchvorlagen der Statistiksuche (setzen Bedingungen, Saison und Rolle). */
+export const PLAYER_PRESETS: { label: string; season: string; role: string; logic?: Logic; conds: Condition[] }[] = [
+  { label: "Receiver 2025: ≥ 500 Rec Yds, ≥ 5 TD, > 50 Rec", season: "2025", role: "WR/TE", conds: [{ stat: "receivingyards", op: "gte", a: 500 }, { stat: "touchdowncatch", op: "gte", a: 5 }, { stat: "catched", op: "gt", a: 50 }] },
+  { label: "Running Backs: ≥ 5,0 Yards pro Carry", season: "", role: "RB", conds: [{ stat: "ypc", op: "gte", a: 5 }, { stat: "run", op: "gte", a: 60 }] },
+  { label: "Quarterbacks: ≥ 30 Pass-TD, ≤ 10 INT", season: "", role: "QB", conds: [{ stat: "touchdownpass", op: "gte", a: 30 }, { stat: "interception", op: "lte", a: 10 }] },
+  { label: "Pass Rusher: ≥ 8 Sacks oder ≥ 15 TFL", season: "", role: "", logic: "or", conds: [{ stat: "sacktotal", op: "gte", a: 8 }, { stat: "tackleforloss", op: "gte", a: 15 }] },
+];

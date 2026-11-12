@@ -10,6 +10,7 @@ import ScopeToggle from "./ScopeToggle";
 import SourceTag from "./SourceTag";
 import TeamTable from "./TeamTable";
 import TeamTag from "./TeamTag";
+import { teamsAttr } from "@/lib/favorite";
 
 export interface DashboardData {
   season: number;
@@ -84,7 +85,7 @@ export default function DashboardBody({ data }: { data: DashboardData }) {
             </thead>
             <tbody>
               {data.performances[scope].map((p) => (
-                <tr key={p.field} className="border-b border-line last:border-0">
+                <tr key={p.field} {...teamsAttr(p.team)} className="border-b border-line last:border-0">
                   <td className="py-2.5 pl-4 text-ink-2">{p.title}</td>
                   <td className="num display py-2.5 text-right text-[18px] font-semibold text-ink">{fmt(p.value)}</td>
                   <td className="py-2.5 pl-6">

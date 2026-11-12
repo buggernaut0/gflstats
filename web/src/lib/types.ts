@@ -24,7 +24,10 @@ export interface Team {
   abbr: string;
   namesBySeason: Record<string, string>;
   colors: { primary: string; secondary?: string } | null;
+  /** Pfad unter public/ (z. B. logos/kiel-baltic-hurricanes.png); null = kein offizielles Logo hinterlegt. */
   logo: string | null;
+  logoSource?: string | null;
+  logoPage?: string | null;
   sources: string[];
   note: string | null;
 }

@@ -483,10 +483,16 @@ def build(write=True):
     for tid, t in sorted(team_meta.items()):
         if tid not in team_names_by_season:
             continue
+        logo = t.get("logo") or {}
+        logo_file = OUT.parent / "logos" / logo["file"] if logo.get("file") else None
         out_teams.append({"id": tid, "name": t["name"], "short": t["short"], "abbr": t["abbr"],
                           "namesBySeason": {str(s): n for s, n in sorted(team_names_by_season[tid].items())},
-                          "colors": t.get("colors"), "logo": t.get("logo"), "sources": t.get("sources", []),
-                          "note": t.get("note")})
+                          "colors": t.get("colors"),
+                          # Logo nur, wenn die Datei heruntergeladen wurde (scripts/download_logos.py)
+                          "logo": f"logos/{logo['file']}" if logo_file and logo_file.exists() else None,
+                          "logoSource": logo.get("url") if logo_file and logo_file.exists() else None,
+                          "logoPage": logo.get("sourcePage") if logo_file and logo_file.exists() else None,
+                          "sources": t.get("sources", []), "note": t.get("note")})
 
     meta = {
         "builtAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),

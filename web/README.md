@@ -57,17 +57,37 @@ GitHub Pages bereit (`https://<konto>.github.io/gflstats/`). Einmalig unter
 | --- | --- |
 | `/`, `/saison/<jahr>/` | Saisonübersicht: Finale, League Leaders, Teamtabelle, Einzelleistungen, Rollen-Index, Breakouts |
 | `/leaders/` | Rangliste für jede Kennzahl (Saison, beste Einzelsaisons, Karriere) |
-| `/spieler/`, `/spieler/<id>/` | Spielerliste mit Filtern; Profil mit Karriere, Perzentil-Radar, Entwicklung, Saisontabellen, Spielprotokoll, Videos |
+| `/spieler/`, `/spieler/<id>/` | Spielersuche: Namenssuche, Filter nach Saison, Team, Rolle und Phase, aufklappbare Statistiksuche (alle Kennzahlen, UND/ODER, Bereiche, Saison- oder Karrierewerte, Vorlagen); Profil mit Karriere, Perzentil-Radar, Entwicklung, Saisontabellen, Spielprotokoll, Videos |
 | `/teams/`, `/teams/<id>/` | Teamübersicht; Teamseite mit Team Analytics, Kader-Filter, Spielplan |
 | `/spiele/`, `/spiele/<id>/` | Spielplan je Saison; Box Score mit Team- und Spielerstatistik |
-| `/analytics/` | Übersicht der Werkzeuge |
-| `/analytics/spieler/`, `/analytics/spiele/`, `/analytics/teams/` | Advanced Player, Game und Team Search mit UND/ODER-Bedingungen |
+| `/analytics/` | Analytics-Hub: Vorschau auf Leaders, Rekorde und Breakouts, Such-Werkzeuge mit Beispielen, Vergleiche. Leaders, Rekorde und Vergleich stehen nicht mehr in der Kopfleiste, sondern sind hier verlinkt (Adressen unverändert) |
+| `/analytics/spiele/`, `/analytics/teams/` | Advanced Game und Team Search mit UND/ODER-Bedingungen. `/analytics/spieler/` leitet samt Suchparametern auf `/spieler/` weiter (eine einzige Implementierung in `components/PlayerSearch.tsx`) |
 | `/vergleich/` | Spielervergleich im Radar-Chart (bis zu 3 Spieler) |
 | `/analytics/breakouts/` | Breakouts und Rollen-Index aller Saisons |
 | `/rekorde/` | Rekorde: Einzelspiel, Saison, Karriere |
 | `/methodik/` | Formeln, Modelle, Korrekturen, Datenverfügbarkeit |
 
 Alle Such- und Filterzustände stehen in der Adresse und lassen sich als Link teilen.
+
+## Lieblingsteam
+
+Oben rechts in der Kopfleiste („Mein Team“) lässt sich ein Team wählen. Die Wahl liegt nur im Browser
+(`localStorage`, Schlüssel `gfl-favorite-team`); es gibt kein Konto und keinen Server.
+
+- Logik zentral in `src/lib/favorite.ts`, Auswahl und Hook `useFavoriteTeam()` in `src/components/FavoriteTeam.tsx`.
+- Jedes Element mit Spieler- oder Teambezug trägt `data-teams="<team-id> …"` (Helfer `teamsAttr()`), und zwar das Team
+  des jeweiligen Datensatzes (Saison, Spiel), nicht ein festes Karriereteam.
+- Für das gewählte Team werden Regeln in `<style id="fav-style">` geschrieben: violetter Streifen links, leichte Tönung,
+  Kennzeichen „Dein Team“. Ein kleines Skript im `<head>` setzt sie vor dem ersten Zeichnen; dadurch kein Aufblitzen und
+  keine Hydration-Unterschiede, und die Markierung bleibt beim Sortieren und Filtern erhalten.
+- Neue Tabellen: `ResultTable` hat dafür die Eigenschaft `rowTeams`; eigene Zeilen bekommen `{...teamsAttr(team)}`.
+
+## Teamlogos
+
+Offizielle Logos liegen in `public/logos/` (Quellen in `public/logos/QUELLEN.md`). Pfad und Quelle stehen zentral in
+`curation/teams.json` (`logo.url`, `logo.sourcePage`, `logo.file`); `scripts/build_data.py` übernimmt ein Logo nur, wenn die
+Datei wirklich vorhanden ist. Ohne Logo zeigt `TeamLogo` das Teamkürzel. Logos neu laden: `scripts/logos-laden.bat`
+(oder `python scripts/download_logos.py --neu`). Die Logos sind Marken der Vereine.
 
 ## Ordner
 

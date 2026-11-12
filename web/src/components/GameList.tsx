@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { TeamLite } from "@/lib/dashboard";
 import { fmtShortDate } from "@/lib/format";
+import { teamsAttr } from "@/lib/favorite";
 
 export interface ListGame {
   id: string;
@@ -56,7 +57,7 @@ export default function GameList({ games, seasons, teams }: { games: ListGame[];
               {list.map((g) => {
                 const homeWon = g.homeScore > g.awayScore;
                 return (
-                  <li key={g.id} className="border-b border-line last:border-0">
+                  <li key={g.id} {...teamsAttr([g.away, g.home])} className="border-b border-line last:border-0">
                     <Link href={`/spiele/${g.id}/`} className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-2.5 hover:bg-surface-2/60">
                       <span className={`truncate text-right text-[14.5px] ${!homeWon ? "text-ink" : "text-ink-2"}`}>{teams[g.away]?.name ?? g.away}</span>
                       <span className="num display text-[19px] font-semibold text-ink">

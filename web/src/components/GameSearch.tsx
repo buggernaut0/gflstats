@@ -169,7 +169,7 @@ export default function GameSearch() {
           </p>
         )}
       </div>
-      <ResultTable rows={hits} columns={columns} initialSort={{ key: show[0] ?? "date", desc: true }} rowKey={(r) => r.key} caption="Ergebnisse der Spielsuche" key={show.join()} />
+      <ResultTable rows={hits} columns={columns} initialSort={{ key: show[0] ?? "date", desc: true }} rowKey={(r) => r.key} rowTeams={(r) => r.team} caption="Ergebnisse der Spielsuche" key={show.join()} />
       <p className="mt-3 text-[12.5px] text-ink-3">Jede Zeile ist ein Spieler in einem Spiel. „n. e.“ = in dieser Saison nicht erfasst; solche Werte erfüllen keine Bedingung.</p>
     </div>
   );

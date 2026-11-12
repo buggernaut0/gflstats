@@ -7,6 +7,7 @@ import { fmtShortDate } from "@/lib/format";
 import { formatStat, stat } from "@/lib/stats";
 import type { Stats } from "@/lib/types";
 import TeamTag from "./TeamTag";
+import { teamsAttr } from "@/lib/favorite";
 
 export interface LogRow {
   game: string;
@@ -61,7 +62,7 @@ export default function GameLog({ rows, cols, teams, availability }: { rows: Log
               const won = r.teamScore > r.oppScore;
               const tie = r.teamScore === r.oppScore;
               return (
-                <tr key={r.game} className="border-b border-line last:border-0 hover:bg-surface-2/60">
+                <tr key={r.game} {...teamsAttr(r.team)} className="border-b border-line last:border-0 hover:bg-surface-2/60">
                   <td className="num py-2 pl-4 text-ink-2">
                     {fmtShortDate(r.date)}
                     {r.playoff && <span className="ml-1.5 rounded border border-line px-1 text-[10.5px] text-ink-3">PO</span>}

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { FavBadge } from "@/components/FavoriteTeam";
+import TeamLogo from "@/components/TeamLogo";
+import { teamsAttr } from "@/lib/favorite";
 import TeamView, { type RosterRow, type TeamSeasonView } from "@/components/TeamView";
-import type { TeamLite } from "@/lib/dashboard";
+import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { FIELDS, getGames, getPlayerGames, getTeamSeasons, getTeams, playerMap, teamMap, teamNameIn } from "@/lib/data";
 import { TEAM_METRICS, teamRank, teamSeasonMetrics, type TeamSeasonMetrics } from "@/lib/team";
 import type { Scope } from "@/lib/types";
@@ -29,7 +32,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
   const players = playerMap();
   const seasonsOf = [...new Set(metrics.filter((m) => m.team === id).map((m) => m.season))].sort((a, b) => b - a);
   const latest = seasonsOf[0];
-  const teams: Record<string, TeamLite> = Object.fromEntries(getTeams().map((t) => [t.id, { id: t.id, name: teamNameIn(t, latest), short: t.short, abbr: t.abbr, colors: t.colors }]));
+  const teams: Record<string, TeamLite> = Object.fromEntries(getTeams().map((t) => [t.id, toTeamLite(t, teamNameIn(t, latest))]));
 
   const views: TeamSeasonView[] = seasonsOf.map((season) => {
     const metric = (scope: Scope) => {
@@ -73,19 +76,24 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
       <section className="mb-6 flex flex-wrap items-end justify-between gap-6">
         <div className="flex items-center gap-5">
-          <div
-            className="display grid h-[88px] w-[88px] shrink-0 place-items-center rounded-2xl border border-line-strong bg-surface-2 text-[30px] font-bold text-ink"
-            style={team.colors?.primary ? { boxShadow: `inset 0 -6px 0 ${team.colors.primary}` } : undefined}
-            aria-hidden="true"
-          >
-            {team.abbr}
-          </div>
+          <TeamLogo team={team} size={88} />
           <div>
             <h1 className="display text-[44px] font-bold leading-none tracking-tight text-ink sm:text-[56px]">{team.name}</h1>
+            <span {...teamsAttr(team.id)} className="fav-plain block">
+              <FavBadge className="mt-2.5" />
+            </span>
             <p className="mt-2 text-[14px] text-ink-2">
               GFL-Saisons in den Daten: {[...seasonsOf].reverse().join(", ")}.
               {formerNames.length > 0 && <> Bis {formerNames[formerNames.length - 1][0]} als „{formerNames[0][1]}“ geführt.</>}
             </p>
+            {team.logoPage && (
+              <p className="mt-1 text-[12.5px] text-ink-3">
+                Logo:{" "}
+                <a href={team.logoPage} className="underline-offset-4 hover:text-ink hover:underline" rel="noopener">
+                  offizielles Teamlogo, gfl.info
+                </a>
+              </p>
+            )}
           </div>
         </div>
         <dl className="flex gap-6 text-[13.5px]">

@@ -105,9 +105,8 @@ export default function SearchBox() {
         aria-expanded={open && results.length > 0}
         aria-controls="search-results"
         aria-activedescendant={results[active] ? `sr-${results[active][1]}` : undefined}
-        className="h-9 w-full rounded-md border border-line bg-surface pl-8 pr-8 text-[14px] text-ink placeholder:text-ink-3 focus:border-line-strong focus:outline-none"
+        className="h-9 w-full rounded-md border border-line bg-surface pl-8 pr-3 text-[14px] text-ink placeholder:text-ink-3 focus:border-line-strong focus:outline-none"
       />
-      <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-line px-1.5 text-[11px] text-ink-3 sm:block">/</kbd>
       {open && q.trim().length >= 2 && (
         <ul
           id="search-results"

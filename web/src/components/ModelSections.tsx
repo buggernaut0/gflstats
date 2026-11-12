@@ -6,6 +6,7 @@ import { BREAKOUT_RULES } from "@/lib/insights";
 import { ROLE_LABELS, ROLE_MIN, formatStat, stat } from "@/lib/stats";
 import SourceTag from "./SourceTag";
 import TeamTag from "./TeamTag";
+import { teamsAttr } from "@/lib/favorite";
 
 /** Rollen-Index je Rolle: die drei (oder n) Spieler mit dem hoechsten Index, mit Begruendung. */
 export function RoleIndexSection({ rows, names, teams, season, perRole = 3, roles = ["QB", "RB", "WR/TE", "DEF"] }: { rows: IndexRow[]; names: Record<string, string>; teams: Record<string, TeamLite>; season: number; perRole?: number; roles?: string[] }) {
@@ -32,7 +33,7 @@ export function RoleIndexSection({ rows, names, teams, season, perRole = 3, role
                 {top.map((r, i) => {
                   const best = [...r.axes].filter((a) => a.pct !== null).sort((a, b) => b.pct! - a.pct!).slice(0, 2);
                   return (
-                    <li key={r.player} className="px-4 py-2">
+                    <li key={r.player} {...teamsAttr(r.teams)} className="px-4 py-2">
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="flex min-w-0 items-baseline gap-2">
                           <span className={`num display text-[15px] font-semibold ${i === 0 ? "text-accent-text" : "text-ink-3"}`}>{i + 1}</span>
@@ -75,7 +76,7 @@ export function BreakoutSection({ items, names, teams, season, limit = 6 }: { it
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {items.slice(0, limit).map((b) => (
-            <div key={b.player} className="rounded-xl border border-line bg-surface px-4 py-3">
+            <div key={b.player} {...teamsAttr(b.teams)} className="rounded-xl border border-line bg-surface px-4 py-3">
               <div className="flex items-baseline justify-between gap-2">
                 <span className="flex min-w-0 items-baseline gap-2">
                   <Link href={`/spieler/${b.player}/`} className="truncate text-[15px] font-medium text-ink hover:underline hover:underline-offset-4">{names[b.player]}</Link>

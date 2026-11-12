@@ -1,13 +1,13 @@
 import Link from "next/link";
 import GameList from "@/components/GameList";
-import type { TeamLite } from "@/lib/dashboard";
+import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { getGames, getMeta, getTeams } from "@/lib/data";
 
 export const metadata = { title: "Spiele" };
 
 export default function GamesPage() {
   const meta = getMeta();
-  const teams: Record<string, TeamLite> = Object.fromEntries(getTeams().map((t) => [t.id, { id: t.id, name: t.name, short: t.short, abbr: t.abbr, colors: t.colors }]));
+  const teams: Record<string, TeamLite> = Object.fromEntries(getTeams().map((t) => [t.id, toTeamLite(t)]));
   const games = getGames().map((g) => ({ id: g.id, season: g.season, date: g.date, playoff: g.type === "playoff", home: g.home, away: g.away, homeScore: g.homeScore, awayScore: g.awayScore }));
   return (
     <main className="mx-auto max-w-[1000px] px-4 pb-24 pt-10 sm:px-6">

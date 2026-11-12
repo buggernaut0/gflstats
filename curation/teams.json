@@ -1,28 +1,336 @@
 {
-  "_info": "Ordnet die Teamnamen aus der Datenbank stabilen Franchise-IDs zu. 'names' = alle Schreibweisen, die in den Daten vorkommen. 'short' = Kurzname für Tabellen. 'colors' und 'logo' werden in einem späteren Schritt aus offiziellen Quellen ergänzt (mit Quellenangabe in 'sources').",
+  "_info": "Ordnet die Teamnamen aus der Datenbank stabilen Team-IDs zu und verwaltet zentral alles, was die Website über ein Team zeigt. 'names' = alle Schreibweisen in den Daten (auch frühere Namen). 'short' = Kurzname, 'abbr' = Kürzel. 'logo' = offizielles Logo: 'url' (Quelle der Datei), 'sourcePage' (Seite, auf der es verlinkt ist), 'file' (Ablage unter web/public/logos/). scripts/download_logos.py lädt die Dateien; ohne heruntergeladene Datei zeigt die Website ein neutrales Kürzel. 'colors' nur mit Quellenangabe in 'sources' eintragen.",
   "franchises": [
-    {"id": "allgaeu-comets", "name": "Allgäu Comets", "short": "Comets", "abbr": "ALL", "names": ["Allgäu Comets"], "colors": null, "logo": null, "sources": []},
-    {"id": "berlin-adler", "name": "Berlin Adler", "short": "Adler", "abbr": "BAD", "names": ["Berlin Adler"], "colors": null, "logo": null, "sources": []},
-    {"id": "berlin-rebels", "name": "Berlin Rebels", "short": "Rebels", "abbr": "BRE", "names": ["Berlin Rebels"], "colors": null, "logo": null, "sources": []},
-    {"id": "braunschweig-lions", "name": "Braunschweig Lions", "short": "Lions", "abbr": "BSL", "names": ["New Yorker Lions Braunschweig", "Braunschweig Lions", "New Yorker Lions"], "colors": null, "logo": null, "sources": [],
-     "note": "Bis 2025 als 'New Yorker Lions Braunschweig' geführt, ab 2026 als 'Braunschweig Lions'. Gleiche statsnscore-Team-ID 6460f1a3e5baf517a73fe2c6."},
-    {"id": "dresden-monarchs", "name": "Dresden Monarchs", "short": "Monarchs", "abbr": "DRE", "names": ["Dresden Monarchs"], "colors": null, "logo": null, "sources": []},
-    {"id": "duesseldorf-panther", "name": "Düsseldorf Panther", "short": "Panther", "abbr": "DUE", "names": ["Düsseldorf Panther"], "colors": null, "logo": null, "sources": []},
-    {"id": "hamburg-pioneers", "name": "Hamburg Pioneers", "short": "Pioneers", "abbr": "HHP", "names": ["Hamburg Pioneers"], "colors": null, "logo": null, "sources": [],
-     "note": "Nur in Relegationsspielen vertreten."},
-    {"id": "hildesheim-invaders", "name": "Hildesheim Invaders", "short": "Invaders", "abbr": "HIL", "names": ["Hildesheim Invaders"], "colors": null, "logo": null, "sources": []},
-    {"id": "ingolstadt-dukes", "name": "Ingolstadt Dukes", "short": "Dukes", "abbr": "ING", "names": ["Ingolstadt Dukes"], "colors": null, "logo": null, "sources": []},
-    {"id": "kiel-baltic-hurricanes", "name": "Kiel Baltic Hurricanes", "short": "Baltic Hurricanes", "abbr": "KIE", "names": ["Kiel Baltic Hurricanes"], "colors": null, "logo": null, "sources": []},
-    {"id": "kirchdorf-wildcats", "name": "Kirchdorf Wildcats", "short": "Wildcats", "abbr": "KIR", "names": ["Kirchdorf Wildcats"], "colors": null, "logo": null, "sources": []},
-    {"id": "marburg-mercenaries", "name": "Marburg Mercenaries", "short": "Mercenaries", "abbr": "MAR", "names": ["Marburg Mercenaries"], "colors": null, "logo": null, "sources": []},
-    {"id": "munich-cowboys", "name": "Munich Cowboys", "short": "Cowboys", "abbr": "MUC", "names": ["Munich Cowboys"], "colors": null, "logo": null, "sources": []},
-    {"id": "paderborn-dolphins", "name": "Paderborn Dolphins", "short": "Dolphins", "abbr": "PAD", "names": ["Paderborn Dolphins"], "colors": null, "logo": null, "sources": []},
-    {"id": "pforzheim-wilddogs", "name": "Pforzheim Wilddogs", "short": "Wilddogs", "abbr": "PFO", "names": ["Pforzheim Wilddogs"], "colors": null, "logo": null, "sources": []},
-    {"id": "potsdam-royals", "name": "Potsdam Royals", "short": "Royals", "abbr": "POT", "names": ["Potsdam Royals"], "colors": null, "logo": null, "sources": []},
-    {"id": "regensburg-phoenix", "name": "Regensburg Phoenix", "short": "Phoenix", "abbr": "REG", "names": ["Regensburg Phoenix"], "colors": null, "logo": null, "sources": []},
-    {"id": "saarland-hurricanes", "name": "Saarland Hurricanes", "short": "Hurricanes", "abbr": "SAA", "names": ["Saarland Hurricanes"], "colors": null, "logo": null, "sources": []},
-    {"id": "schwaebisch-hall-unicorns", "name": "Schwäbisch Hall Unicorns", "short": "Unicorns", "abbr": "SHU", "names": ["Schwäbisch Hall Unicorns"], "colors": null, "logo": null, "sources": []},
-    {"id": "straubing-spiders", "name": "Straubing Spiders", "short": "Spiders", "abbr": "STR", "names": ["Straubing Spiders"], "colors": null, "logo": null, "sources": []},
-    {"id": "ravensburg-razorbacks", "name": "Ravensburg Razorbacks", "short": "Razorbacks", "abbr": "RAV", "names": ["ifm Razorbacks Ravensburg"], "colors": null, "logo": null, "sources": []}
+    {
+      "id": "allgaeu-comets",
+      "name": "Allgäu Comets",
+      "short": "Comets",
+      "abbr": "ALL",
+      "names": [
+        "Allgäu Comets"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/ALC.png",
+        "sourcePage": "https://gfl.info/teams/allgaeu-comets/",
+        "file": "allgaeu-comets.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "berlin-adler",
+      "name": "Berlin Adler",
+      "short": "Adler",
+      "abbr": "BAD",
+      "names": [
+        "Berlin Adler"
+      ],
+      "colors": null,
+      "logo": null,
+      "sources": []
+    },
+    {
+      "id": "berlin-rebels",
+      "name": "Berlin Rebels",
+      "short": "Rebels",
+      "abbr": "BRE",
+      "names": [
+        "Berlin Rebels"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/BRE.png",
+        "sourcePage": "https://gfl.info/teams/berlin-rebels/",
+        "file": "berlin-rebels.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "braunschweig-lions",
+      "name": "Braunschweig Lions",
+      "short": "Lions",
+      "abbr": "BSL",
+      "names": [
+        "New Yorker Lions Braunschweig",
+        "Braunschweig Lions",
+        "New Yorker Lions"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/BSL.png",
+        "sourcePage": "https://gfl.info/teams/braunschweig-lions/",
+        "file": "braunschweig-lions.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": [],
+      "note": "Bis 2025 als 'New Yorker Lions Braunschweig' geführt, ab 2026 als 'Braunschweig Lions'. Gleiche statsnscore-Team-ID 6460f1a3e5baf517a73fe2c6."
+    },
+    {
+      "id": "dresden-monarchs",
+      "name": "Dresden Monarchs",
+      "short": "Monarchs",
+      "abbr": "DRE",
+      "names": [
+        "Dresden Monarchs"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/DDM.png",
+        "sourcePage": "https://gfl.info/teams/dresden-monarchs/",
+        "file": "dresden-monarchs.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "duesseldorf-panther",
+      "name": "Düsseldorf Panther",
+      "short": "Panther",
+      "abbr": "DUE",
+      "names": [
+        "Düsseldorf Panther"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/DPA.png",
+        "sourcePage": "https://gfl.info/teams/duesseldorf-panther/",
+        "file": "duesseldorf-panther.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "hamburg-pioneers",
+      "name": "Hamburg Pioneers",
+      "short": "Pioneers",
+      "abbr": "HHP",
+      "names": [
+        "Hamburg Pioneers"
+      ],
+      "colors": null,
+      "logo": null,
+      "sources": [],
+      "note": "Nur in Relegationsspielen vertreten."
+    },
+    {
+      "id": "hildesheim-invaders",
+      "name": "Hildesheim Invaders",
+      "short": "Invaders",
+      "abbr": "HIL",
+      "names": [
+        "Hildesheim Invaders"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/HII.png",
+        "sourcePage": "https://gfl.info/teams/hildesheim-invaders/",
+        "file": "hildesheim-invaders.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "ingolstadt-dukes",
+      "name": "Ingolstadt Dukes",
+      "short": "Dukes",
+      "abbr": "ING",
+      "names": [
+        "Ingolstadt Dukes"
+      ],
+      "colors": null,
+      "logo": null,
+      "sources": []
+    },
+    {
+      "id": "kiel-baltic-hurricanes",
+      "name": "Kiel Baltic Hurricanes",
+      "short": "Baltic Hurricanes",
+      "abbr": "KIE",
+      "names": [
+        "Kiel Baltic Hurricanes"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/KBH.png",
+        "sourcePage": "https://gfl.info/teams/kiel-baltic-hurricanes/",
+        "file": "kiel-baltic-hurricanes.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "kirchdorf-wildcats",
+      "name": "Kirchdorf Wildcats",
+      "short": "Wildcats",
+      "abbr": "KIR",
+      "names": [
+        "Kirchdorf Wildcats"
+      ],
+      "colors": null,
+      "logo": null,
+      "sources": []
+    },
+    {
+      "id": "marburg-mercenaries",
+      "name": "Marburg Mercenaries",
+      "short": "Mercenaries",
+      "abbr": "MAR",
+      "names": [
+        "Marburg Mercenaries"
+      ],
+      "colors": null,
+      "logo": null,
+      "sources": []
+    },
+    {
+      "id": "munich-cowboys",
+      "name": "Munich Cowboys",
+      "short": "Cowboys",
+      "abbr": "MUC",
+      "names": [
+        "Munich Cowboys"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/MUC.png",
+        "sourcePage": "https://gfl.info/teams/munich-cowboys/",
+        "file": "munich-cowboys.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "paderborn-dolphins",
+      "name": "Paderborn Dolphins",
+      "short": "Dolphins",
+      "abbr": "PAD",
+      "names": [
+        "Paderborn Dolphins"
+      ],
+      "colors": null,
+      "logo": null,
+      "sources": []
+    },
+    {
+      "id": "pforzheim-wilddogs",
+      "name": "Pforzheim Wilddogs",
+      "short": "Wilddogs",
+      "abbr": "PFO",
+      "names": [
+        "Pforzheim Wilddogs"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/PFW.png",
+        "sourcePage": "https://gfl.info/teams/pforzheim-wilddogs/",
+        "file": "pforzheim-wilddogs.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "potsdam-royals",
+      "name": "Potsdam Royals",
+      "short": "Royals",
+      "abbr": "POT",
+      "names": [
+        "Potsdam Royals"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/PRO.png",
+        "sourcePage": "https://gfl.info/teams/potsdam-royals/",
+        "file": "potsdam-royals.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "regensburg-phoenix",
+      "name": "Regensburg Phoenix",
+      "short": "Phoenix",
+      "abbr": "REG",
+      "names": [
+        "Regensburg Phoenix"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/RPX.png",
+        "sourcePage": "https://gfl.info/teams/regensburg-phoenix/",
+        "file": "regensburg-phoenix.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "saarland-hurricanes",
+      "name": "Saarland Hurricanes",
+      "short": "Hurricanes",
+      "abbr": "SAA",
+      "names": [
+        "Saarland Hurricanes"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/SAH.png",
+        "sourcePage": "https://gfl.info/teams/saarland-hurricanes/",
+        "file": "saarland-hurricanes.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "schwaebisch-hall-unicorns",
+      "name": "Schwäbisch Hall Unicorns",
+      "short": "Unicorns",
+      "abbr": "SHU",
+      "names": [
+        "Schwäbisch Hall Unicorns"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/SHU.png",
+        "sourcePage": "https://gfl.info/teams/schwaebisch-hall-unicorns/",
+        "file": "schwaebisch-hall-unicorns.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "straubing-spiders",
+      "name": "Straubing Spiders",
+      "short": "Spiders",
+      "abbr": "STR",
+      "names": [
+        "Straubing Spiders"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/SRS.png",
+        "sourcePage": "https://gfl.info/teams/straubing-spiders/",
+        "file": "straubing-spiders.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    },
+    {
+      "id": "ravensburg-razorbacks",
+      "name": "Ravensburg Razorbacks",
+      "short": "Razorbacks",
+      "abbr": "RAV",
+      "names": [
+        "ifm Razorbacks Ravensburg"
+      ],
+      "colors": null,
+      "logo": {
+        "url": "https://gfl.info/wp-content/uploads/Grafiken/RVR.png",
+        "sourcePage": "https://gfl.info/teams/ifm-razorbacks-ravensburg/",
+        "file": "ravensburg-razorbacks.png",
+        "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
+      },
+      "sources": []
+    }
   ]
 }

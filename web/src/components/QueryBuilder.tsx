@@ -35,16 +35,19 @@ export default function QueryBuilder({
   options,
   onChange,
   defaultStat,
+  framed = true,
 }: {
   conditions: Condition[];
   logic: Logic;
   options: StatOption[];
   onChange: (conds: Condition[], logic: Logic) => void;
   defaultStat: string;
+  /** false: ohne eigenen Rahmen, wenn der Baukasten in einem bestehenden Bereich sitzt */
+  framed?: boolean;
 }) {
   const set = (i: number, patch: Partial<Condition>) => onChange(conditions.map((c, k) => (k === i ? { ...c, ...patch } : c)), logic);
   return (
-    <fieldset className="rounded-xl border border-line bg-surface p-4">
+    <fieldset className={framed ? "rounded-xl border border-line bg-surface p-4" : "min-w-0"}>
       <legend className="px-1 text-[13px] font-medium text-ink-2">Bedingungen</legend>
       {conditions.length > 1 && (
         <div role="radiogroup" aria-label="Verknüpfung" className="mb-3 flex items-center gap-2 text-[13.5px] text-ink-2">
@@ -66,7 +69,7 @@ export default function QueryBuilder({
       <ul className="flex flex-col gap-2">
         {conditions.map((c, i) => (
           <li key={i} className="flex flex-wrap items-center gap-2">
-            {i > 0 && <span className="w-10 text-[12px] font-semibold text-ink-3">{logic === "and" ? "UND" : "ODER"}</span>}
+            {conditions.length > 1 && <span className="w-10 text-[12px] font-semibold text-ink-3">{i === 0 ? "" : logic === "and" ? "UND" : "ODER"}</span>}
             <StatSelect value={c.stat} onChange={(v) => set(i, { stat: v })} options={options} className="min-w-[220px]" />
             <select aria-label="Vergleich" value={c.op} onChange={(e) => set(i, { op: e.target.value as Op })} className="h-9 rounded-md border border-line bg-surface px-2 text-[14px] text-ink">
               {OPS.map((o) => (

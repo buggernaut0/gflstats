@@ -6,6 +6,7 @@ import type { TeamLite } from "@/lib/dashboard";
 import { fmtShortDate } from "@/lib/format";
 import { formatStat, stat } from "@/lib/stats";
 import TeamTag from "./TeamTag";
+import { teamsAttr } from "@/lib/favorite";
 
 export interface RecordItem {
   player: string;
@@ -39,7 +40,7 @@ export default function RecordsView({ data, teams }: { data: Record<"game" | "se
             <h2 className="display border-b border-line px-4 pb-2 pt-3 text-[18px] font-semibold text-ink">{stat(field).label}</h2>
             <ol className="py-1.5">
               {items.map((r, i) => (
-                <li key={`${r.player}-${r.note}`} className="grid grid-cols-[1.75rem_1fr_auto] items-baseline gap-x-2 px-4 py-1.5">
+                <li key={`${r.player}-${r.note}`} {...teamsAttr(r.teams)} className="grid grid-cols-[1.75rem_1fr_auto] items-baseline gap-x-2 px-4 py-1.5">
                   <span className={`num display text-[15px] font-semibold ${i === 0 ? "text-accent-text" : "text-ink-3"}`}>{i + 1}</span>
                   <span className="min-w-0">
                     <Link href={`/spieler/${r.player}/`} className="block truncate text-[14px] text-ink hover:underline hover:underline-offset-4">{r.name}</Link>

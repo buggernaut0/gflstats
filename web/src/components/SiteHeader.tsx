@@ -1,7 +1,23 @@
 import Link from "next/link";
+import { getTeamSeasons, getTeams, teamNameIn } from "@/lib/data";
+import FavoriteTeamPicker, { type PickerTeam } from "./FavoriteTeam";
 import NavLinks from "./NavLinks";
 import SearchBox from "./SearchBox";
 import ThemeToggle from "./ThemeToggle";
+
+/** Teams fuer die Lieblingsteam-Auswahl: offizieller Name der letzten eigenen Saison, aktuelle Saison zuerst. */
+function pickerTeams(): PickerTeam[] {
+  const seasons = getTeamSeasons();
+  const latest = Math.max(...seasons.map((s) => s.season));
+  const lastOf = new Map<string, number>();
+  for (const s of seasons) lastOf.set(s.team, Math.max(lastOf.get(s.team) ?? 0, s.season));
+  return getTeams()
+    .map((t) => {
+      const last = lastOf.get(t.id) ?? latest;
+      return { id: t.id, name: teamNameIn(t, last), short: t.short, abbr: t.abbr, logo: t.logo ?? null, current: last === latest };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "de"));
+}
 
 export default function SiteHeader() {
   return (
@@ -20,6 +36,7 @@ export default function SiteHeader() {
           <div className="hidden md:block">
             <SearchBox />
           </div>
+          <FavoriteTeamPicker teams={pickerTeams()} />
           <ThemeToggle />
         </div>
         <div className="order-4 w-full md:hidden">

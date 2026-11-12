@@ -109,7 +109,7 @@ export default function TeamSearch() {
         {conds.length > 0 && <span className="text-ink-3"> mit {conds.map((c) => describe(c, DEF.get(c.stat)!.label)).join(logic === "and" ? " und " : " oder ")}</span>}
         <span className="text-ink-3">. Bis zu drei Zeilen zum Vergleich anhaken.</span>
       </p>
-      <ResultTable rows={rows} columns={columns} initialSort={{ key: sortKey, desc: !DEF.get(sortKey)?.lowerIsBetter }} rowKey={keyOf} caption="Ergebnisse der Teamsuche" key={sortKey + show.join()} />
+      <ResultTable rows={rows} columns={columns} initialSort={{ key: sortKey, desc: !DEF.get(sortKey)?.lowerIsBetter }} rowKey={keyOf} rowTeams={(r) => r.team} caption="Ergebnisse der Teamsuche" key={sortKey + show.join()} />
 
       {compared.length >= 2 && (
         <section aria-labelledby="cmp-h" className="mt-10">

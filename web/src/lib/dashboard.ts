@@ -206,4 +206,9 @@ export function topPerformances(
   return out;
 }
 
-export type TeamLite = Pick<Team, "id" | "name" | "short" | "abbr" | "colors">;
+export type TeamLite = Pick<Team, "id" | "name" | "short" | "abbr" | "colors" | "logo">;
+
+/** Kompakte Teamdaten fuer die Oberflaeche; name = Name in der betrachteten Saison, falls angegeben. */
+export function toTeamLite(t: Team, name?: string): TeamLite {
+  return { id: t.id, name: name ?? t.name, short: t.short, abbr: t.abbr, colors: t.colors, logo: t.logo ?? null };
+}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { TeamLite, TeamRow } from "@/lib/dashboard";
 import { fmt, fmtDec, fmtSigned } from "@/lib/format";
+import { teamsAttr } from "@/lib/favorite";
 
 type Col = {
   key: keyof TeamRow;
@@ -74,7 +75,7 @@ export default function TeamTable({ rows, teams }: { rows: TeamRow[]; teams: Rec
           {sorted.map((r, i) => {
             const t = teams[r.team];
             return (
-              <tr key={r.team} className="border-b border-line last:border-0 hover:bg-surface-2/60">
+              <tr key={r.team} {...teamsAttr(r.team)} className="border-b border-line last:border-0 hover:bg-surface-2/60">
                 <td className="num py-2 pl-4 text-ink-3">{i + 1}</td>
                 <td className="py-2 pr-3">
                   <Link href={`/teams/${r.team}/`} className="font-medium text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4">

@@ -111,7 +111,7 @@ export default function LeadersView() {
         {meta.seasons.some((s) => !def.needs.every((f) => meta.availability[f]?.includes(s))) && <>In manchen Saisons nicht erfasst; diese Saisons fehlen in der Rangliste. </>}
         {def.lowerIsBetter && <>Weniger ist besser.</>}
       </p>
-      <ResultTable rows={rows} columns={columns} initialSort={{ key: "v", desc: !def.lowerIsBetter }} rowKey={(r) => r.key} caption={`Rangliste ${def.label}`} key={cat + season + perGame} />
+      <ResultTable rows={rows} columns={columns} initialSort={{ key: "v", desc: !def.lowerIsBetter }} rowKey={(r) => r.key} rowTeams={(r) => r.teams} caption={`Rangliste ${def.label}`} key={cat + season + perGame} />
     </div>
   );
 }

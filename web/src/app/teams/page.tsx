@@ -1,5 +1,7 @@
 import Link from "next/link";
+import TeamLogo from "@/components/TeamLogo";
 import { getMeta, getTeamSeasons, getTeams } from "@/lib/data";
+import { teamsAttr } from "@/lib/favorite";
 
 export const metadata = { title: "Teams" };
 
@@ -24,9 +26,12 @@ export default function TeamsPage() {
           </thead>
           <tbody>
             {teams.map((t) => (
-              <tr key={t.id} className="border-b border-line last:border-0 hover:bg-surface-2/60">
+              <tr key={t.id} {...teamsAttr(t.id)} className="border-b border-line last:border-0 hover:bg-surface-2/60">
                 <td className="py-2.5 pl-4">
-                  <Link href={`/teams/${t.id}/`} className="font-medium text-ink hover:underline hover:underline-offset-4">{t.name}</Link>
+                  <span className="flex items-center gap-2.5">
+                    <TeamLogo team={t} size={26} />
+                    <Link href={`/teams/${t.id}/`} className="font-medium text-ink hover:underline hover:underline-offset-4">{t.name}</Link>
+                  </span>
                 </td>
                 {seasons.map((s) => {
                   const r = ts.find((x) => x.team === t.id && x.season === s);

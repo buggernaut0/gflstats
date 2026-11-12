@@ -8,6 +8,7 @@ import { SEASON_TABLES } from "@/lib/tables";
 import type { Scope, Stats } from "@/lib/types";
 import ScopeToggle from "./ScopeToggle";
 import TeamTag from "./TeamTag";
+import { teamsAttr } from "@/lib/favorite";
 
 export interface SplitRow {
   season: number;
@@ -96,7 +97,7 @@ export default function PlayerStats({
                 </thead>
                 <tbody>
                   {shown.map((r) => (
-                    <tr key={`${r.season}-${r.team}`} className="border-b border-line">
+                    <tr key={`${r.season}-${r.team}`} {...teamsAttr(r.team)} className="border-b border-line">
                       <td className="num py-2 pl-4">
                         <Link href={`/saison/${r.season}/`} className="text-ink hover:underline hover:underline-offset-4">
                           {r.season}

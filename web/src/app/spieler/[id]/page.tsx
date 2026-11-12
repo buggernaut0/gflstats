@@ -3,12 +3,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import GameLog, { type LogRow } from "@/components/GameLog";
 import PlayerStats, { type SplitRow } from "@/components/PlayerStats";
+import { FavBadge } from "@/components/FavoriteTeam";
 import ProfileRadar from "@/components/ProfileRadar";
 import SourceTag from "@/components/SourceTag";
+import TeamLogo from "@/components/TeamLogo";
 import TeamTag from "@/components/TeamTag";
 import Videos from "@/components/Videos";
-import type { TeamLite } from "@/lib/dashboard";
+import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { FIELDS, gameMap, getMeta, getPlayers, getPlayerSeasons, getTeams, leagueRank, playerGameRows, playerMap, teamNameIn } from "@/lib/data";
+import { teamsAttr } from "@/lib/favorite";
 import { fmt } from "@/lib/format";
 import { axesFor, comparisonGroup, entries, qualified, type Entry } from "@/lib/profile";
 import { ROLE_HEADLINE, ROLE_LABELS, ROLE_MIN, formatStat, stat, statAvailable, value } from "@/lib/stats";
@@ -42,7 +45,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   const games = gameMap();
   const lastSeason = p.seasons[p.seasons.length - 1];
   const teams: Record<string, TeamLite> = Object.fromEntries(
-    getTeams().map((t) => [t.id, { id: t.id, name: teamNameIn(t, lastSeason.season), short: t.short, abbr: t.abbr, colors: t.colors }]),
+    getTeams().map((t) => [t.id, toTeamLite(t, teamNameIn(t, lastSeason.season))]),
   );
 
   // Rolle: die abgeleitete Rolle mit den meisten Spielen; bei Gleichstand die juengste
@@ -82,6 +85,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   const headline = role ? ROLE_HEADLINE[role] : ["touchdown", "points"];
   const allTeams = [...new Set(p.seasons.flatMap((s) => s.teams))];
   const currentTeams = lastSeason.teams;
+  // Logo im Kopf: Team mit den meisten Spielen in der letzten Saison des Spielers
+  const mainTeam = [...currentTeams].sort((a, b) => (split.get(`${lastSeason.season}|${b}|all`)?.games ?? 0) - (split.get(`${lastSeason.season}|${a}|all`)?.games ?? 0))[0];
   const formerTeams = allTeams.filter((t) => !currentTeams.includes(t));
   const span = p.seasons.length > 1 ? `${p.seasons[0].season}–${lastSeason.season}` : String(lastSeason.season);
 
@@ -89,7 +94,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
       <section className="grid gap-8 border-b border-line pb-10 lg:grid-cols-[1fr_auto]">
         <div className="flex items-start gap-5">
-          <Avatar name={p.name} />
+          {mainTeam && teams[mainTeam]?.logo ? <TeamLogo team={teams[mainTeam]} size={88} /> : <Avatar name={p.name} />}
           <div>
             <h1 className="display text-[44px] font-bold leading-none tracking-tight text-ink sm:text-[56px]">{p.name}</h1>
             <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] text-ink-2">
@@ -100,6 +105,9 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
               ) : (
                 <span className="text-ink-3">Rolle nicht eindeutig</span>
               )}
+              <span {...teamsAttr(currentTeams)} className="fav-plain contents">
+                <FavBadge />
+              </span>
               {currentTeams.map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <TeamTag team={teams[t]} />

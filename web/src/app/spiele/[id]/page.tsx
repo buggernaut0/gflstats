@@ -6,6 +6,7 @@ import { gameMap, getGames, getMeta, getPlayerGames, playerMap, teamMap, teamNam
 import { fmtDate } from "@/lib/format";
 import { formatStat, stat } from "@/lib/stats";
 import type { PlayerGame, TeamGameStats } from "@/lib/types";
+import { teamsAttr } from "@/lib/favorite";
 
 export const dynamicParams = false;
 
@@ -148,7 +149,7 @@ function Box({ title, cols, rows, players, avail }: { title: string; cols: strin
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.p} className="border-b border-line last:border-0">
+              <tr key={r.p} {...teamsAttr(r.t)} className="border-b border-line last:border-0">
                 <td className="py-1.5 pl-4">
                   <Link href={`/spieler/${r.p}/`} className="text-ink hover:underline hover:underline-offset-4">
                     {players.get(r.p)?.name ?? r.p}

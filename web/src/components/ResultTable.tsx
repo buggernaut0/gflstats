@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { teamsAttr } from "@/lib/favorite";
 
 export interface Column<T> {
   key: string;
@@ -22,6 +23,7 @@ export default function ResultTable<T>({
   caption,
   pageSize = 100,
   rank = true,
+  rowTeams,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -30,6 +32,8 @@ export default function ResultTable<T>({
   caption: string;
   pageSize?: number;
   rank?: boolean;
+  /** Team(s) des Datensatzes, fuer die Lieblingsteam-Markierung */
+  rowTeams?: (row: T) => string | string[] | undefined;
 }) {
   const [sort, setSort] = useState(initialSort ?? { key: columns[0].key, desc: true });
   const [limit, setLimit] = useState(pageSize);
@@ -91,7 +95,7 @@ export default function ResultTable<T>({
           </thead>
           <tbody>
             {sorted.slice(0, limit).map((r, i) => (
-              <tr key={rowKey(r)} className="border-b border-line last:border-0 hover:bg-surface-2/60">
+              <tr key={rowKey(r)} {...teamsAttr(rowTeams?.(r))} className="border-b border-line last:border-0 hover:bg-surface-2/60">
                 {rank && (
                   <td className="num py-1.5 pl-4 text-ink-3">
                     {ranks[i]}

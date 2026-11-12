@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { LeaderCategory, LeaderRow, TeamLite } from "@/lib/dashboard";
 import { fmt } from "@/lib/format";
 import TeamTag from "./TeamTag";
+import { teamsAttr } from "@/lib/favorite";
 
 export default function LeaderCard({
   category,
@@ -34,7 +35,7 @@ export default function LeaderCard({
       ) : (
         <ol className="flex flex-col py-1.5">
           {rows.map((r, i) => (
-            <li key={r.player} className="grid grid-cols-[1.75rem_1fr_auto] items-center gap-x-2 px-4 py-[6px]">
+            <li key={r.player} {...teamsAttr(r.teams)} className="grid grid-cols-[1.75rem_1fr_auto] items-center gap-x-2 px-4 py-[6px]">
               <span className={`num display text-[15px] font-semibold ${i === 0 ? "text-accent-text" : "text-ink-3"}`}>
                 {r.tied ? `${r.rank}=` : r.rank}
               </span>

@@ -2,23 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-export const NAV = [
-  { href: "/leaders/", label: "Leaders" },
-  { href: "/spieler/", label: "Spieler" },
-  { href: "/teams/", label: "Teams" },
-  { href: "/spiele/", label: "Spiele" },
-  { href: "/analytics/", label: "Analytics" },
-  { href: "/rekorde/", label: "Rekorde" },
-];
+import { NAV, isActive } from "@/lib/nav";
 
 export default function NavLinks() {
   const path = usePathname() || "/";
   return (
-    <nav aria-label="Hauptnavigation" className="-mx-1 flex min-w-0 items-center gap-0.5 overflow-x-auto">
+    <nav aria-label="Hauptnavigation" className="-mx-1 flex min-w-0 items-center gap-0.5 overflow-x-auto sm:overflow-visible">
       {NAV.map((item) => {
-        const base = item.href.replace(/\/$/, "");
-        const active = path === base || path.startsWith(`${base}/`) || (item.href === "/analytics/" && path.startsWith("/vergleich"));
+        const active = isActive(path, item);
         return (
           <Link
             key={item.href}
@@ -29,7 +20,7 @@ export default function NavLinks() {
             }`}
           >
             {item.label}
-            {active && <span className="absolute inset-x-3 -bottom-[13px] h-[3px] rounded-full bg-accent" aria-hidden="true" />}
+            {active && <span className="absolute inset-x-3 bottom-0 h-[3px] sm:-bottom-[13px] rounded-full bg-accent" aria-hidden="true" />}
           </Link>
         );
       })}
