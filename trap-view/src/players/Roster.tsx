@@ -17,13 +17,14 @@ export function Roster({ model }: { model: SceneModel }) {
           key={p.id}
           position={p.world}
           rotationY={p.rotationY}
-          number={p.player.number}
-          lastName={p.player.name.split(' ').slice(-1)[0]}
-          build={p.player.build}
+          number={p.player?.number ?? null}
+          lastName={p.shortName}
+          ghost={!p.player}
+          build={p.slot.build}
           stance={p.slot.stance}
           kit={p.kit}
           materials={p.side === 'offense' ? offenseMats : defenseMats}
-          seed={i * 7 + p.player.number}
+          seed={i * 7 + (p.player?.number ?? i)}
         />
       ))}
     </group>

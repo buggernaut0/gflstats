@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import type { SceneModel } from '../data/sceneModel';
+import { playerTag, type SceneModel } from '../data/sceneModel';
+import type { DataIndex } from '../data/types';
 import { MatchupPanel } from '../matchup/MatchupPanel';
 import { useTrapView } from '../state/store';
 
 /** Zurückhaltende Bedienelemente über der Szene; blenden sich bei Inaktivität aus. */
-export function CinemaHud({ model, usingPlaceholder, onExit }: {
+export function CinemaHud({ model, index, noAudio, onExit }: {
   model: SceneModel;
-  usingPlaceholder: boolean;
+  index: DataIndex;
+  noAudio: boolean;
   onExit: () => void;
 }) {
   const chapter = useTrapView((s) => s.chapter);
@@ -36,6 +38,7 @@ export function CinemaHud({ model, usingPlaceholder, onExit }: {
 
   const active = model.matchups.find((m) => m.id === matchupId);
   const quiet = idle && !active && !ended;
+  const provisional = [model.offense, model.defense].some((t) => t.lineup.basis === 'provisional');
 
   return (
     <div className={`tv-hud${quiet ? ' is-quiet' : ''}`}>
@@ -49,7 +52,8 @@ export function CinemaHud({ model, usingPlaceholder, onExit }: {
 
       <div className="tv-hud__top tv-fade">
         <span className="tv-wordmark tv-wordmark--sm">TRAP VIEW</span>
-        {model.isSampleData && <span className="tv-tag">Prototype · Sample data</span>}
+        <span className="tv-tag">Saison {model.season.season}</span>
+        {provisional && <span className="tv-tag" title="Ohne offiziellen Kader: keine Rückennummern, Positionen nur grob aus der Statistik">Vorläufige Aufstellung</span>}
       </div>
 
       {chapter && !active && (
@@ -62,25 +66,27 @@ export function CinemaHud({ model, usingPlaceholder, onExit }: {
         </div>
       )}
 
-      <nav className="tv-matchups tv-fade">
-        <span className="tv-matchups__head">Matchups</span>
-        {model.matchups.map((m) => (
-          <button
-            key={m.id}
-            className={`tv-matchup${m.id === matchupId ? ' is-active' : ''}`}
-            onClick={() => setMatchup(m.id === matchupId ? null : m.id)}
-          >
-            <b>{m.offense.player.position} {m.offense.player.number}</b>
-            <i>vs</i>
-            <b>{m.defense.player.position} {m.defense.player.number}</b>
-          </button>
-        ))}
-      </nav>
+      {model.matchups.length > 0 && (
+        <nav className="tv-matchups tv-fade">
+          <span className="tv-matchups__head">Matchups</span>
+          {model.matchups.map((m) => (
+            <button
+              key={m.id}
+              className={`tv-matchup${m.id === matchupId ? ' is-active' : ''}`}
+              onClick={() => setMatchup(m.id === matchupId ? null : m.id)}
+            >
+              <b>{playerTag(m.offense, m.offense.player?.number == null)}</b>
+              <i>vs</i>
+              <b>{playerTag(m.defense, m.defense.player?.number == null)}</b>
+            </button>
+          ))}
+        </nav>
+      )}
 
-      {active && <MatchupPanel matchup={active} isSampleData={model.isSampleData} onClose={() => setMatchup(null)} />}
+      {active && <MatchupPanel matchup={active} index={index} season={model.season} onClose={() => setMatchup(null)} />}
 
       <div className="tv-controls tv-fade">
-        {usingPlaceholder && <span className="tv-tag">Placeholder beat</span>}
+        {noAudio && <span className="tv-tag" title="public/audio/track.mp3 fehlt">No audio</span>}
         <button className="tv-btn" onClick={restart}>{ended ? 'Replay' : 'Restart'}</button>
         <button className="tv-btn" onClick={toggleMuted}>{muted ? 'Unmute' : 'Mute'}</button>
         <input

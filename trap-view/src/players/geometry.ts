@@ -1,10 +1,13 @@
 import * as THREE from 'three';
 import { TORSO_HEIGHT } from './numberTexture';
 
-/** Torso-Profil: [Höhe in m, Radius in m] von der Taille bis zum Kragen. */
+/**
+ * Torso-Profil: [Höhe in m, Radius in m] von der Taille bis zum Kragen.
+ * Schmale Taille, breiter Brustkorb unter den Schulterpolstern – das typische V eines Football-Spielers.
+ */
 const TORSO_PROFILE: [number, number][] = [
-  [0.0, 0.158], [0.08, 0.166], [0.18, 0.185], [0.28, 0.212], [0.36, 0.238],
-  [0.42, 0.252], [0.46, 0.24], [0.5, 0.17], [0.53, 0.105], [TORSO_HEIGHT, 0.078],
+  [0.0, 0.152], [0.06, 0.157], [0.16, 0.176], [0.26, 0.204], [0.34, 0.236],
+  [0.4, 0.258], [0.45, 0.262], [0.49, 0.214], [0.525, 0.128], [TORSO_HEIGHT, 0.086],
 ];
 
 function profileRadius(y: number): number {
@@ -71,14 +74,35 @@ export const GEO = {
   torso: torso(),
   shoulderCap: new THREE.SphereGeometry(1, 20, 14),
   pelvis: new THREE.SphereGeometry(1, 20, 14),
-  thigh: limb(0.44, [0.108, 0.116, 0.104, 0.086, 0.074]),
+  // Oberschenkel mit Thigh Pads: kräftiger als die nackte Anatomie
+  thigh: limb(0.44, [0.114, 0.124, 0.114, 0.096, 0.08]),
   shin: limb(0.4, [0.07, 0.08, 0.07, 0.054, 0.046]),
   shoe: new THREE.SphereGeometry(1, 14, 10),
   upperArm: limb(0.3, [0.066, 0.07, 0.062, 0.052], 12),
   sleeve: limb(0.13, [0.074, 0.078, 0.076], 12),
   forearm: limb(0.25, [0.05, 0.056, 0.046, 0.038], 12),
   hand: new THREE.SphereGeometry(0.046, 12, 10),
-  neck: new THREE.CylinderGeometry(0.058, 0.066, 0.1, 12),
+  neck: new THREE.CylinderGeometry(0.066, 0.078, 0.1, 14),
+
+  // ── Ausrüstung ──
+  /** Schulterpolster unter dem Trikot: abgeflachte Halbkugel je Schulter */
+  shoulderPad: new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI * 0.56),
+  /** Unterkante der Polster ("Flap"), gibt der Kante Materialstärke */
+  padRim: new THREE.TorusGeometry(1, 0.07, 6, 28),
+  /** offene Bänder: Gürtel, Ärmel-/Sockenstreifen, Spats, Schweißbänder */
+  band: new THREE.CylinderGeometry(1, 1, 1, 24, 1, true),
+  collar: new THREE.TorusGeometry(1, 0.13, 8, 28),
+  kneePad: new THREE.SphereGeometry(1, 16, 12),
+  /** Hosenbein bis knapp unter das Knie */
+  pantsCuff: limb(0.1, [0.088, 0.086, 0.08], 14),
+  sideStripe: new THREE.BoxGeometry(1, 1, 1),
+  sole: new THREE.SphereGeometry(1, 16, 8),
+  // Helm-Details
+  jawPad: new THREE.SphereGeometry(1, 16, 12),
+  earHole: new THREE.CircleGeometry(0.015, 14),
+  chinCup: new THREE.SphereGeometry(1, 16, 10),
+  maskClip: new THREE.BoxGeometry(0.022, 0.018, 0.03),
+  bumper: new THREE.BoxGeometry(0.08, 0.022, 0.026),
   helmetCap: new THREE.SphereGeometry(HELMET_R, 32, 12, 0, Math.PI * 2, 0, BROW),
   helmetShell: new THREE.SphereGeometry(
     HELMET_R, 28, 10, Math.PI / 2 + OPEN, Math.PI * 2 - OPEN * 2, BROW, 1.2,

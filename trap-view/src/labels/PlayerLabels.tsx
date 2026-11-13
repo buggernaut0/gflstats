@@ -19,6 +19,7 @@ const Label = memo(function Label({ p, registry }: { p: ScenePlayer; registry: L
   const visible = useTrapView((s) => s.visibleLabels.includes(p.id));
   const featured = useTrapView((s) => s.matchupId !== null && s.visibleLabels.includes(p.id));
   const accent = p.side === 'offense' ? p.team.colors.accent : p.team.colors.secondary;
+  const number = p.player?.number;
   return (
     <div
       className="tv-label-anchor"
@@ -28,14 +29,14 @@ const Label = memo(function Label({ p, registry }: { p: ScenePlayer; registry: L
       }}
     >
       <div
-        className={`tv-label${visible ? ' is-on' : ''}${featured ? ' is-featured' : ''}`}
+        className={`tv-label${visible ? ' is-on' : ''}${featured ? ' is-featured' : ''}${p.player ? '' : ' is-empty'}`}
         style={{ ['--accent' as string]: accent }}
       >
         <div className="tv-label__plate">
-          <span className="tv-label__num">{p.player.number}</span>
+          {number != null && <span className="tv-label__num">{number}</span>}
           <span className="tv-label__text">
-            <span className="tv-label__pos">{p.player.position}</span>
-            <span className="tv-label__name">{p.player.name.split(' ').slice(-1)[0]}</span>
+            <span className="tv-label__pos">{p.posLabel}</span>
+            <span className="tv-label__name">{p.shortName ?? 'nicht belegt'}</span>
           </span>
         </div>
         <div className="tv-label__tick" />

@@ -9,7 +9,7 @@ export const TORSO_HEIGHT = 0.56;
  * Vorderseite liegt bei u = 0.75, Rückseite bei u = 0.25 – die Nummer ist Teil der
  * Oberfläche und kann deshalb von keiner Geometrie verdeckt werden.
  */
-export function createJerseyTexture(kit: Kit, number: number, lastName: string): THREE.CanvasTexture {
+export function createJerseyTexture(kit: Kit, number: number | null, lastName: string | null): THREE.CanvasTexture {
   const W = 1024;
   const H = 512;
   const canvas = document.createElement('canvas');
@@ -37,7 +37,8 @@ export function createJerseyTexture(kit: Kit, number: number, lastName: string):
   ctx.fillRect(0, 0, W, yOf(0.538));
   ctx.fillRect(0, yOf(0.455), W, 6);
 
-  const text = String(number);
+  // Ohne belegte Rückennummer bleibt das Trikot ohne Nummer – es wird keine erfunden
+  const text = number != null ? String(number) : '';
   const draw = (u: number, heightM: number, centerM: number) => {
     const size = (heightM / TORSO_HEIGHT) * H * 1.25;
     ctx.save();
@@ -54,19 +55,23 @@ export function createJerseyTexture(kit: Kit, number: number, lastName: string):
     ctx.fillText(text, 0, size * 0.05);
     ctx.restore();
   };
-  draw(0.75, 0.17, 0.3); // Brust
-  draw(0.25, 0.2, 0.26); // Rücken
+  if (text) {
+    draw(0.75, 0.17, 0.3); // Brust
+    draw(0.25, 0.2, 0.26); // Rücken
+  }
 
   // Namenszug auf dem Rücken
-  ctx.save();
-  ctx.translate(0.25 * W, yOf(0.415));
-  ctx.scale(0.8, 1);
-  ctx.font = `600 30px "Barlow Condensed"`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = kit.number;
-  ctx.fillText(lastName.toUpperCase().split('').join(' '), 0, 0);
-  ctx.restore();
+  if (lastName) {
+    ctx.save();
+    ctx.translate(0.25 * W, yOf(0.415));
+    ctx.scale(0.8, 1);
+    ctx.font = `600 30px "Barlow Condensed"`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = kit.number;
+    ctx.fillText(lastName.toUpperCase().split('').join(' '), 0, 0);
+    ctx.restore();
+  }
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;

@@ -1,4 +1,4 @@
-import type { SceneModel } from '../../data/sceneModel';
+import { playerTag, type SceneModel } from '../../data/sceneModel';
 import type { Shot } from '../sequence';
 
 /**
@@ -10,10 +10,16 @@ import type { Shot } from '../sequence';
  * keine Änderung an dieser Datei.
  */
 export function buildMainSequence(model: SceneModel): Shot[] {
+  const ol = model.players.filter((p) => p.side === 'offense' && p.group === 'OL');
+  const olFilled = ol.filter((p) => p.player).length;
+  const qb = model.byRole.get('QB');
+  const rbs = model.players.filter((p) => p.side === 'offense' && p.slot.position === 'RB' && p.player);
+  const backfield = [qb?.player ? playerTag(qb) : null, ...rbs.map((p) => playerTag(p))].filter(Boolean).join(' · ');
+
   const duels: Shot[] = model.matchups.map((m, i) => ({
     id: `duel-${m.id}`,
     title: 'On the Perimeter',
-    subtitle: `${m.offense.player.position} #${m.offense.player.number} vs ${m.defense.player.position} #${m.defense.player.number}`,
+    subtitle: `${playerTag(m.offense)} vs ${playerTag(m.defense)}`,
     duration: i === 0 ? 7.5 : 6.5,
     path: [
       { at: `matchup:${m.id}`, offset: [-7.6, 1.55, 7.4], mirror: true },
@@ -49,7 +55,7 @@ export function buildMainSequence(model: SceneModel): Shot[] {
     {
       id: 'offensive-line',
       title: 'The Line',
-      subtitle: 'Offensive Line',
+      subtitle: olFilled ? `Offensive Line · ${olFilled} von ${ol.length} Plätzen belegt` : 'Offensive Line · ohne Kader nicht belegbar',
       duration: 11,
       path: [
         { at: 'group:OL:min', offset: [8.2, 4.1, -5.5] },
@@ -67,7 +73,7 @@ export function buildMainSequence(model: SceneModel): Shot[] {
     {
       id: 'backfield',
       title: 'Backfield',
-      subtitle: 'Quarterback & Running Back',
+      subtitle: backfield || 'Quarterback & Running Back',
       duration: 10,
       path: [
         { at: 'role:QB', offset: [-7.5, 2.9, -5.5] },
@@ -81,7 +87,7 @@ export function buildMainSequence(model: SceneModel): Shot[] {
       fov: [36, 38],
       ease: 'soft',
       transition: { type: 'dip' },
-      labels: ['role:QB', 'role:RB'],
+      labels: ['role:QB', 'role:RB', 'role:RB2'],
     },
     ...duels,
     {

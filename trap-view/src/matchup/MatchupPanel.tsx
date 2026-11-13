@@ -1,27 +1,93 @@
 import type { CSSProperties } from 'react';
 import type { SceneMatchup, ScenePlayer } from '../data/sceneModel';
+import type { DataIndex, SeasonData } from '../data/types';
+import { GROUP_NAME } from '../data/names';
+import { familyOf, headToHead, rankOf, statLines, type HeadToHead, type RankView } from './compare';
+
+const accentOf = (p: ScenePlayer) => (p.side === 'offense' ? p.team.colors.accent : p.team.colors.secondary);
 
 function Card({ p, align }: { p: ScenePlayer; align: 'left' | 'right' }) {
-  const accent = p.side === 'offense' ? p.team.colors.accent : p.team.colors.secondary;
+  const player = p.player!;
   return (
-    <div className={`tv-card tv-card--${align}`} style={{ '--accent': accent } as CSSProperties}>
-      <div className="tv-card__num">{p.player.number}</div>
+    <div className={`tv-card tv-card--${align}`} style={{ '--accent': accentOf(p) } as CSSProperties}>
+      {player.number != null && <div className="tv-card__num">{player.number}</div>}
       <div className="tv-card__info">
-        <div className="tv-card__pos">{p.player.position} · {p.team.abbreviation}</div>
-        <div className="tv-card__name">{p.player.name}</div>
+        <div className="tv-card__pos" title={GROUP_NAME[p.dataGroup]}>{p.posLabel} · {p.team.abbreviation}</div>
+        <div className="tv-card__name">{player.name}</div>
+        <div className="tv-card__meta">{player.games} {player.games === 1 ? 'Spiel' : 'Spiele'} · {p.team.name}</div>
       </div>
     </div>
   );
 }
 
-/** Vergleichsfenster für ein Duell. Die Werte sind im Prototyp reine Beispieldaten. */
-export function MatchupPanel({ matchup, isSampleData, onClose }: {
+function Lines({ p, index, season, align }: { p: ScenePlayer; index: DataIndex; season: SeasonData; align: 'left' | 'right' }) {
+  const fam = familyOf(p);
+  if (!fam || !p.player) return <div className={`tv-lines tv-lines--${align}`} />;
+  return (
+    <dl className={`tv-lines tv-lines--${align}`}>
+      {statLines(p.player, fam, index, season).map((l) => (
+        <div className="tv-line" key={l.key}>
+          <dt>{l.label}</dt>
+          <dd>
+            <b>{l.value}</b>
+            {l.sub && <small>{l.sub}</small>}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function RankCell({ r, align }: { r: RankView | null; align: 'l' | 'r' }) {
+  if (!r) return <span className={`tv-rank__val tv-rank__val--${align} is-na`}><small>keine Einordnung</small></span>;
+  return (
+    <span className={`tv-rank__val tv-rank__val--${align}`}>
+      <b>{r.rank.pct}</b>
+      <small>Rang {r.rank.rank} von {r.rank.of}</small>
+    </span>
+  );
+}
+
+/** Positionsübergreifender Vergleich: beide Perzentile auf derselben Skala, von der Mitte nach außen. */
+function RankBar({ o, d, oColor, dColor }: { o: RankView | null; d: RankView | null; oColor: string; dColor: string }) {
+  return (
+    <div className="tv-rank">
+      <RankCell r={o} align="l" />
+      <div className="tv-rank__mid">
+        <span className="tv-rank__label">Liga-Perzentil · eigene Positionsgruppe</span>
+        <div className="tv-rank__bars">
+          <div className="tv-rank__half tv-rank__half--l"><i style={{ width: `${o?.rank.pct ?? 0}%`, background: oColor }} /></div>
+          <div className="tv-rank__half tv-rank__half--r"><i style={{ width: `${d?.rank.pct ?? 0}%`, background: dColor }} /></div>
+        </div>
+        <span className="tv-rank__basis">
+          <span>{o?.label ?? '–'}</span>
+          <span>{d?.label ?? '–'}</span>
+        </span>
+      </div>
+      <RankCell r={d} align="r" />
+    </div>
+  );
+}
+
+/** Kurzformen statt Langnamen – kompakt und ohne falsche Mehrzahl ("1 INT" statt "1 Interceptions"). */
+const h2hText = (h: HeadToHead | null) => (h ? h.lines.map((l) => `${l.value} ${l.abbr}`).join(' · ') : '–');
+
+/** Vergleichsfenster für ein Duell – nur echte Werte der gewählten Saison. */
+export function MatchupPanel({ matchup, index, season, onClose }: {
   matchup: SceneMatchup;
-  isSampleData: boolean;
+  index: DataIndex;
+  season: SeasonData;
   onClose: () => void;
 }) {
-  const { offense, defense, stats } = matchup;
-  const fmt = (v: number, unit?: string) => `${v}${unit ? (unit === '%' ? '%' : ` ${unit}`) : ''}`;
+  const { offense, defense } = matchup;
+  const of = familyOf(offense);
+  const df = familyOf(defense);
+  const oRank = of && offense.player ? rankOf(offense.player, of, index) : null;
+  const dRank = df && defense.player ? rankOf(defense.player, df, index) : null;
+  const oH2H = of ? headToHead(offense, defense.team.id, of, index, season) : null;
+  const dH2H = df ? headToHead(defense, offense.team.id, df, index, season) : null;
+  const h2hGames = Math.max(oH2H?.games ?? 0, dH2H?.games ?? 0);
+
   return (
     <div className="tv-panel" key={matchup.id}>
       <div className="tv-panel__head">
@@ -29,28 +95,36 @@ export function MatchupPanel({ matchup, isSampleData, onClose }: {
         <div className="tv-panel__vs">VS</div>
         <Card p={defense} align="right" />
       </div>
-      <div className="tv-panel__stats">
-        {stats.map((s) => {
-          const total = s.offense + s.defense || 1;
-          const oBetter = s.lowerIsBetter ? s.offense < s.defense : s.offense > s.defense;
-          const dBetter = s.lowerIsBetter ? s.defense < s.offense : s.defense > s.offense;
-          return (
-            <div className="tv-stat" key={s.label}>
-              <span className={`tv-stat__val${oBetter ? ' is-better' : ''}`}>{fmt(s.offense, s.unit)}</span>
-              <div className="tv-stat__mid">
-                <span className="tv-stat__label">{s.label}</span>
-                <div className="tv-stat__bar">
-                  <i style={{ width: `${(s.offense / total) * 100}%`, background: offense.team.colors.accent }} />
-                  <i style={{ width: `${(s.defense / total) * 100}%`, background: defense.team.colors.secondary }} />
-                </div>
-              </div>
-              <span className={`tv-stat__val tv-stat__val--r${dBetter ? ' is-better' : ''}`}>{fmt(s.defense, s.unit)}</span>
-            </div>
-          );
-        })}
+
+      <RankBar o={oRank} d={dRank} oColor={accentOf(offense)} dColor={accentOf(defense)} />
+
+      <div className="tv-panel__cols">
+        <Lines p={offense} index={index} season={season} align="left" />
+        <div className="tv-panel__colhead">Saison<br />{season.season}</div>
+        <Lines p={defense} index={index} season={season} align="right" />
       </div>
+
+      {h2hGames > 0 && (
+        <div className="tv-h2h">
+          <span className="tv-h2h__side" title={oH2H?.lines.map((l) => `${l.label}: ${l.value}`).join(' · ')}>{h2hText(oH2H)}</span>
+          <span className="tv-h2h__label">
+            Direktes Duell
+            <small>{h2hGames} {h2hGames === 1 ? 'Spiel' : 'Spiele'} gegeneinander</small>
+          </span>
+          <span className="tv-h2h__side tv-h2h__side--r" title={dH2H?.lines.map((l) => `${l.label}: ${l.value}`).join(' · ')}>{h2hText(dH2H)}</span>
+        </div>
+      )}
+
       <div className="tv-panel__foot">
-        {isSampleData && <span className="tv-tag">Sample data · illustrative values</span>}
+        <details className="tv-panel__note">
+          <summary>Quelle &amp; Berechnung</summary>
+          GFL-Statistikbögen {season.season}, Regular Season + Playoffs. Perzentil = Anteil der Vergleichsgruppe mit
+          niedrigerem Wert pro Spiel (gleiche Rolle, mind. {index.method.poolMinGames} Spiele) – links unter{' '}
+          {oRank?.peers ?? '–'}, rechts unter {dRank?.peers ?? '–'}. „Direktes Duell“: Werte aus den Spielen der
+          beiden Teams gegeneinander, keine Deckungsdaten. Die Duelle stellen den Receiver mit den meisten Receiving
+          Yards dem Passverteidiger mit den meisten Interceptions + abgewehrten Pässen gegenüber (usw.) – die Bögen
+          enthalten keine Angaben, wer wen gedeckt hat.
+        </details>
         <button className="tv-btn" onClick={onClose}>Resume</button>
       </div>
     </div>

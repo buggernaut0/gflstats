@@ -1,21 +1,18 @@
-import { PlaceholderBeat } from './placeholderBeat';
-
 /**
- * Kapselt die gesamte Musikwiedergabe. Spielt die übergebene Audiodatei, sofern sie
- * existiert, sonst den synthetischen Platzhalter. Muss aus einer Nutzeraktion heraus
+ * Kapselt die gesamte Musikwiedergabe (public/audio/track.mp3, in Schleife). Fehlt die Datei,
+ * bleibt es still. Muss aus einer Nutzeraktion heraus
  * gestartet werden (Browser-Autoplay-Regeln) – auf der Auswahloberfläche bleibt es still.
  */
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private element: HTMLAudioElement | null = null;
-  private beat: PlaceholderBeat | null = null;
   private startedAt = 0;
   private volume = 0.7;
   private muted = false;
   private session = 0;
-  /** true, solange der Platzhalter statt einer echten Datei läuft. */
-  usingPlaceholder = false;
+  /** false, wenn die Audiodatei nicht geladen werden konnte. */
+  available = true;
 
   /** Startet die Musik von vorn. `src` ist die austauschbare Audiodatei. */
   async start(src: string) {
@@ -38,20 +35,15 @@ export class AudioEngine {
     if (session !== this.session) return;
 
     this.startedAt = ctx.currentTime;
-    if (hasFile) {
-      if (!this.element) {
-        this.element = new Audio(src);
-        this.element.loop = true;
-        ctx.createMediaElementSource(this.element).connect(master);
-      }
-      this.element.currentTime = 0;
-      this.usingPlaceholder = false;
-      void this.element.play();
-    } else {
-      this.beat ??= new PlaceholderBeat(ctx, master);
-      this.usingPlaceholder = true;
-      this.beat.start();
+    this.available = hasFile;
+    if (!hasFile) return;
+    if (!this.element) {
+      this.element = new Audio(src);
+      this.element.loop = true;
+      ctx.createMediaElementSource(this.element).connect(master);
     }
+    this.element.currentTime = 0;
+    void this.element.play();
   }
 
   /** Blendet aus und stoppt. */
@@ -79,7 +71,7 @@ export class AudioEngine {
 
   /** Sekunden seit Start des Tracks – Grundlage für die spätere Musik-Synchronisation. */
   get currentTime(): number {
-    if (this.element && !this.usingPlaceholder) return this.element.currentTime;
+    if (this.element && this.available) return this.element.currentTime;
     return this.ctx ? this.ctx.currentTime - this.startedAt : 0;
   }
 
@@ -92,7 +84,6 @@ export class AudioEngine {
   }
 
   private halt() {
-    this.beat?.stop();
     this.element?.pause();
   }
 
