@@ -22,6 +22,8 @@ export interface TrapViewProps {
   audioSrc?: string;
   /** Wird aufgerufen, wenn der Nutzer den Kinomodus verlässt. */
   onExit?: () => void;
+  /** Öffnet den Simulator (nur Saison 2026) mit den gewählten Teams. */
+  onSimulate?: (teamA: string, teamB: string, autoStart?: boolean) => void;
 }
 
 /** Zeit, in der die Auswahl ausblendet und die Szene im Dunkeln vorbereitet wird. */
@@ -31,7 +33,7 @@ const ENTER_MS = 1500;
 type Stage = 'ok' | 'unsupported' | 'error' | 'lost';
 
 /** Öffentlicher Einstiegspunkt des Features – füllt seinen Container vollständig. */
-export function TrapView({ data, loading = false, onSeasonChange, audioSrc = `${import.meta.env.BASE_URL}audio/track.mp3`, onExit }: TrapViewProps) {
+export function TrapView({ data, loading = false, onSeasonChange, audioSrc = `${import.meta.env.BASE_URL}audio/track.mp3`, onExit, onSimulate }: TrapViewProps) {
   const { index, season } = data;
   const phase = useTrapView((s) => s.phase);
   const storedOffense = useTrapView((s) => s.offenseId);
@@ -177,6 +179,17 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = `${
               audioStatus={audioStatus}
               onUnlockAudio={() => audio.current!.unlock()}
               onExit={exit}
+              onSimulate={
+                onSimulate
+                  ? season.season === 2026
+                    ? () => {
+                      // Musik sofort stoppen; die Szene gibt Canvas und Speicher beim Aushängen selbst frei
+                      audio.current!.stop();
+                      onSimulate(model.offense.id, model.defense.id, true);
+                    }
+                    : null
+                  : undefined
+              }
             />
           )}
         </div>
@@ -194,6 +207,7 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = `${
           onSeason={(s) => onSeasonChange?.(s)}
           onChange={(o, d) => useTrapView.getState().setTeams(o, d)}
           onEnter={enter}
+          onSimulate={onSimulate && season.season === 2026 ? () => onSimulate(offenseId, defenseId) : undefined}
         />
       )}
     </div>

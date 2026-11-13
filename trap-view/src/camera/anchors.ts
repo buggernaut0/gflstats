@@ -8,6 +8,7 @@ import type { SceneModel, ScenePlayer } from '../data/sceneModel';
  *   "los"                     – Ball / Mitte der Line of Scrimmage
  *   "role:QB"                 – ein Spieler über seine Rolle in der Formation
  *   "group:OL"                – Schwerpunkt einer Positionsgruppe
+ *   "group:OL+DL"             – gemeinsamer Schwerpunkt mehrerer Gruppen (hier: beide Lines)
  *   "group:OL:min" / ":max"   – äußerster Spieler der Gruppe (links / rechts)
  *   "side:offense|defense"    – Schwerpunkt eines Teams
  *   "matchup:<id>"            – Mitte zwischen den beiden Spielern eines Duells
@@ -38,7 +39,8 @@ export function resolveAnchor(model: SceneModel, spec: AnchorSpec): THREE.Vector
     if (p) out.set(...p.world);
     else out.set(model.losX, 0, 0);
   } else if (kind === 'group') {
-    const members = model.players.filter((p) => p.group === key);
+    const groups = key.split('+');
+    const members = model.players.filter((p) => groups.includes(p.group));
     if (mod === 'min' || mod === 'max') {
       const sorted = [...members].sort((a, b) => a.world[2] - b.world[2]);
       const p = mod === 'min' ? sorted[0] : sorted[sorted.length - 1];
@@ -72,7 +74,8 @@ export function resolveLabelIds(model: SceneModel, selectors: string[]): string[
       const p = model.byRole.get(key);
       if (p) ids.push(p.id);
     } else if (kind === 'group') {
-      for (const p of model.players) if (p.group === key) ids.push(p.id);
+      const groups = key.split('+');
+      for (const p of model.players) if (groups.includes(p.group)) ids.push(p.id);
     } else if (kind === 'matchup') {
       const m = model.matchups.find((x) => x.id === key);
       if (m) ids.push(m.offense.id, m.defense.id);

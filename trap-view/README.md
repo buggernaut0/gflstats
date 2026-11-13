@@ -85,7 +85,67 @@ Unbesetzte Plätze erscheinen als durchscheinende Silhouette desselben Modells.
 
 ## Musik
 
-`public/audio/track.mp3`, in Schleife, mit halber Lautstärke (`TRACK_GAIN` in `src/audio/AudioEngine.ts`); Herkunft
+`public/audio/track.mp3`, in Schleife, mit reduziertem Grundpegel und 4,5 s weicher Einblendung (`TRACK_GAIN`, `FADE_IN` in `src/audio/AudioEngine.ts`); Herkunft
 und Hinweis zur Nutzung: `public/audio/README.md`. Die Musik startet direkt im Klick auf „Enter Trap View“
 (Autoplay-Regeln). Blockiert der Browser trotzdem, zeigt die HUD „Sound on“; fehlt die Datei, „No audio“.
 Im Hintergrund-Tab pausiert die Musik. Stummschaltung bleibt über Neuladen erhalten.
+
+## Simulator (Phase 1: Engine ohne Darstellung, nur Saison 2026)
+
+Vollautomatische Spielsimulation zweier Teams auf Basis der Bögen 2026 – kein Coach-Modus, keine Eingriffe.
+
+```bash
+npm run data       # erzeugt zusätzlich public/data/sim-2026.json (scripts/export-sim.ts)
+npm test           # Engine-Tests (node --test)
+npm run backtest   # simuliert jedes echte Spiel 2026 N-mal und vergleicht mit der Realität
+```
+
+- `src/sim/model.ts` – Quoten für Liga, Teams und Spieler (Shrinkage zum Ligaschnitt), Kombination in Log-Odds.
+- `src/sim/engine.ts` – Spielregeln (Downs, Punts, FG, PAT/2-Pt, Turnovers, Safety, 4 × 12 min) → `PlayEvent[]`
+  mit Akteuren, berechneten Wahrscheinlichkeiten („Warum?“) und deutschem Text. Seed → reproduzierbar.
+- `src/sim/params.ts` – alle Simulationsparameter (Annahmen, nicht aus den Bögen), kommentiert und per Rücktest eingestellt.
+- Sacks stehen in den Bögen als QB-Läufe; Sack-Yards (≈ −6,0) werden per Regression abgeleitet.
+- Direkte Duelle nur auf Teamebene (Spieler gegen Team, Gewicht ≤ 25 %) – die Bögen sagen nicht, wer wen gedeckt hat.
+
+### Phase 2: 2D-Wiedergabe
+
+Einstieg: Button „Spiel simulieren“ oben rechts in der laufenden Trap View (startet sofort mit den beiden gewählten Teams), Link „Spiel simulieren (2026)“ im Auswahlbildschirm oder direkt `http://localhost:5183/#simulator`. Nur Saison 2026.
+
+- `src/simview/SimulatorView.tsx` – Teamwahl, Scoreboard (Viertel, Uhr, Down & Distance, Feldposition), Steuerung
+  (Pause, 1×/2×/4×, Highlights, Zum Ende, Neues Spiel), „Warum?“-Fenster mit den berechneten Wahrscheinlichkeiten,
+  Spielverlauf (anklickbar), Endstand mit Teamwerten und besten Spielern.
+- `src/simview/FieldCanvas.tsx` – Canvas-2D-Vogelperspektive: Feld, Endzonen, Line of Scrimmage, First-Down-Linie,
+  Drive-Balken, Ball (mit Flughöhe) und die am Spielzug beteiligten Spieler mit Nummer und Namen.
+- `src/simview/playback.ts` – Dauer je Ereignis (Bewegung + Standbild zum Lesen; Schlüsselspielzüge länger; 1× ≈ 4–5 Minuten pro Spiel) und Positionen
+  zum Zeitpunkt t. Die Bewegung folgt dem berechneten Ergebnis – Darstellung, keine Physik.
+- Teamfarben nur, wenn belegt; sonst neutral hell/dunkel, immer unterscheidbar.
+
+### Phase 3: alle 22 Spieler je Spielzug
+
+- `src/simview/roster.ts` – Aufstellung aus derselben Logik wie die 3D-Trap-View (`buildSceneModel`: Shotgun 11 gegen 4-3,
+  gleiche Platzvergabe aus der Starting Lineup). Unbesetzte Plätze bleiben leer (gestrichelter Ring), niemand wird erfunden.
+  Ist ein beteiligter Spieler (Passempfänger, Läufer, Tackler …) kein Starter, wird er für diesen Spielzug auf einen passenden Platz gewechselt.
+- `src/simview/choreo.ts` – Bewegungen passend zum berechneten Ergebnis: Routen (Go, Slant, Out, Curl, Post), Pass Protection,
+  Pass Rush, Mann-Deckung bzw. Zonen, tiefer Safety, Verfolgung nach dem Catch, Lauf durch die Lücke, Sack, Kickoff/Punt mit
+  Coverage und Blockern, Field Goal/PAT. Reine Darstellung: Die Bögen enthalten weder Laufwege noch Deckungszuordnungen.
+  Spezialteams sind namenlos (Besetzung nicht in den Daten), nur Kicker/Returner werden genannt.
+- Beschriftet werden nur die am Ausgang Beteiligten (und der QB bei Pässen); Rückennummern nur aus dem offiziellen Kader.
+
+### Feinschliff
+
+- Yard-Verteilung als Mischung aus enger Streuung und seltenem Breakaway (`PARAMS.breakaway`): 3rd-Down-Quote und First Downs
+  liegen im Rücktest jetzt bei −1 bis −3 % statt −10 %. Die längsten Spielzüge sind dafür etwa 7–12 % kürzer als real.
+- 4th Down: flachere Distanzregel, Versuche pro Spiel wie real (2,4); Punts etwas seltener als real.
+- Spielfeld nutzt die volle Breite (Seitenverhältnis 120 : 53,3); unter 1200 px stehen Warum-Fenster und Spielverlauf darunter.
+- „▶ Spielzug nochmal zeigen“ im Warum-Fenster: spielt einen gewählten Spielzug in Normaltempo erneut ab und kehrt danach
+  an die alte Stelle zurück.
+
+### Phase 4: Transparenz
+
+- **Siegchance über 1.000 Simulationen** (`src/sim/multi.ts`, `src/simview/MultiPanel.tsx`) – in der Teamauswahl und unter
+  jedem Spiel: Siegquote, Ø Punkte, Verteilung der Punktdifferenz, häufigste Spielstände, Ø-Werte der wichtigsten Spieler.
+  Rechnet in Häppchen per `setTimeout` (≈ 0,5 s), die Seite bleibt bedienbar.
+- **„So funktioniert's“** (`src/simview/SimMethod.tsx`): Prinzip, Datengrundlage (verwendet / nicht vorhanden), Glättung mit
+  Beispiel, Log-Odds-Vergleich, direkte Duelle, Simulationsparameter und die Rücktest-Tabelle – alle Zahlen live aus
+  Daten, Modell und `public/data/sim-2026-backtest.json` (schreibt `npm run data` mit 40 Durchläufen je Spiel,
+  ausführlich: `npm run backtest -- 200 --write`).
