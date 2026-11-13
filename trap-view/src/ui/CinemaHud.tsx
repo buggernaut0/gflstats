@@ -6,13 +6,15 @@ import { useTrapView } from '../state/store';
 import type { AudioStatus } from '../audio/AudioEngine';
 
 /** Zurückhaltende Bedienelemente über der Szene; blenden sich bei Inaktivität aus. */
-export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: {
+export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit, onSimulate }: {
   model: SceneModel;
   index: DataIndex;
   audioStatus: AudioStatus;
   /** Musik starten, nachdem der Browser die automatische Wiedergabe blockiert hat. */
   onUnlockAudio: () => void;
   onExit: () => void;
+  /** Simulator mit genau diesen beiden Teams starten; null = in dieser Saison nicht verfügbar (nur 2026). */
+  onSimulate?: (() => void) | null;
 }) {
   const chapter = useTrapView((s) => s.chapter);
   const matchupId = useTrapView((s) => s.matchupId);
@@ -69,6 +71,18 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: 
         <span className="tv-tag">Saison {model.season.season}</span>
         {provisional && <span className="tv-tag" title="Ohne offiziellen Kader: keine Rückennummern, Positionen nur grob aus der Statistik">Vorläufige Aufstellung</span>}
       </div>
+
+      {onSimulate !== undefined && (
+        <button
+          className="tv-simulate"
+          onClick={onSimulate ?? undefined}
+          disabled={!onSimulate}
+          title={onSimulate ? `${model.offense.name} gegen ${model.defense.name} simulieren` : 'Der Simulator nutzt ausschließlich Saison 2026'}
+        >
+          <span className="tv-simulate__label">Spiel simulieren</span>
+          <span className="tv-simulate__sub">{onSimulate ? `${model.offense.abbreviation} vs ${model.defense.abbreviation} · 2026` : 'nur Saison 2026'}</span>
+        </button>
+      )}
 
       {chapter && !active && (
         <div className="tv-chapter" key={`${restartToken}-${chapter.index}`}>

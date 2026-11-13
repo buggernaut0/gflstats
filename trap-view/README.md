@@ -89,3 +89,33 @@ Unbesetzte Plätze erscheinen als durchscheinende Silhouette desselben Modells.
 und Hinweis zur Nutzung: `public/audio/README.md`. Die Musik startet direkt im Klick auf „Enter Trap View“
 (Autoplay-Regeln). Blockiert der Browser trotzdem, zeigt die HUD „Sound on“; fehlt die Datei, „No audio“.
 Im Hintergrund-Tab pausiert die Musik. Stummschaltung bleibt über Neuladen erhalten.
+
+## Simulator (Phase 1: Engine ohne Darstellung, nur Saison 2026)
+
+Vollautomatische Spielsimulation zweier Teams auf Basis der Bögen 2026 – kein Coach-Modus, keine Eingriffe.
+
+```bash
+npm run data       # erzeugt zusätzlich public/data/sim-2026.json (scripts/export-sim.ts)
+npm test           # Engine-Tests (node --test)
+npm run backtest   # simuliert jedes echte Spiel 2026 N-mal und vergleicht mit der Realität
+```
+
+- `src/sim/model.ts` – Quoten für Liga, Teams und Spieler (Shrinkage zum Ligaschnitt), Kombination in Log-Odds.
+- `src/sim/engine.ts` – Spielregeln (Downs, Punts, FG, PAT/2-Pt, Turnovers, Safety, 4 × 12 min) → `PlayEvent[]`
+  mit Akteuren, berechneten Wahrscheinlichkeiten („Warum?“) und deutschem Text. Seed → reproduzierbar.
+- `src/sim/params.ts` – alle Simulationsparameter (Annahmen, nicht aus den Bögen), kommentiert und per Rücktest eingestellt.
+- Sacks stehen in den Bögen als QB-Läufe; Sack-Yards (≈ −6,0) werden per Regression abgeleitet.
+- Direkte Duelle nur auf Teamebene (Spieler gegen Team, Gewicht ≤ 25 %) – die Bögen sagen nicht, wer wen gedeckt hat.
+
+### Phase 2: 2D-Wiedergabe
+
+Einstieg: Button „Spiel simulieren“ oben rechts in der laufenden Trap View (startet sofort mit den beiden gewählten Teams), Link „Spiel simulieren (2026)“ im Auswahlbildschirm oder direkt `http://localhost:5183/#simulator`. Nur Saison 2026.
+
+- `src/simview/SimulatorView.tsx` – Teamwahl, Scoreboard (Viertel, Uhr, Down & Distance, Feldposition), Steuerung
+  (Pause, 1×/2×/4×, Highlights, Zum Ende, Neues Spiel), „Warum?“-Fenster mit den berechneten Wahrscheinlichkeiten,
+  Spielverlauf (anklickbar), Endstand mit Teamwerten und besten Spielern.
+- `src/simview/FieldCanvas.tsx` – Canvas-2D-Vogelperspektive: Feld, Endzonen, Line of Scrimmage, First-Down-Linie,
+  Drive-Balken, Ball (mit Flughöhe) und die am Spielzug beteiligten Spieler mit Nummer und Namen.
+- `src/simview/playback.ts` – Dauer je Ereignis (Bewegung + Standbild zum Lesen; Schlüsselspielzüge länger; 1× ≈ 4–5 Minuten pro Spiel) und Positionen
+  zum Zeitpunkt t. Die Bewegung folgt dem berechneten Ergebnis – Darstellung, keine Physik.
+- Teamfarben nur, wenn belegt; sonst neutral hell/dunkel, immer unterscheidbar.

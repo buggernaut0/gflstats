@@ -96,6 +96,11 @@
 .tv-enter:hover { color: var(--tv-bg); }
 .tv-enter:hover::before { transform: none; }
 .tv-select__hint { font-size: 12px; color: var(--tv-dim); letter-spacing: 0.04em; }
+.tv-root .tv-sim-link {
+  font-family: var(--tv-cond); font-weight: 600; font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--tv-dim); border-bottom: 1px solid var(--tv-faint); padding: 2px 0;
+}
+.tv-root .tv-sim-link:hover { color: var(--tv-ink); border-color: var(--tv-ink); }
 
 @keyframes tv-rise { from { opacity: 0; transform: translateY(14px); } }
 
@@ -150,6 +155,24 @@
 .tv-matchup.is-active i { color: rgba(5, 6, 8, 0.6); }
 
 .tv-controls { position: absolute; right: 32px; bottom: 34px; display: flex; align-items: center; gap: 10px; }
+
+/* Einstieg in den Simulator: oben rechts, bleibt auch bei Inaktivität sichtbar */
+.tv-root .tv-simulate {
+  position: absolute; top: 20px; right: 32px; z-index: 2; pointer-events: auto;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+  padding: 12px 20px 10px; border: 1px solid var(--tv-ink); background: rgba(5, 6, 8, 0.55);
+  backdrop-filter: blur(6px); transition: color 0.25s ease, background 0.25s ease;
+  animation: tv-rise 0.6s ease 1.2s both;
+}
+.tv-simulate__label { font-family: var(--tv-display); font-size: 18px; letter-spacing: 0.22em; text-transform: uppercase; padding-left: 0.22em; }
+.tv-simulate__sub { font-family: var(--tv-cond); font-weight: 600; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--tv-dim); }
+.tv-root .tv-simulate:hover:not(:disabled) { background: var(--tv-ink); color: var(--tv-bg); }
+.tv-simulate:hover:not(:disabled) .tv-simulate__sub { color: rgba(5, 6, 8, 0.6); }
+.tv-root .tv-simulate:disabled { border-color: var(--tv-faint); color: var(--tv-dim); cursor: default; }
+@media (max-width: 760px) {
+  .tv-root .tv-simulate { top: 56px; right: 16px; padding: 9px 14px 8px; }
+  .tv-simulate__label { font-size: 14px; }
+}
 .tv-root .tv-btn {
   font-family: var(--tv-cond); font-weight: 600; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
   padding: 8px 12px 7px; border: 1px solid var(--tv-faint); background: rgba(5, 6, 8, 0.5); color: var(--tv-dim);
