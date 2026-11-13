@@ -24,6 +24,11 @@ export interface Condition {
 
 export type Logic = "and" | "or";
 
+/** Vollstaendig ausgefuellte Bedingung? Unfertige (ohne Kennzahl oder Wert) werden beim Filtern ignoriert. */
+export function isComplete(c: Condition): boolean {
+  return !!c.stat && Number.isFinite(c.a) && (c.op !== "between" || c.b === undefined || Number.isFinite(c.b));
+}
+
 export function testCondition(c: Condition, x: number | null): boolean {
   if (x === null || Number.isNaN(x)) return false;
   switch (c.op) {
@@ -36,14 +41,15 @@ export function testCondition(c: Condition, x: number | null): boolean {
   }
 }
 
-/** Alle Bedingungen (UND) oder mindestens eine (ODER). Keine Bedingung = alles passt. */
-export function matches(conds: Condition[], logic: Logic, get: (stat: string) => number | null): boolean {
+/** Alle Bedingungen (UND) oder mindestens eine (ODER). Keine Bedingung = alles passt; unfertige zaehlen nicht. */
+export function matches(all: Condition[], logic: Logic, get: (stat: string) => number | null): boolean {
+  const conds = all.filter(isComplete);
   if (!conds.length) return true;
   return logic === "and" ? conds.every((c) => testCondition(c, get(c.stat))) : conds.some((c) => testCondition(c, get(c.stat)));
 }
 
 export function encodeConditions(conds: Condition[]): string {
-  return conds.map((c) => [c.stat, c.op, c.a, c.op === "between" ? c.b ?? c.a : null].filter((x) => x !== null).join(":")).join("~");
+  return conds.filter(isComplete).map((c) => [c.stat, c.op, c.a, c.op === "between" ? c.b ?? c.a : null].filter((x) => x !== null).join(":")).join("~");
 }
 
 export function decodeConditions(s: string | null, valid: (stat: string) => boolean): Condition[] {

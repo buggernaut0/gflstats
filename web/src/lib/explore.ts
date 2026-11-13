@@ -1,6 +1,5 @@
 /** Gemeinsame Zeilen-Logik fuer Leaders und Player Search (laeuft im Browser). */
 import { GROUP_LABELS, STATS, addStats, stat, statAvailable, value, type StatDef } from "./stats.ts";
-import type { Condition, Logic } from "./query";
 import type { Player, PlayerSeason, Scope, Stats } from "./types";
 
 export interface PRow {
@@ -77,10 +76,19 @@ export const GAME_STAT_OPTIONS = STAT_OPTIONS.filter((o) => !stat(o.key).perGame
 
 export const ROLES = ["QB", "RB", "WR/TE", "DEF", "K", "P"];
 
-/** Suchvorlagen der Statistiksuche (setzen Bedingungen, Saison und Rolle). */
-export const PLAYER_PRESETS: { label: string; season: string; role: string; logic?: Logic; conds: Condition[] }[] = [
-  { label: "Receiver 2025: ≥ 500 Rec Yds, ≥ 5 TD, > 50 Rec", season: "2025", role: "WR/TE", conds: [{ stat: "receivingyards", op: "gte", a: 500 }, { stat: "touchdowncatch", op: "gte", a: 5 }, { stat: "catched", op: "gt", a: 50 }] },
-  { label: "Running Backs: ≥ 5,0 Yards pro Carry", season: "", role: "RB", conds: [{ stat: "ypc", op: "gte", a: 5 }, { stat: "run", op: "gte", a: 60 }] },
-  { label: "Quarterbacks: ≥ 30 Pass-TD, ≤ 10 INT", season: "", role: "QB", conds: [{ stat: "touchdownpass", op: "gte", a: 30 }, { stat: "interception", op: "lte", a: 10 }] },
-  { label: "Pass Rusher: ≥ 8 Sacks oder ≥ 15 TFL", season: "", role: "", logic: "or", conds: [{ stat: "sacktotal", op: "gte", a: 8 }, { stat: "tackleforloss", op: "gte", a: 15 }] },
-];
+/**
+ * Karrierewerte als eigene Kennzahlen der Statistiksuche ("Karriere: Rushing Yards").
+ * Schluessel mit Praefix "k.", z. B. "k.runyards" = Summe aller Saisons (careerRows), "Laengster ..." als Maximum.
+ */
+export const CAREER_PREFIX = "k.";
+export const isCareerKey = (k: string) => k.startsWith(CAREER_PREFIX);
+export const baseKey = (k: string) => (isCareerKey(k) ? k.slice(CAREER_PREFIX.length) : k);
+
+export const CAREER_STAT_OPTIONS = STATS.map((s) => ({
+  key: CAREER_PREFIX + s.key,
+  label: `Karriere: ${s.label} (${s.abbr})${s.kind === "derived" ? " *" : ""}`,
+  group: `Karriere · ${GROUP_LABELS[s.group] ?? "Weitere"}`,
+}));
+
+/** Auswahl der Spielersuche: jede Kennzahl als Saisonwert und als Karrierewert. */
+export const PLAYER_STAT_OPTIONS = [...STAT_OPTIONS, ...CAREER_STAT_OPTIONS];

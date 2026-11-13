@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
-import { PLAYER_PRESETS, STAT_OPTIONS, careerRows, rowRecorded, rowValue, seasonRows, type PRow } from "../src/lib/explore.ts";
+import { CAREER_STAT_OPTIONS, PLAYER_STAT_OPTIONS, STAT_OPTIONS, baseKey, careerRows, isCareerKey, rowRecorded, rowValue, seasonRows, type PRow } from "../src/lib/explore.ts";
 import { decodeConditions, encodeConditions, matches } from "../src/lib/query.ts";
 import { STAT, STATS, stat } from "../src/lib/stats.ts";
 
@@ -18,8 +18,26 @@ test("Statistiksuche bietet den kompletten Kennzahlen-Katalog an", () => {
   }
 });
 
-test("Suchvorlagen verwenden nur bekannte Kennzahlen", () => {
-  for (const p of PLAYER_PRESETS) for (const c of p.conds) assert.ok(STAT.has(c.stat), `${p.label}: ${c.stat}`);
+test("Spielersuche: jede Kennzahl als Saison- und als Karrierewert auswaehlbar", () => {
+  assert.equal(PLAYER_STAT_OPTIONS.length, STATS.length * 2);
+  assert.equal(new Set(PLAYER_STAT_OPTIONS.map((o) => o.key)).size, PLAYER_STAT_OPTIONS.length, "keine doppelten Schluessel");
+  for (const o of CAREER_STAT_OPTIONS) {
+    assert.ok(isCareerKey(o.key) && STAT.has(baseKey(o.key)), o.key);
+    assert.ok(o.label.startsWith("Karriere: "));
+  }
+  for (const k of ["runyards", "touchdownrun", "receivingyards", "touchdowncatch", "catched", "kickoffreturn", "kickoffreturnyards", "tackletotal", "sacktotal", "intercepted", "passingyards"]) {
+    assert.ok(PLAYER_STAT_OPTIONS.some((o) => o.key === k), `${k} (Saison) fehlt`);
+    assert.ok(PLAYER_STAT_OPTIONS.some((o) => o.key === `k.${k}`), `${k} (Karriere) fehlt`);
+  }
+});
+
+test("Unfertige Bedingungen (ohne Kennzahl oder Wert) filtern nicht und landen nicht im Link", () => {
+  const get = () => 10;
+  assert.equal(matches([{ stat: "", op: "gte", a: NaN }], "and", get), true);
+  assert.equal(matches([{ stat: "runyards", op: "gte", a: NaN }, { stat: "runyards", op: "gte", a: 20 }], "and", get), false);
+  assert.equal(matches([{ stat: "runyards", op: "gte", a: NaN }, { stat: "runyards", op: "gte", a: 5 }], "and", get), true);
+  assert.equal(encodeConditions([{ stat: "", op: "gte", a: 5 }, { stat: "k.runyards", op: "gte", a: NaN }, { stat: "k.runyards", op: "gte", a: 2000 }]), "k.runyards:gte:2000");
+  assert.deepEqual(decodeConditions("k.runyards:gte:2000~foo:gte:1", (s) => STAT.has(baseKey(s))), [{ stat: "k.runyards", op: "gte", a: 2000 }]);
 });
 
 test("Nicht erfasste Kennzahl: n. e., nicht 0, erfuellt keine Bedingung", () => {
@@ -55,6 +73,19 @@ test("Echte Daten: Saison-, Team-, Rollen- und UND/ODER-Filter", { skip: !has &&
   const or = rows.filter((r) => matches([{ stat: "receivingyards", op: "gte", a: 500 }, { stat: "touchdowncatch", op: "gte", a: 5 }], "or", get(r)));
   assert.ok(and.length <= Math.min(a.length, b.length));
   assert.equal(or.length, new Set([...a, ...b].map((r) => r.key)).size);
+
+  // UND mit Karrierewert: Saison-Rushing-Yards >= 500 und Karriere-Rushing-Yards >= 1500
+  const careerAll = new Map(careerRows(ps, players as never, "all").map((c) => [c.player, c]));
+  const val = (r: PRow) => (k: string) => (isCareerKey(k) ? rowValue(stat(baseKey(k)), careerAll.get(r.player)!, meta.availability) : rowValue(stat(k), r, meta.availability));
+  const mixed = rows.filter((r) => matches([{ stat: "runyards", op: "gte", a: 500 }, { stat: "k.runyards", op: "gte", a: 1500 }], "and", val(r)));
+  assert.ok(mixed.length > 0);
+  for (const r of mixed) {
+    assert.ok((r.stats.runyards ?? 0) >= 500);
+    const total = rows.filter((x) => x.player === r.player).reduce((s, x) => s + (x.stats.runyards ?? 0), 0);
+    assert.ok(total >= 1500, `${r.player}: Karriere ${total}`);
+  }
+  const rushAnd = rows.filter((r) => matches([{ stat: "runyards", op: "gte", a: 500 }, { stat: "touchdownrun", op: "gte", a: 5 }], "and", get(r)));
+  assert.ok(rushAnd.length > 0 && rushAnd.every((r) => (r.stats.runyards ?? 0) >= 500 && (r.stats.touchdownrun ?? 0) >= 5));
 
   // Karriere = Summe der Saisons
   const career = careerRows(ps, players as never, "all");

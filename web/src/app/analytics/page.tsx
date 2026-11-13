@@ -23,9 +23,9 @@ function searchLink(path: string, conds: Condition[], extra: Record<string, stri
 
 const SEARCHES = [
   {
-    href: "/spieler/?erweitert=1",
+    href: "/spieler/",
     title: "Spielersuche",
-    text: "Teil der Spielerseite: Saison- oder Karrierewerte mit beliebig kombinierten Bedingungen, Filter nach Team, Rolle und Spielen.",
+    text: "Teil der Spielerseite: beliebig viele Bedingungen auf Saison- oder Karrierewerte (alle müssen erfüllt sein), Filter nach Saison, Team und Rolle.",
     examples: [
       { label: "Receiver mit ≥ 500 Yards und ≥ 5 TD", href: searchLink("/spieler/", [{ stat: "receivingyards", op: "gte", a: 500 }, { stat: "touchdowncatch", op: "gte", a: 5 }], { rolle: "WR/TE" }) },
       { label: "QBs mit ≥ 30 Passing-TD", href: searchLink("/spieler/", [{ stat: "touchdownpass", op: "gte", a: 30 }], { rolle: "QB" }) },

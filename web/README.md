@@ -57,7 +57,7 @@ GitHub Pages bereit (`https://<konto>.github.io/gflstats/`). Einmalig unter
 | --- | --- |
 | `/`, `/saison/<jahr>/` | Saisonübersicht: Finale, League Leaders, Teamtabelle, Einzelleistungen, Rollen-Index, Breakouts |
 | `/leaders/` | Rangliste für jede Kennzahl (Saison, beste Einzelsaisons, Karriere) |
-| `/spieler/`, `/spieler/<id>/` | Spielersuche: Namenssuche, Filter nach Saison, Team, Rolle und Phase, aufklappbare Statistiksuche (alle Kennzahlen, UND/ODER, Bereiche, Saison- oder Karrierewerte, Vorlagen); Profil mit Karriere, Perzentil-Radar, Entwicklung, Saisontabellen, Spielprotokoll, Videos |
+| `/spieler/`, `/spieler/<id>/` | Spielersuche: Namenssuche, Filter nach Saison, Team, Rolle und Phase, direkt sichtbare Statistiksuche (alle Kennzahlen als Saison- und Karrierewert, Bedingungen mit UND verknüpft, Bereiche); Profil mit Karriere, Perzentil-Radar, Entwicklung, Saisontabellen, Spielprotokoll, Videos |
 | `/teams/`, `/teams/<id>/` | Teamübersicht; Teamseite mit Team Analytics, Kader-Filter, Spielplan |
 | `/spiele/`, `/spiele/<id>/` | Spielplan je Saison; Box Score mit Team- und Spielerstatistik |
 | `/analytics/` | Analytics-Hub: Vorschau auf Leaders, Rekorde und Breakouts, Such-Werkzeuge mit Beispielen, Vergleiche. Leaders, Rekorde und Vergleich stehen nicht mehr in der Kopfleiste, sondern sind hier verlinkt (Adressen unverändert) |

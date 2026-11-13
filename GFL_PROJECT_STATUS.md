@@ -1,4 +1,4 @@
-# GFL Stats – Projektstatus (Stand 12.11.2026, 23:20)
+# GFL Stats – Projektstatus (Stand 13.11.2026)
 
 ## 1. Repository-Zustand
 - PC `C:\Users\Rasmus\Desktop\gflstats`: Branch `main`. Die 3D-Erweiterung (Phasen 2, 3, 4 und 6 Teil 1) wurde am 12.11.2026 in **einem Commit** auf `main` committet und gepusht: „3D: Starting Lineup für alle Teams und Radar in 3D“ (Vorgänger: `e61ef0b`). Hash mit `git log --oneline -1` prüfen.
@@ -7,7 +7,12 @@
 - Sonstiges: Branch `feature/web-platform` existiert noch (Löschen angeboten, unbeantwortet). `web/vorschau/commit-main.bat` stammt nicht von mir. `test.txt.txt` (leer) in der Repo-Wurzel.
 
 ## 2. Fertig und auf `main` (committet/gepusht)
-Datenschicht + Website, Lieblingsteam, Teamlogos (15 mit Quellen), Navigation + Analytics-Hub, erweiterte Spielersuche in `/spieler/`, Spieler-Highlight-Video (Tim Müller), Game Highlights (126 verifizierte YouTube-Videos in `curation/game_videos.json`), Radar mit Tiefe, Review-Korrekturen, 4 Design-Konzepte in `design-konzepte/` (keines übernommen).
+Datenschicht + Website, Lieblingsteam, Teamlogos (15 mit Quellen), Navigation + Analytics-Hub, erweiterte Spielersuche in `/spieler/`, Spieler-Highlight-Video (Tim Müller), Game Highlights (126 verifizierte, seit 13.11.2026: 379 – YouTube-Videos in `curation/game_videos.json`), Radar mit Tiefe, Review-Korrekturen, 4 Design-Konzepte in `design-konzepte/` (keines übernommen).
+
+## 2a. Überarbeitung 13.11.2026 (auf dem PC, **nicht committet**)
+- Spielersuche `/spieler/`: Statistiksuche direkt sichtbar (kein Aufklappen), Vorlagen/Ebene/Mindestspiele/„pro Spiel statt Summe“ entfernt, Bedingungen immer UND. Jede Kennzahl als Saison- und als Karrierewert („Karriere: …“, Schlüssel `k.<kennzahl>`). Leere Zeile „Statistik wählen …“; unfertige Bedingungen filtern nicht. Alte Links (`ebene=karriere`, `l=or`, `min`, `proSpiel`, `erweitert`) brechen nicht. Dateien: `PlayerSearch.tsx`, `QueryBuilder.tsx` (Props `allowOr`, `draft`), `lib/explore.ts` (`PLAYER_STAT_OPTIONS`, `PLAYER_PRESETS` entfernt), `lib/query.ts` (`isComplete`), `tests/players.test.ts`, `app/analytics/page.tsx`, `web/README.md`.
+- Game Highlights: 253 weitere Videos (jetzt 379 von 388 Spielen), gleiche Prüfregel; 251 offizielle Sporteurope.TV-Highlights, 2 Spielberichte Sachsen Fernsehen. Ohne Video: 9 Spiele (u. a. German Bowl 2024, Relegation 2025).
+- Tests: typecheck OK, `npm test` 38/38, build_data 106/106, `next build` OK.
 
 ## 3. 3D-Erweiterung „Interactive 3D Football Experience“
 | Phase | Inhalt | Stand |
