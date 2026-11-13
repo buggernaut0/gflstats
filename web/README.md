@@ -47,7 +47,7 @@ npm run typecheck
 
 ## Veröffentlichen
 
-`.github/workflows/pages.yml` baut die Seite bei jedem Push auf `main` und stellt sie auf
+`.github/workflows/pages.yml` baut die Seite nur bei manuellem Start (Actions → Run workflow) und stellt sie auf
 GitHub Pages bereit (`https://<konto>.github.io/gflstats/`). Einmalig unter
 *Settings → Pages → Source* „GitHub Actions“ auswählen.
 

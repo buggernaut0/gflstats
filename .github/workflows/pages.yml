@@ -1,11 +1,9 @@
 # Baut die Website und veroeffentlicht sie auf GitHub Pages.
-# Laeuft nur bei Aenderungen auf main (also erst nach einem Merge) oder per Hand.
+# Laeuft nur per Hand (Actions -> "Website veröffentlichen" -> Run workflow), nicht bei jedem Push.
 # Einmalig noetig: Repository -> Settings -> Pages -> Source: "GitHub Actions".
 name: Website veröffentlichen
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
