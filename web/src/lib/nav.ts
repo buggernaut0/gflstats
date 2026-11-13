@@ -4,6 +4,8 @@ export const NAV = [
   { href: "/teams/", label: "Teams" },
   { href: "/spiele/", label: "Spiele" },
   { href: "/analytics/", label: "Analytics", also: ["/leaders", "/rekorde", "/vergleich"] },
+  // Trap View enthaelt auch den Spielsimulator (kein eigener Menuepunkt)
+  { href: "/trap-view/", label: "Trap View" },
 ];
 
 export function isActive(path: string, item: { href: string; also?: string[] }): boolean {

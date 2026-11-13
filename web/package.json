@@ -4,21 +4,30 @@
   "private": true,
   "description": "GFL Analytics & Scouting Platform - Website",
   "scripts": {
-    "data": "python ../scripts/build_data.py",
+    "data": "python ../scripts/build_data.py && npm run data:trapview",
+    "data:trapview": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/trapview/export-data.ts && node scripts/trapview/export-sim.ts && node scripts/trapview/backtest-sim.ts 40 --write",
     "dev": "next dev",
     "build": "next build",
     "start": "npx serve out",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"tests/**/*.test.ts\""
+    "test": "node --test \"tests/**/*.test.ts\" \"src/trapview/**/*.test.ts\"",
+    "backtest": "node scripts/trapview/backtest-sim.ts"
   },
   "dependencies": {
+    "@fontsource/anton": "^5.3.0",
     "@fontsource/barlow": "^5.3.0",
     "@fontsource/barlow-condensed": "^5.3.0",
-    "@types/three": "^0.170.0",
+    "@fontsource/inter": "^5.3.0",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
+    "@react-three/postprocessing": "^3.2.2",
+    "@types/three": "^0.187.0",
     "next": "^15.5.29",
+    "postprocessing": "^6.39.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "three": "^0.170.0"
+    "three": "^0.187.0",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.5",

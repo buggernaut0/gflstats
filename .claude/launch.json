@@ -2,16 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "trap-view",
+      "name": "web",
       "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
-      "runtimeArgs": ["--prefix", "trap-view", "run", "dev"],
-      "port": 5183
-    },
-    {
-      "name": "trap-view-labels",
-      "runtimeExecutable": "C:\\Program Files\\nodejs\\npx.cmd",
-      "runtimeArgs": ["--prefix", "trap-view", "vite", "trap-view", "--port", "5184", "--strictPort"],
-      "port": 5184
+      "runtimeArgs": ["--prefix", "web", "run", "dev"],
+      "port": 3000
     }
   ]
 }

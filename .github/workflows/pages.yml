@@ -37,6 +37,7 @@ jobs:
         run: |
           python -m unittest ../scripts/test_build_data.py
           npm ci
+          npm run data:trapview
           npm test
       - name: Website bauen
         run: npm run build
