@@ -98,7 +98,7 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: 
         </nav>
       )}
 
-      {active && <MatchupPanel matchup={active} index={index} season={model.season} onClose={() => setMatchup(null)} />}
+      {active && <MatchupPanel model={model} matchup={active} index={index} season={model.season} onClose={() => setMatchup(null)} />}
 
       <div className="tv-controls tv-fade">
         {audioStatus === 'missing' && <span className="tv-tag" title="Musikdatei fehlt oder ist nicht abspielbar">No audio</span>}

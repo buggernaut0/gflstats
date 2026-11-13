@@ -87,7 +87,7 @@ interface TubeOpts {
   y1?: number;
   rows?: number;
   segs?: number;
-  /** Ausschnitt des Umfangs, 0–1 (Naht links, 0.25 hinten, 0.5 rechts, 0.75 vorn) */
+  /** Ausschnitt des Umfangs, 0–1 (0 = Naht bei +X, 0.25 hinten, 0.5 bei −X, 0.75 vorn) */
   arc?: [number, number];
   /** Aufdickung in Metern – für Stoffschichten und Streifen, die auf dem Körper liegen */
   inflate?: number;
@@ -97,6 +97,11 @@ interface TubeOpts {
  * Schlauch entlang +Y mit frei geformten Querschnitten (Superellipse). Grundform für Rumpf,
  * Gliedmaßen, Schuhe sowie – als Ausschnitt mit `inflate` – für Ärmel, Bündchen und Streifen.
  * u läuft einmal um den Körper, v über die volle Profilhöhe (auch bei Ausschnitten).
+ *
+ * Orientierung: u läuft – von außen betrachtet – gegen den Uhrzeigersinn um die Hochachse, sodass
+ * (∂P/∂u, ∂P/∂v) zusammen mit der Außennormalen ein Rechtssystem bilden. Nur dann erscheint eine
+ * Textur von außen seitenrichtig (u wächst nach rechts, v nach oben) – an Brust wie Rücken.
+ * Die Dreiecke sind passend dazu gegen den Uhrzeigersinn (Normale nach außen) gewickelt.
  */
 function tube(keys: Key[], o: TubeOpts = {}): THREE.BufferGeometry {
   const yMin = keys[0][0];
@@ -117,7 +122,7 @@ function tube(keys: Key[], o: TubeOpts = {}): THREE.BufferGeometry {
     const [a, b, zo, n] = sample(keys, y);
     for (let j = 0; j <= segs; j++) {
       const u = u0 + ((u1 - u0) * j) / segs;
-      const phi = Math.PI * 2 * u + Math.PI;
+      const phi = -Math.PI * 2 * u;
       pos.push((a + inf) * pw(Math.cos(phi), n), y, zo + (b + inf) * pw(Math.sin(phi), n));
       uv.push(u, (y - yMin) / (yMax - yMin));
     }
@@ -129,7 +134,7 @@ function tube(keys: Key[], o: TubeOpts = {}): THREE.BufferGeometry {
       const b = a + 1;
       const c = a + w;
       const d = c + 1;
-      idx.push(a, c, d, a, d, b);
+      idx.push(a, b, d, a, d, c);
     }
   }
   const g = new THREE.BufferGeometry();
@@ -208,7 +213,8 @@ function thigh(side: 1 | -1) {
     [-0.46, 0.058, 0.062], [-0.44, 0.064, 0.066], [-0.3, 0.078, 0.084, 0.004], [-0.14, 0.092, 0.098, 0.006],
     [-0.03, 0.094, 0.098, 0.002], [0.03, 0.07, 0.08], [0.06, 0.02, 0.02],
   ];
-  const arc: [number, number] = side === 1 ? [0.47, 0.53] : [-0.03, 0.03];
+  // Streifen jeweils außen: u = 0 liegt bei +X, u = 0.5 bei −X
+  const arc: [number, number] = side === 1 ? [-0.03, 0.03] : [0.47, 0.53];
   return merge([
     paint(tube(keys, { rows: 12, segs: 18 }), { slot: 1, ...STRETCH }),
     paint(tube(keys, { y0: -0.45, y1: -0.02, rows: 10, segs: 3, arc, inflate: 0.002 }), { slot: 2, ...STRETCH }),

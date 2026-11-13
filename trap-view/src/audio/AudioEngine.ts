@@ -1,6 +1,19 @@
-/** Grundpegel des Tracks: halbe Lautstärke. Der Regler (0–1) skaliert darunter. */
-const TRACK_GAIN = 0.5;
-const FADE_IN = 1.2;
+/** Grundpegel des Tracks (vorher 0,5 → jetzt rund −6 dB leiser). Der Regler (0–1) skaliert darunter. */
+const TRACK_GAIN = 0.25;
+/** Einblenden beim Betreten der Trap View – lang und weich, damit kein Lautstärkesprung entsteht. */
+const FADE_IN = 4.5;
+/** Ausblenden beim Verlassen. */
+const FADE_OUT = 0.8;
+
+/** Weiche Blendkurve (Smoothstep): beginnt und endet ohne Knick. */
+function fadeCurve(from: number, to: number): Float32Array {
+  const c = new Float32Array(64);
+  for (let i = 0; i < c.length; i++) {
+    const x = i / (c.length - 1);
+    c[i] = from + (to - from) * x * x * (3 - 2 * x);
+  }
+  return c;
+}
 
 /**
  * idle    – nichts gestartet
@@ -15,11 +28,15 @@ export type AudioStatus = 'idle' | 'playing' | 'blocked' | 'missing';
  *
  * Autoplay: `start()` und `unlock()` müssen direkt in einem Klick/Tastendruck aufgerufen werden.
  * Deshalb passiert dort nichts Asynchrones vor `play()` – sonst verliert z. B. Safari die Freigabe.
- * Lautstärke und Stummschaltung laufen über einen GainNode (iOS ignoriert `audio.volume`).
+ * Zwei GainNodes hintereinander (iOS ignoriert `audio.volume`):
+ *   fader  – Ein-/Ausblenden beim Betreten und Verlassen (0 → 1 → 0), läuft als Kurve
+ *   master – Pegel aus Regler und Stummschaltung
+ * Getrennt, damit ein Griff zum Lautstärkeregler eine laufende Einblendung weder abbricht noch springen lässt.
  */
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  private fader: GainNode | null = null;
   private element: HTMLAudioElement | null = null;
   private src = '';
   private volume = 0.7;
@@ -41,7 +58,8 @@ export class AudioEngine {
     } catch {
       /* noch keine Metadaten – die Wiedergabe beginnt ohnehin vorn */
     }
-    this.fadeIn();
+    // Immer aus der Stille einblenden – auch wenn ein vorheriges Ausblenden noch lief
+    this.fadeTo(1, FADE_IN, 0);
     this.play();
   }
 
@@ -49,20 +67,16 @@ export class AudioEngine {
   unlock() {
     if (!this.element) return;
     this.wanted = true;
-    this.fadeIn();
+    this.fadeTo(1, FADE_IN);
     this.play();
   }
 
   /** Blendet aus und hält an. */
   stop() {
     this.wanted = false;
-    const { ctx, master } = this;
-    if (ctx && master) {
-      master.gain.cancelScheduledValues(ctx.currentTime);
-      master.gain.setTargetAtTime(0, ctx.currentTime, 0.12);
-    }
+    this.fadeTo(0, FADE_OUT);
     window.clearTimeout(this.stopTimer);
-    this.stopTimer = window.setTimeout(() => this.element?.pause(), 500);
+    this.stopTimer = window.setTimeout(() => this.element?.pause(), FADE_OUT * 1000 + 100);
     this.set('idle');
   }
 
@@ -96,6 +110,7 @@ export class AudioEngine {
     this.element = null;
     this.ctx = null;
     this.master = null;
+    this.fader = null;
     this.src = '';
     this.status = 'idle';
   }
@@ -118,9 +133,12 @@ export class AudioEngine {
       if (Ctx) {
         this.ctx = new Ctx();
         this.master = this.ctx.createGain();
-        this.master.gain.value = 0;
+        this.master.gain.value = this.level();
         this.master.connect(this.ctx.destination);
-        this.ctx.createMediaElementSource(el).connect(this.master);
+        this.fader = this.ctx.createGain();
+        this.fader.gain.value = 0;
+        this.fader.connect(this.master);
+        this.ctx.createMediaElementSource(el).connect(this.fader);
       }
       this.element = el;
       this.src = src;
@@ -149,14 +167,24 @@ export class AudioEngine {
     );
   }
 
-  private fadeIn() {
-    const { ctx, master } = this;
-    if (ctx && master) {
-      master.gain.cancelScheduledValues(ctx.currentTime);
-      master.gain.setValueAtTime(0, ctx.currentTime);
-      master.gain.linearRampToValueAtTime(this.level(), ctx.currentTime + FADE_IN);
-    } else if (this.element) {
-      this.element.volume = this.level();
+  /**
+   * Blendet den Fader von seinem aktuellen Wert (oder `from`) weich auf `to`. Eine laufende Blende wird
+   * an ihrem momentanen Wert übernommen – kein Sprung, auch bei schnellem Exit/Restart.
+   */
+  private fadeTo(to: number, duration: number, from?: number) {
+    const { ctx, fader } = this;
+    if (!ctx || !fader) {
+      if (this.element) this.element.volume = this.level();
+      return;
+    }
+    const now = ctx.currentTime;
+    const start = from ?? fader.gain.value;
+    fader.gain.cancelScheduledValues(now);
+    try {
+      fader.gain.setValueCurveAtTime(fadeCurve(start, to), now, duration);
+    } catch {
+      fader.gain.setValueAtTime(start, now);
+      fader.gain.setTargetAtTime(to, now, duration / 4);
     }
   }
 

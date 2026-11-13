@@ -3,9 +3,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneModel } from '../data/sceneModel';
 import { useTrapView } from '../state/store';
-import { resolveAnchor } from './anchors';
-import { compileSequence, createPose, evaluateSequence, type CameraPose } from './sequence';
-import { buildMainSequence } from './shots/mainSequence';
+import { compileSequence, createPose, evaluateSequence } from './sequence';
+import { buildMainSequence, LOOP_FROM } from './shots/mainSequence';
+import { matchupPose } from './matchupView';
 
 /** Dauer der Überblendung beim Wechsel zwischen Präsentation und Duell-Ansicht. */
 const MODE_BLEND = 1.5;
@@ -23,15 +23,6 @@ function fitFov(fov: number, aspect: number): number {
   return THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) * k));
 }
 
-/** Vorbereitete Perspektive auf ein Duell, mit langsamem Schub. */
-function matchupPose(model: SceneModel, id: string, elapsed: number, out: CameraPose) {
-  const push = Math.min(elapsed, 30) * 0.05;
-  out.pos.copy(resolveAnchor(model, { at: `matchup:${id}`, offset: [-7.0 + push, 1.7, 6.6 - push * 0.6], mirror: true }));
-  // Blickziel tief ansetzen: die Spieler stehen im oberen Bilddrittel, das Vergleichsfenster darunter
-  out.look.copy(resolveAnchor(model, { at: `matchup:${id}`, offset: [0.4, 0.45, 0] }));
-  out.fov = 30;
-}
-
 /**
  * Der Regisseur: einzige Stelle, die die Kamera bewegt. Liest die Zeit, wertet die
  * Sequenz aus und überblendet kontrolliert in die Duell-Ansicht und zurück.
@@ -44,7 +35,7 @@ export function Director({ model, fadeRef, steady = false }: {
   steady?: boolean;
 }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
-  const sequence = useMemo(() => compileSequence(buildMainSequence(model), model), [model]);
+  const sequence = useMemo(() => compileSequence(buildMainSequence(model), model, { loopFrom: LOOP_FROM }), [model]);
 
   const time = useRef(0);
   const shotIndex = useRef(-1);
@@ -85,7 +76,11 @@ export function Director({ model, fadeRef, steady = false }: {
     }
 
     const inMatchup = s.matchupId !== null;
-    if (s.phase === 'cinema' && !inMatchup && !paused.current) time.current = Math.min(time.current + dt, sequence.duration);
+    // Mit Loop läuft die Zeit unbegrenzt weiter, evaluateSequence bildet sie auf die Runde ab
+    const loops = sequence.loop.length > 0;
+    if (s.phase === 'cinema' && !inMatchup && !paused.current) {
+      time.current = loops ? time.current + dt : Math.min(time.current + dt, sequence.firstDuration);
+    }
 
     // Wechsel Präsentation ↔ Duell: aktuelle Pose merken und weich überblenden
     const key = s.matchupId ?? 'timeline';
@@ -115,7 +110,7 @@ export function Director({ model, fadeRef, steady = false }: {
       s.setChapter({ index, title: shot.shot.title, subtitle: shot.shot.subtitle });
       if (!inMatchup) s.setVisibleLabels(shot.labelIds);
     }
-    const ended = time.current >= sequence.duration - 0.01;
+    const ended = !loops && time.current >= sequence.firstDuration - 0.01;
     if (ended !== s.ended) s.setEnded(ended);
 
     const pose = now.current;

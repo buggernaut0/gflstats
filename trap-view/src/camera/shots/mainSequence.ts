@@ -1,9 +1,30 @@
 import { playerTag, type SceneModel } from '../../data/sceneModel';
+import type { AnchorSpec } from '../anchors';
 import type { Shot } from '../sequence';
 
+/** Ab dieser Einstellung wiederholt sich die Fahrt endlos (der Einstieg läuft nur einmal). */
+export const LOOP_FROM = 'line-of-scrimmage';
+
+/** Mitte beider Lines – um sie kreist die Kamera an der Line of Scrimmage. */
+const LINES = 'group:OL+DL';
 /**
- * Die Hauptpräsentation: A Establishing → B Offensive Line → C Backfield →
- * D Receiver-Duelle → E Defense → F Final Shot.
+ * Punkt auf einer Kreisbahn um die Lines. θ in Grad: 0 = hinter der Offense, 90 = seitlich auf
+ * Höhe der Line of Scrimmage (rechte Feldseite), 180 = hinter der Defense; r = Abstand, h = Höhe (Yards).
+ */
+const orbit = (deg: number, r: number, h: number): AnchorSpec => {
+  const a = (deg * Math.PI) / 180;
+  return { at: LINES, offset: [-r * Math.cos(a), h, r * Math.sin(a)] };
+};
+/** Blickziel auf Schulterhöhe der Linemen, leicht zur Offense bzw. Defense verschoben. */
+const linesLook = (dx: number): AnchorSpec => ({ at: LINES, offset: [dx, 0.75, 0] });
+
+/**
+ * Die Hauptpräsentation: A Einstieg → B Line of Scrimmage (O-Line und D-Line) → C Backfield →
+ * D Receiver-Duelle → E Defense → F Final Shot → nahtlos wieder B, C, … (Endlosschleife).
+ *
+ * Einstieg und Final Shot münden per `flow` in denselben Startpunkt der Line-Einstellung – mit
+ * gemeinsamer Tangente und gleicher Geschwindigkeit (siehe sequence.ts). So geht die Fahrt nach
+ * der ersten Runde ohne Schnitt, Pause oder Richtungswechsel in die zweite über.
  *
  * Alle Positionen sind Anker relativ zur Aufstellung (siehe anchors.ts). Die Duell-Einstellungen
  * werden aus den übergebenen Matchups erzeugt – andere Teams oder Formationen brauchen
@@ -12,6 +33,9 @@ import type { Shot } from '../sequence';
 export function buildMainSequence(model: SceneModel): Shot[] {
   const ol = model.players.filter((p) => p.side === 'offense' && p.group === 'OL');
   const olFilled = ol.filter((p) => p.player).length;
+  const dl = model.players.filter((p) => p.side === 'defense' && p.group === 'DL');
+  const dlFilled = dl.filter((p) => p.player).length;
+  const lineCount = (n: number, of: number) => (n === of ? `${n}` : `${n} von ${of}`);
   const qb = model.byRole.get('QB');
   const rbs = model.players.filter((p) => p.side === 'offense' && p.slot.position === 'RB' && p.player);
   const backfield = [qb?.player ? playerTag(qb) : null, ...rbs.map((p) => playerTag(p))].filter(Boolean).join(' · ');
@@ -32,43 +56,39 @@ export function buildMainSequence(model: SceneModel): Shot[] {
     labels: [`matchup:${m.id}`],
   }));
 
+  /** Startpunkt der Line-Einstellung – hier münden Einstieg und Final Shot. */
+  const lineStart = orbit(40, 15, 6.4);
+
   return [
     {
+      // Schneller Einstieg aus der Totalen, bremst weich ab und geht ohne Schnitt in die Line über
       id: 'establishing',
       title: 'The Matchup',
       subtitle: `${model.offense.name} vs ${model.defense.name}`,
-      duration: 12,
-      path: [
-        { at: 'los', offset: [-78, 58, 54] },
-        { at: 'los', offset: [-50, 33, 37] },
-        { at: 'los', offset: [-29, 16, 22] },
-      ],
-      lookAt: [
-        { at: 'los', offset: [0, 0, 0] },
-        { at: 'los', offset: [1, 1, 0] },
-      ],
-      fov: [30, 36],
+      duration: 6.5,
+      path: [orbit(12, 88, 56), orbit(20, 36, 17), lineStart],
+      lookAt: [{ at: LINES, offset: [0, 0, 0] }, linesLook(-0.4)],
+      fov: [30, 33],
       ease: 'out',
       transition: { type: 'dip' },
       labels: [],
     },
     {
-      id: 'offensive-line',
-      title: 'The Line',
-      subtitle: olFilled ? `Offensive Line · ${olFilled} von ${ol.length} Plätzen belegt` : 'Offensive Line · ohne Kader nicht belegbar',
-      duration: 11,
-      path: [
-        { at: 'group:OL:min', offset: [8.2, 4.1, -5.5] },
-        { at: 'group:OL:max', offset: [8.2, 3.9, 5.5] },
-      ],
-      lookAt: [
-        { at: 'group:OL:min', offset: [0, 1.25, -0.6] },
-        { at: 'group:OL:max', offset: [0, 1.25, 0.6] },
-      ],
-      fov: [30, 30],
+      // Halbkreis um die Line of Scrimmage: von schräg hinter der Offense über die Seite bis schräg
+      // hinter die Defense. Leicht erhöht, damit die Linemen einander nicht verdecken; vorn sind
+      // Nummern der O-Line, am Ende Namen und Nummern der D-Line (Rücken) zu lesen.
+      id: LOOP_FROM,
+      title: 'The Trenches',
+      subtitle: olFilled || dlFilled
+        ? `Offensive Line ${lineCount(olFilled, ol.length)} · Defensive Line ${lineCount(dlFilled, dl.length)}`
+        : 'Offensive & Defensive Line · ohne Kader nicht belegbar',
+      duration: 9.5,
+      path: [lineStart, orbit(65, 15, 7.6), orbit(90, 15, 8.4), orbit(115, 15, 7.6), orbit(140, 15, 6.4)],
+      lookAt: [linesLook(-0.4), linesLook(0.4)],
+      fov: [33, 33],
       ease: 'soft',
-      transition: { type: 'blend', duration: 2.8 },
-      labels: ['group:OL'],
+      transition: { type: 'flow' },
+      labels: ['group:OL', 'group:DL'],
     },
     {
       id: 'backfield',
@@ -110,22 +130,17 @@ export function buildMainSequence(model: SceneModel): Shot[] {
       labels: ['group:LB', 'group:DB'],
     },
     {
+      // Totale hinter der Offense – beide Teams Auge in Auge –, dann im Bogen hinab an die Line:
+      // endet exakt am Startpunkt der Line-Einstellung, die Fahrt beginnt dort von vorn
       id: 'final',
       title: 'Face to Face',
       subtitle: `${model.offense.nickname} · ${model.defense.nickname}`,
-      duration: 16,
-      path: [
-        { at: 'los', offset: [9, 3.2, 24] },
-        { at: 'los', offset: [1, 8.5, 34] },
-        { at: 'los', offset: [-1, 12.5, 39] },
-      ],
-      lookAt: [
-        { at: 'los', offset: [0.5, 1.1, 0] },
-        { at: 'los', offset: [0, 0, 0] },
-      ],
-      fov: [34, 40],
+      duration: 12,
+      path: [orbit(-25, 42, 15), orbit(0, 30, 11), orbit(22, 21, 8), lineStart],
+      lookAt: [{ at: LINES, offset: [0.5, 0.6, 0] }, linesLook(-0.4)],
+      fov: [38, 33],
       ease: 'soft',
-      transition: { type: 'blend', duration: 3.2 },
+      transition: { type: 'dip' },
       labels: [],
     },
   ];

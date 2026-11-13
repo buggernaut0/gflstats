@@ -85,7 +85,7 @@ Unbesetzte Plätze erscheinen als durchscheinende Silhouette desselben Modells.
 
 ## Musik
 
-`public/audio/track.mp3`, in Schleife, mit halber Lautstärke (`TRACK_GAIN` in `src/audio/AudioEngine.ts`); Herkunft
+`public/audio/track.mp3`, in Schleife, mit reduziertem Grundpegel und 4,5 s weicher Einblendung (`TRACK_GAIN`, `FADE_IN` in `src/audio/AudioEngine.ts`); Herkunft
 und Hinweis zur Nutzung: `public/audio/README.md`. Die Musik startet direkt im Klick auf „Enter Trap View“
 (Autoplay-Regeln). Blockiert der Browser trotzdem, zeigt die HUD „Sound on“; fehlt die Datei, „No audio“.
 Im Hintergrund-Tab pausiert die Musik. Stummschaltung bleibt über Neuladen erhalten.
