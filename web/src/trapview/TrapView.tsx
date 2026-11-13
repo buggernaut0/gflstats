@@ -19,8 +19,8 @@ export interface TrapViewProps {
   loading?: boolean;
   /** Saisonwechsel in der Auswahl. Ohne Handler wird keine Saisonauswahl angeboten. */
   onSeasonChange?: (season: number) => void;
-  /** Musikdatei (Standard: public/audio/track.mp3). Fehlt sie, bleibt es still. */
-  audioSrc?: string;
+  /** Musik: eine Datei oder mehrere (zufällige Auswahl je Eintritt). Standard: TRACKS. Fehlt sie, bleibt es still. */
+  audioSrc?: string | string[];
   /** Wird aufgerufen, wenn der Nutzer den Kinomodus verlässt. */
   onExit?: () => void;
   /** Öffnet den Simulator (nur Saison 2026) mit den gewählten Teams. */
@@ -32,6 +32,15 @@ export interface TrapViewProps {
 /** Ausblenden der Musik beim Wechsel in den Simulator – so lang wie der ganze Übergang, kein Schnitt. */
 export const HANDOFF_AUDIO_FADE = 2.2;
 
+/** Lieder der Trap View (public/trapview/audio/). Bei jedem „Enter Trap View“ wird eines zufällig gewählt. */
+export const TRACKS = ['track.mp3', 'track-2.mp3', 'track-3.mp3', 'track-4.mp3'].map((f) => `${ASSET_BASE}/audio/${f}`);
+
+/** Zufälliges Lied, möglichst nicht dasselbe wie zuletzt. */
+function pickTrack(list: string[], last: string | null): string {
+  const pool = list.length > 1 ? list.filter((t) => t !== last) : list;
+  return pool[Math.floor(Math.random() * pool.length)] ?? list[0];
+}
+
 /** Zeit, in der die Auswahl ausblendet und die Szene im Dunkeln vorbereitet wird. */
 const ENTER_MS = 1500;
 
@@ -39,7 +48,7 @@ const ENTER_MS = 1500;
 type Stage = 'ok' | 'unsupported' | 'error' | 'lost';
 
 /** Öffentlicher Einstiegspunkt des Features – füllt seinen Container vollständig. */
-export function TrapView({ data, loading = false, onSeasonChange, audioSrc = `${ASSET_BASE}/audio/track.mp3`, onExit, onSimulate, leaving = false }: TrapViewProps) {
+export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRACKS, onExit, onSimulate, leaving = false }: TrapViewProps) {
   const { index, season } = data;
   const phase = useTrapView((s) => s.phase);
   const storedOffense = useTrapView((s) => s.offenseId);
@@ -53,6 +62,9 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = `${
   const muted = useTrapView((s) => s.muted);
   const restartToken = useTrapView((s) => s.restartToken);
 
+  const tracks = typeof audioSrc === 'string' ? [audioSrc] : audioSrc;
+  /** Lied des aktuellen Durchgangs – ein Neustart über die HUD behält es bei */
+  const track = useRef<string | null>(null);
   const audio = useRef<AudioEngine | null>(null);
   audio.current ??= new AudioEngine();
   const fadeRef = useRef<HTMLDivElement>(null);
@@ -102,7 +114,7 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = `${
   const firstToken = useRef(restartToken);
   useEffect(() => {
     if (restartToken === firstToken.current) return;
-    if (useTrapView.getState().phase === 'cinema') audio.current!.start(audioSrc);
+    if (useTrapView.getState().phase === 'cinema') audio.current!.start(track.current ?? pickTrack(tracks, null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restartToken]);
 
@@ -120,8 +132,9 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = `${
     s.setPhase('entering');
     // Nach einem früheren Ausfall der 3D-Szene bei jedem Eintritt neu versuchen
     if (stage !== 'ok') retry3d();
-    // Direkt im Klick starten – nur so erlauben Browser die Wiedergabe
-    audio.current!.start(audioSrc);
+    // Direkt im Klick starten – nur so erlauben Browser die Wiedergabe. Jeder Eintritt: zufälliges Lied
+    track.current = pickTrack(tracks, track.current);
+    audio.current!.start(track.current);
   };
 
   const retry3d = () => {
