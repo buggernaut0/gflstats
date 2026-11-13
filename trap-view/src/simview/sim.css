@@ -123,3 +123,66 @@
   font-style: normal; font-family: var(--tv-cond); font-weight: 700; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--tv-bg); background: #ffd400; padding: 2px 6px 1px; margin-right: 8px; vertical-align: middle;
 }
+
+/* ───────── Mehrfachsimulation ───────── */
+.sim-multi-wrap { padding: 4px 28px 14px; }
+.sim-pick .sim-multi-wrap, .tv-root.sim > .sim-multi-wrap { width: 100%; }
+.sim-multi { background: var(--sim-panel); border: 1px solid var(--sim-line); border-radius: 6px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.sim-multi__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sim-multi h3, .sim-multi h4 { margin: 0; font-family: var(--tv-cond); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--tv-dim); }
+.sim-multi h3 { font-size: 12px; }
+.sim-multi h4 { font-size: 11px; margin-bottom: 8px; }
+.sim-multi__progress { height: 4px; background: rgba(241, 242, 240, 0.08); border-radius: 2px; overflow: hidden; }
+.sim-multi__progress i { display: block; height: 100%; background: var(--tv-ink); transition: width 0.1s linear; }
+.sim-multi__body { display: flex; flex-direction: column; gap: 18px; }
+.sim-multi__bar { display: flex; height: 18px; border-radius: 3px; overflow: hidden; border: 1px solid var(--sim-line); }
+.sim-multi__bar i { display: block; height: 100%; }
+.sim-multi__legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; font-size: 14px; }
+.sim-multi__legend b { font-family: var(--tv-display); font-weight: 400; font-size: 22px; margin-right: 4px; }
+.sim-multi__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.sim-multi__team { color: var(--tv-ink) !important; border-left: 4px solid; padding-left: 8px; }
+.sim-hist { display: flex; flex-direction: column; gap: 3px; }
+.sim-hist__row { display: grid; grid-template-columns: 92px 1fr 44px; align-items: center; gap: 8px; font-size: 12px; }
+.sim-hist__row span { font-family: var(--tv-cond); font-weight: 600; letter-spacing: 0.06em; color: var(--tv-dim); }
+.sim-hist__row i { display: block; height: 12px; border-radius: 2px; min-width: 1px; }
+.sim-hist__row em { font-style: normal; text-align: right; font-variant-numeric: tabular-nums; }
+.sim-scores { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.sim-scores li { display: flex; justify-content: space-between; max-width: 200px; font-variant-numeric: tabular-nums; }
+.sim-scores b { font-family: var(--tv-display); font-weight: 400; font-size: 18px; }
+.sim-scores span { color: var(--tv-dim); font-size: 13px; }
+.sim-leaders { border-collapse: collapse; width: 100%; font-size: 13px; }
+.sim-leaders th { text-align: left; font-weight: 500; padding: 3px 10px 3px 0; white-space: nowrap; }
+.sim-leaders td { color: var(--tv-dim); padding: 3px 0; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .sim-multi__grid { grid-template-columns: 1fr; }
+  .sim-multi-wrap { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ───────── Erklärseite ───────── */
+.tv-root.sim-method {
+  position: fixed; inset: 0; z-index: 200; width: auto; height: auto; overflow-y: auto; user-select: text;
+  background: rgba(5, 6, 8, 0.82); backdrop-filter: blur(6px); padding: 32px 16px;
+}
+.sim-method__panel {
+  max-width: 860px; margin: 0 auto; background: var(--sim-panel, #0c0f14); border: 1px solid rgba(241, 242, 240, 0.1);
+  border-radius: 8px; padding: 26px 30px 30px; line-height: 1.6; font-size: 14.5px; animation: tv-rise 0.4s ease both;
+}
+.sim-method__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.sim-method h2 { margin: 0; font-family: var(--tv-display); font-weight: 400; font-size: 28px; letter-spacing: 0.04em; text-transform: uppercase; }
+.sim-method section { border-top: 1px solid rgba(241, 242, 240, 0.1); padding-top: 14px; margin-top: 16px; }
+.sim-method h3 { margin: 0 0 6px; font-family: var(--tv-cond); font-weight: 600; font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; color: #ffd400; }
+.sim-method h4 { margin: 0 0 4px; font-family: var(--tv-cond); font-weight: 600; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--tv-dim); }
+.sim-method p { margin: 0 0 10px; }
+.sim-method ul { margin: 0 0 10px; padding-left: 18px; }
+.sim-method li { margin-bottom: 4px; }
+.sim-method code { font-size: 13px; }
+.sim-method__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.sim-method__table { border-collapse: collapse; margin: 4px 0 12px; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+.sim-method__table th, .sim-method__table td { padding: 4px 16px 4px 0; text-align: left; border-bottom: 1px solid rgba(241, 242, 240, 0.07); }
+.sim-method__table th { font-family: var(--tv-cond); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tv-dim); font-size: 12px; }
+.sim-method__table td.is-off { color: #e0a42f; }
+.tv-root .sim-head__method { margin-left: 8px; color: #ffd400; }
+@media (max-width: 640px) {
+  .sim-method__cols { grid-template-columns: 1fr; }
+  .sim-method__panel { padding: 18px 16px 22px; }
+}

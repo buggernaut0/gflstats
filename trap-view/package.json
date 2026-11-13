@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "data": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/export-data.ts && node scripts/export-sim.ts",
+    "data": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/export-data.ts && node scripts/export-sim.ts && node scripts/backtest-sim.ts 40 --write",
     "predev": "npm run data",
     "dev": "vite",
     "prebuild": "npm run data",

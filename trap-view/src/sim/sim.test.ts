@@ -86,3 +86,17 @@ test('stärkeres Team gewinnt langfristig häufiger, aber nicht immer', () => {
   assert.ok(wins / N > 0.8, `Favorit gewinnt ${wins}/${N}`);
   assert.ok(wins < N, 'Zufall muss Überraschungen zulassen');
 });
+
+test('Mehrfachsimulation: Summen stimmen, Ergebnis wiederholbar', async () => {
+  const { MultiSim } = await import('./multi.ts');
+  const m1 = new MultiSim(profiles, a, b, 1000);
+  m1.run(200);
+  const r = m1.result();
+  assert.equal(r.runs, 200);
+  assert.equal(r.wins[a] + r.wins[b] + r.ties, 200);
+  assert.equal(r.margins.reduce((x, m) => x + m.count, 0), 200);
+  assert.ok(r.close >= 0 && r.close <= 1);
+  const m2 = new MultiSim(profiles, a, b, 1000);
+  m2.run(120); m2.run(80); // in Häppchen = am Stück
+  assert.deepEqual(m2.result(), r);
+});

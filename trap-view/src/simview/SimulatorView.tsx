@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { buildProfiles, randomSeed, simulateGame } from '../sim/index.ts';
+import { buildProfiles, randomSeed, simulateGame, type Profiles } from '../sim/index.ts';
+import { MultiPanel } from './MultiPanel';
+import { SimMethod } from './SimMethod';
 import type { GameResult, PlayEvent, SimData } from '../sim/types';
 import { loadSeason } from '../data/load';
 import type { SeasonData, Team } from '../data/types';
@@ -78,6 +80,8 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props
   const [error, setError] = useState<string | null>(null);
   const [pick, setPick] = useState<[string, string] | null>(initialTeams ?? null);
   const [game, setGame] = useState<GameResult | null>(null);
+  const [method, setMethod] = useState(false);
+  const closeMethod = useCallback(() => setMethod(false), []);
 
   useEffect(() => {
     Promise.all([
@@ -129,6 +133,7 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props
         <header className="sim-head">
           {onBack && <button className="sim-link" onClick={onBack}>← Trap View</button>}
           <span className="tv-wordmark">GFL SIMULATOR</span>
+          <button className="sim-link sim-head__method" onClick={() => setMethod(true)}>So funktioniert's</button>
           <span className="sim-head__sub">Saison {SIM_SEASON} · vollautomatisch</span>
         </header>
         <div className="sim-pick">
@@ -158,11 +163,22 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props
             Kein Heimvorteil, keine Overtime.
           </p>
         </footer>
+        {profiles && (
+          <div className="sim-multi-wrap">
+            <MultiPanel
+              profiles={profiles}
+              teams={(() => { const [x, y] = teamLooks(teamA, teamB); return [{ ...x, name: teamA.name }, { ...y, name: teamB.name }]; })()}
+            />
+          </div>
+        )}
+        {method && <SimMethod data={data} onClose={closeMethod} />}
       </div>
     );
   }
 
   return (
+    <>
+    {method && <SimMethod data={data} onClose={closeMethod} />}
     <GamePlayer
       key={game.seed}
       data={data}
@@ -173,15 +189,18 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props
       onNew={() => start()}
       onTeams={() => setGame(null)}
       onBack={onBack}
+      profiles={profiles!}
+      onMethod={() => setMethod(true)}
     />
+    </>
   );
 }
 
 // ─────────────────────────────────────────────────────────── Wiedergabe
 
-function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack }: {
+function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack, profiles, onMethod }: {
   data: SimData; season: SeasonData; game: GameResult; teamA: Team; teamB: Team;
-  onNew: () => void; onTeams: () => void; onBack?: () => void;
+  onNew: () => void; onTeams: () => void; onBack?: () => void; profiles: Profiles; onMethod: () => void;
 }) {
   const events = game.events;
   const [home, away] = useMemo(() => teamLooks(teamA, teamB), [teamA, teamB]);
@@ -282,6 +301,7 @@ function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack }
       <header className="sim-head">
         {onBack && <button className="sim-link" onClick={onBack}>← Trap View</button>}
         <span className="tv-wordmark tv-wordmark--sm">GFL SIMULATOR</span>
+        <button className="sim-link sim-head__method" onClick={onMethod}>So funktioniert's</button>
         <span className="sim-head__sub">Saison {SIM_SEASON} · Seed {game.seed}</span>
       </header>
 
@@ -355,6 +375,9 @@ function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack }
           </section>
         </aside>
       </main>
+      <div className="sim-multi-wrap">
+        <MultiPanel profiles={profiles} teams={[{ ...home, name: teamA.name }, { ...away, name: teamB.name }]} />
+      </div>
       <footer className="sim-foot">
         Grundlage: GFL-Statistikbögen {SIM_SEASON} ({data.league.games} Spiele). Spielerwerte zum Ligaschnitt geglättet, direkte Duelle nur auf
         Teamebene (die Bögen sagen nicht, wer wen gedeckt hat). Annahmen wie Yard-Verteilung, Uhr und 4th-Down-Situationen sind

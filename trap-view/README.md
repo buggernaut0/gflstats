@@ -139,3 +139,13 @@ Einstieg: Button „Spiel simulieren“ oben rechts in der laufenden Trap View (
 - Spielfeld nutzt die volle Breite (Seitenverhältnis 120 : 53,3); unter 1200 px stehen Warum-Fenster und Spielverlauf darunter.
 - „▶ Spielzug nochmal zeigen“ im Warum-Fenster: spielt einen gewählten Spielzug in Normaltempo erneut ab und kehrt danach
   an die alte Stelle zurück.
+
+### Phase 4: Transparenz
+
+- **Siegchance über 1.000 Simulationen** (`src/sim/multi.ts`, `src/simview/MultiPanel.tsx`) – in der Teamauswahl und unter
+  jedem Spiel: Siegquote, Ø Punkte, Verteilung der Punktdifferenz, häufigste Spielstände, Ø-Werte der wichtigsten Spieler.
+  Rechnet in Häppchen per `setTimeout` (≈ 0,5 s), die Seite bleibt bedienbar.
+- **„So funktioniert's“** (`src/simview/SimMethod.tsx`): Prinzip, Datengrundlage (verwendet / nicht vorhanden), Glättung mit
+  Beispiel, Log-Odds-Vergleich, direkte Duelle, Simulationsparameter und die Rücktest-Tabelle – alle Zahlen live aus
+  Daten, Modell und `public/data/sim-2026-backtest.json` (schreibt `npm run data` mit 40 Durchläufen je Spiel,
+  ausführlich: `npm run backtest -- 200 --write`).

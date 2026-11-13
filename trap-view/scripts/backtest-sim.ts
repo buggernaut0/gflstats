@@ -11,7 +11,7 @@
  * (In-Sample). Der Test zeigt, ob die Mechanik realistische Spiele erzeugt – er ist kein Beleg für
  * Vorhersagekraft bei neuen Spielen.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildProfiles, simulateGame } from '../src/sim/index.ts';
@@ -22,7 +22,8 @@ const data = JSON.parse(readFileSync(join(HERE, '..', 'public', 'data', 'sim-202
 const pg = JSON.parse(readFileSync(resolve(HERE, '..', '..', 'web', 'public', 'data', 'pg', '2026.json'), 'utf-8')) as { g: string; t: string; s: Stats }[];
 const webGames = JSON.parse(readFileSync(resolve(HERE, '..', '..', 'web', 'public', 'data', 'games.json'), 'utf-8')) as { id: string; teamStats?: Record<string, Record<string, number>> }[];
 const reportOf = new Map(webGames.map((g) => [g.id, g.teamStats ?? {}]));
-const N = Number(process.argv[2] ?? 200);
+const N = Number(process.argv.slice(2).find((x) => /^\d+$/.test(x)) ?? 200);
+const WRITE = process.argv.includes('--write');
 
 const profiles = buildProfiles(data);
 const v = (s: Stats, k: string) => s[k] ?? 0;
@@ -130,4 +131,25 @@ console.log(`\nSieger richtig: ${hits}/${decided} (${(hits / decided * 100).toFi
 console.log('Kalibrierung (Favoriten-Chance → tatsächliche Siegquote des Favoriten):');
 for (const [b, e] of [...buckets].sort((x, y) => x[0] - y[0])) {
   console.log(`  ${50 + b * 10}–${59 + b * 10 + (b === 4 ? 1 : 0)} %: ${e.n} Spiele, Ø Prognose ${(e.p / e.n * 100).toFixed(0)} %, Favorit gewann ${(e.wins / e.n * 100).toFixed(0)} %`);
+}
+
+// ── Ergebnis für die Erklärseite (npm run data schreibt es mit wenigen Durchläufen) ──
+if (WRITE) {
+  const LABELS: Record<string, string> = {
+    points: 'Punkte', plays: 'Spielzüge', firstDowns: 'First Downs', thirdConv: '3rd-Down-Conversions', fourthAtt: '4th-Down-Versuche',
+    passAtt: 'Passversuche', completions: 'Completions', passYds: 'Pass-Yards', rushAttInclSacks: 'Läufe (inkl. Sacks)',
+    rushYdsInclSacks: 'Lauf-Yards (inkl. Sacks)', sacks: 'Sacks', interceptions: 'Interceptions', fumblesLost: 'Fumbles verloren',
+    punts: 'Punts', fgTry: 'Field-Goal-Versuche', longestPass: 'Längster Pass', longestRun: 'Längster Lauf',
+  };
+  const out = {
+    season: data.season,
+    generatedAt: new Date().toISOString(),
+    games: data.games.length,
+    runsPerGame: N,
+    rows: Object.keys(LABELS).map((k) => ({ key: k, label: LABELS[k], real: Math.round(mean(real, k) * 10) / 10, sim: Math.round(mean(sim, k) * 10) / 10 })),
+    winner: { hits, decided, brier: Math.round((brier / decided) * 1000) / 1000 },
+    calibration: [...buckets].sort((x, y) => x[0] - y[0]).map(([b, e]) => ({ from: 50 + b * 10, games: e.n, predicted: Math.round((e.p / e.n) * 100), actual: Math.round((e.wins / e.n) * 100) })),
+  };
+  writeFileSync(join(HERE, '..', 'public', 'data', `sim-${data.season}-backtest.json`), JSON.stringify(out));
+  console.log(`\nGeschrieben: public/data/sim-${data.season}-backtest.json`);
 }
