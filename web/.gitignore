@@ -7,3 +7,5 @@ next-env.d.ts
 public/data/
 # Lokale Vorschau (vorschau.bat): fertiger Build, wird bei Bedarf neu erzeugt
 vorschau/
+# Erzeugt von scripts/trapview/*.ts (npm run data:trapview)
+public/trapview/data/

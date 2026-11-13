@@ -180,3 +180,29 @@ body {
   min-height: 300px;
   background: radial-gradient(ellipse at 50% 58%, var(--surface-2), transparent 72%);
 }
+
+/* Trap View (/trap-view/): füllt den Bildschirm unter der Kopfzeile, eigene dunkle Inszenierung. */
+.trapview-host {
+  position: relative;
+  height: calc(100dvh - var(--site-header-h, 57px));
+  min-height: 480px;
+  background: #050608;
+  overflow: hidden;
+}
+html.trapview-page,
+html.trapview-page body {
+  overflow: hidden;
+}
+html.trapview-page body > footer {
+  display: none;
+}
+.trapview-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(241, 242, 240, 0.55);
+  font-family: "Barlow Condensed", sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}

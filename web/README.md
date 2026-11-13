@@ -25,7 +25,7 @@ Voraussetzungen: Python 3 (habt ihr schon) und [Node.js](https://nodejs.org/) ab
 ```bash
 cd web
 npm install          # einmalig
-npm run data         # Website-Daten aus gflstats.db erzeugen
+npm run data         # Website-Daten aus gflstats.db erzeugen (inkl. Trap View/Simulator)
 npm run dev          # Entwicklungsansicht unter http://localhost:3000
 ```
 
@@ -66,6 +66,7 @@ GitHub Pages bereit (`https://<konto>.github.io/gflstats/`). Einmalig unter
 | `/analytics/breakouts/` | Breakouts und Rollen-Index aller Saisons |
 | `/rekorde/` | Rekorde: Einzelspiel, Saison, Karriere |
 | `/methodik/` | Formeln, Modelle, Korrekturen, Datenverfügbarkeit |
+| `/trap-view/` | Trap View: zwei Teams im 3D-Matchup mit Starting Lineups und Duellen; daraus startet der Spielsimulator 2026 (`#simulator`, kein eigener Menüpunkt). Code und Doku: `src/trapview/` (README dort) |
 
 Alle Such- und Filterzustände stehen in der Adresse und lassen sich als Link teilen.
 

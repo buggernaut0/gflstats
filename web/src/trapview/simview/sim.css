@@ -1,0 +1,200 @@
+/* GFL Simulator – nutzt die Tokens von .tv-root (ui/styles.css). */
+.tv-root.sim {
+  --sim-good: #22c55e;
+  --sim-warn: #e0a42f;
+  --sim-bad: #ef4444;
+  --sim-panel: #0c0f14;
+  --sim-line: rgba(241, 242, 240, 0.1);
+  display: flex; flex-direction: column; overflow: auto; user-select: text;
+  background: radial-gradient(120% 80% at 50% 120%, #0d1016 0%, var(--tv-bg) 60%);
+}
+.sim-head { display: flex; align-items: baseline; gap: 18px; padding: 18px 28px 10px; flex-wrap: wrap; }
+.sim-head__sub { font-family: var(--tv-cond); font-weight: 500; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--tv-dim); margin-left: auto; }
+.tv-root .sim-link { font-family: var(--tv-cond); font-weight: 600; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tv-dim); padding: 0; }
+.tv-root .sim-link:hover { color: var(--tv-ink); }
+.sim-muted { font-size: 13px; color: var(--tv-dim); line-height: 1.5; }
+
+/* ───────── Auswahl ───────── */
+.sim-pick { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--sim-line); margin: 24px 28px; }
+.sim-pick__side { background: var(--tv-bg); padding: 28px 32px; display: flex; flex-direction: column; gap: 10px; }
+.sim-pick__side h2 { margin: 0; font-family: var(--tv-cond); font-weight: 600; font-size: 13px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--tv-dim); }
+.sim-pick__name { font-family: var(--tv-display); font-size: clamp(30px, 4vw, 60px); line-height: 1; text-transform: uppercase; margin-bottom: 14px; }
+.sim-pick__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.sim-pick__foot { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 4px 28px 40px; }
+.sim-note { max-width: 640px; margin: 0; text-align: center; font-size: 13px; line-height: 1.55; color: var(--tv-dim); }
+
+/* ───────── Scoreboard ───────── */
+.sim-board { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1px; margin: 0 28px; background: var(--sim-line); border: 1px solid var(--sim-line); }
+.sim-board__team { display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: var(--sim-panel); border-top: 4px solid var(--fill); min-width: 0; box-shadow: inset 0 1px 0 rgba(241, 242, 240, 0.12); }
+.sim-board__team img { width: 38px; height: 38px; object-fit: contain; }
+.sim-board__name { display: flex; flex-direction: column; font-family: var(--tv-display); font-size: 22px; line-height: 1; text-transform: uppercase; min-width: 0; }
+.sim-board__name small { font-family: var(--tv-cond); font-weight: 500; font-size: 13px; letter-spacing: 0.2em; color: var(--tv-dim); margin-top: 3px; }
+.sim-board__ball { width: 14px; height: 9px; border-radius: 50%; background: #7a3f1d; border: 1px solid #f1e6d6; }
+.sim-board__score { margin-left: auto; font-family: var(--tv-display); font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
+.sim-board__state { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 8px 22px; background: var(--sim-panel); min-width: 210px; }
+.sim-board__state b { font-family: var(--tv-display); font-weight: 400; font-size: 22px; letter-spacing: 0.06em; }
+.sim-board__state span { font-family: var(--tv-cond); font-weight: 600; font-size: 15px; letter-spacing: 0.08em; color: #ffd400; }
+
+/* ───────── Hauptbereich ───────── */
+.sim-main { flex: 1 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px; padding: 14px 28px 10px; align-items: start; }
+.sim-stage { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sim-field-wrap { position: relative; width: 100%; aspect-ratio: 120 / 53.3; max-height: 72vh; display: flex; align-items: center; justify-content: center; }
+.sim-field { display: block; border-radius: 4px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); }
+.sim-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sim-speeds { display: flex; gap: 4px; }
+.sim-controls__spacer { flex: 1; }
+.sim-controls__hint { width: 100%; font-size: 12px; color: var(--tv-dim); }
+.tv-root .sim-controls .tv-chip, .tv-root .sim-summary .tv-chip { padding: 7px 12px 6px; }
+
+.sim-side { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.sim-side h3 { margin: 0 0 10px; font-family: var(--tv-cond); font-weight: 600; font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--tv-dim); }
+.sim-why { background: var(--sim-panel); border: 1px solid var(--sim-line); border-radius: 6px; padding: 14px 16px; }
+.sim-why__body { display: flex; flex-direction: column; gap: 10px; }
+.sim-why__text { font-family: var(--tv-cond); font-weight: 600; font-size: 19px; line-height: 1.2; }
+.sim-chance__row { display: flex; justify-content: space-between; font-size: 14px; }
+.sim-chance__row b { font-variant-numeric: tabular-nums; }
+.sim-chance__bar { height: 7px; border-radius: 4px; background: rgba(241, 242, 240, 0.08); overflow: hidden; margin-top: 4px; }
+.sim-chance__bar i { display: block; height: 100%; border-radius: 4px; background: #8a94a3; }
+.sim-chance--good .sim-chance__bar i { background: var(--sim-good); }
+.sim-chance--warn .sim-chance__bar i { background: var(--sim-warn); }
+.sim-chance--bad .sim-chance__bar i { background: var(--sim-bad); }
+.sim-chance__basis { font-size: 11.5px; line-height: 1.45; color: var(--tv-dim); margin-top: 3px; }
+
+.sim-ticker { flex: 1; min-height: 200px; display: flex; flex-direction: column; background: var(--sim-panel); border: 1px solid var(--sim-line); border-radius: 6px; padding: 14px 8px 8px 16px; }
+.sim-ticker ol { list-style: none; margin: 0; padding: 0 8px 0 0; overflow-y: auto; flex: 1; max-height: 34vh; }
+.sim-ticker li { border-left: 3px solid transparent; animation: tv-rise 0.35s ease both; }
+.sim-ticker li.is-key { border-left-color: var(--fill); }
+.sim-ticker li.is-selected { background: rgba(241, 242, 240, 0.06); }
+.tv-root .sim-ticker button { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--sim-line); }
+.tv-root .sim-ticker button:hover { background: rgba(241, 242, 240, 0.04); }
+.sim-ticker__meta { font-family: var(--tv-cond); font-weight: 500; font-size: 11.5px; letter-spacing: 0.08em; color: var(--tv-dim); }
+.sim-ticker__text { font-size: 13.5px; line-height: 1.35; }
+.is-key .sim-ticker__text { font-weight: 500; }
+.sim-ticker__score { font-family: var(--tv-display); font-size: 15px; letter-spacing: 0.05em; color: var(--fill); }
+
+.sim-foot { padding: 6px 28px 18px; font-size: 11.5px; line-height: 1.5; color: rgba(241, 242, 240, 0.4); }
+
+/* ───────── Endstand ───────── */
+.sim-summary {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 22px; background: var(--sim-panel); border: 1px solid var(--sim-line); border-radius: 8px;
+  animation: tv-rise 0.5s ease both;
+}
+.sim-summary__score { display: flex; align-items: baseline; gap: 22px; font-family: var(--tv-display); text-transform: uppercase; }
+.sim-summary__score span { font-size: 22px; border-bottom: 4px solid; padding-bottom: 2px; }
+.sim-summary__score b { font-weight: 400; font-size: 54px; line-height: 1; font-variant-numeric: tabular-nums; }
+.sim-summary table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.sim-summary td, .sim-summary th { padding: 3px 14px; font-size: 14px; }
+.sim-summary td { font-family: var(--tv-display); font-size: 17px; text-align: center; }
+.sim-summary tbody th { font-family: var(--tv-cond); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tv-dim); }
+.sim-summary thead th { font-family: var(--tv-cond); letter-spacing: 0.2em; }
+.sim-summary__leaders { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 100%; max-width: 760px; }
+.sim-summary__leaders h4 { margin: 0 0 4px; font-family: var(--tv-cond); letter-spacing: 0.3em; color: var(--tv-dim); }
+.sim-summary__leaders p { margin: 0 0 3px; font-size: 13px; }
+.sim-summary__actions { display: flex; gap: 8px; }
+
+/* ───────── Schmale Bildschirme ───────── */
+@media (max-width: 1200px) {
+  .sim-main { grid-template-columns: 1fr; }
+  .sim-ticker ol { max-height: 40vh; }
+  /* Feld in voller Breite, darunter Warum-Fenster und Spielverlauf nebeneinander */
+  .sim-side { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+}
+@media (max-width: 640px) {
+  .sim-side { grid-template-columns: 1fr; }
+  .sim-head, .sim-main, .sim-foot { padding-left: 16px; padding-right: 16px; }
+  .sim-board, .sim-pick { margin-left: 16px; margin-right: 16px; }
+  .sim-pick { grid-template-columns: 1fr; }
+  .sim-board { grid-template-columns: 1fr 1fr; }
+  .sim-board__state { grid-column: 1 / -1; min-width: 0; }
+  .sim-board__team { padding: 8px 10px; gap: 8px; }
+  .sim-board__team img { display: none; }
+  .sim-board__name { font-size: 16px; }
+  .sim-board__score { font-size: 32px; }
+  .sim-summary__score { gap: 12px; }
+  .sim-summary__score b { font-size: 40px; }
+  .sim-summary__score span { font-size: 16px; }
+  .sim-summary__leaders { grid-template-columns: 1fr; }
+}
+
+/* Wiederholung eines Spielzugs */
+.tv-root .sim-watch { align-self: flex-start; padding: 6px 12px 5px; }
+.sim-replay {
+  font-style: normal; font-family: var(--tv-cond); font-weight: 700; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--tv-bg); background: #ffd400; padding: 2px 6px 1px; margin-right: 8px; vertical-align: middle;
+}
+
+/* ───────── Mehrfachsimulation ───────── */
+.sim-multi-wrap { padding: 4px 28px 14px; }
+.sim-pick .sim-multi-wrap, .tv-root.sim > .sim-multi-wrap { width: 100%; }
+.sim-multi { background: var(--sim-panel); border: 1px solid var(--sim-line); border-radius: 6px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.sim-multi__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sim-multi h3, .sim-multi h4 { margin: 0; font-family: var(--tv-cond); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--tv-dim); }
+.sim-multi h3 { font-size: 12px; }
+.sim-multi h4 { font-size: 11px; margin-bottom: 8px; }
+.sim-multi__progress { height: 4px; background: rgba(241, 242, 240, 0.08); border-radius: 2px; overflow: hidden; }
+.sim-multi__progress i { display: block; height: 100%; background: var(--tv-ink); transition: width 0.1s linear; }
+.sim-multi__body { display: flex; flex-direction: column; gap: 18px; }
+.sim-multi__bar { display: flex; height: 18px; border-radius: 3px; overflow: hidden; border: 1px solid var(--sim-line); }
+.sim-multi__bar i { display: block; height: 100%; }
+.sim-multi__legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; font-size: 14px; }
+.sim-multi__legend b { font-family: var(--tv-display); font-weight: 400; font-size: 22px; margin-right: 4px; }
+.sim-multi__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.sim-multi__team { color: var(--tv-ink) !important; border-left: 4px solid; padding-left: 8px; }
+.sim-hist { display: flex; flex-direction: column; gap: 3px; }
+.sim-hist__row { display: grid; grid-template-columns: 92px 1fr 44px; align-items: center; gap: 8px; font-size: 12px; }
+.sim-hist__row span { font-family: var(--tv-cond); font-weight: 600; letter-spacing: 0.06em; color: var(--tv-dim); }
+.sim-hist__row i { display: block; height: 12px; border-radius: 2px; min-width: 1px; }
+.sim-hist__row em { font-style: normal; text-align: right; font-variant-numeric: tabular-nums; }
+.sim-scores { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.sim-scores li { display: flex; justify-content: space-between; max-width: 200px; font-variant-numeric: tabular-nums; }
+.sim-scores b { font-family: var(--tv-display); font-weight: 400; font-size: 18px; }
+.sim-scores span { color: var(--tv-dim); font-size: 13px; }
+.sim-leaders { border-collapse: collapse; width: 100%; font-size: 13px; }
+.sim-leaders th { text-align: left; font-weight: 500; padding: 3px 10px 3px 0; white-space: nowrap; }
+.sim-leaders td { color: var(--tv-dim); padding: 3px 0; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .sim-multi__grid { grid-template-columns: 1fr; }
+  .sim-multi-wrap { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ───────── Erklärseite ───────── */
+.tv-root.sim-method {
+  position: fixed; inset: 0; z-index: 200; width: auto; height: auto; overflow-y: auto; user-select: text;
+  background: rgba(5, 6, 8, 0.82); backdrop-filter: blur(6px); padding: 32px 16px;
+}
+.sim-method__panel {
+  max-width: 860px; margin: 0 auto; background: var(--sim-panel, #0c0f14); border: 1px solid rgba(241, 242, 240, 0.1);
+  border-radius: 8px; padding: 26px 30px 30px; line-height: 1.6; font-size: 14.5px; animation: tv-rise 0.4s ease both;
+}
+.sim-method__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.sim-method h2 { margin: 0; font-family: var(--tv-display); font-weight: 400; font-size: 28px; letter-spacing: 0.04em; text-transform: uppercase; }
+.sim-method section { border-top: 1px solid rgba(241, 242, 240, 0.1); padding-top: 14px; margin-top: 16px; }
+.sim-method h3 { margin: 0 0 6px; font-family: var(--tv-cond); font-weight: 600; font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; color: #ffd400; }
+.sim-method h4 { margin: 0 0 4px; font-family: var(--tv-cond); font-weight: 600; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--tv-dim); }
+.sim-method p { margin: 0 0 10px; }
+.sim-method ul { margin: 0 0 10px; padding-left: 18px; }
+.sim-method li { margin-bottom: 4px; }
+.sim-method code { font-size: 13px; }
+.sim-method__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.sim-method__table { border-collapse: collapse; margin: 4px 0 12px; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+.sim-method__table th, .sim-method__table td { padding: 4px 16px 4px 0; text-align: left; border-bottom: 1px solid rgba(241, 242, 240, 0.07); }
+.sim-method__table th { font-family: var(--tv-cond); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tv-dim); font-size: 12px; }
+.sim-method__table td.is-off { color: #e0a42f; }
+.tv-root .sim-head__method { margin-left: 8px; color: #ffd400; }
+@media (max-width: 640px) {
+  .sim-method__cols { grid-template-columns: 1fr; }
+  .sim-method__panel { padding: 18px 16px 22px; }
+}
+
+/* Highlight-Modus: Kennzeichnung der gezeigten Szene */
+.sim-hl-tag {
+  position: absolute; top: 10px; left: 10px; z-index: 2; display: flex; flex-direction: column; gap: 2px;
+  padding: 7px 12px 6px; background: rgba(5, 6, 8, 0.78); border-left: 3px solid #ffd400; pointer-events: none;
+  font-family: var(--tv-cond); text-transform: uppercase; letter-spacing: 0.08em;
+  animation: sim-hl-in 0.5s ease-out both;
+}
+.sim-hl-tag span { font-size: 12px; color: var(--tv-dim); }
+.sim-hl-tag b { font-size: 18px; font-weight: 700; color: var(--tv-ink); }
+@keyframes sim-hl-in { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sim-hl-tag { animation: none; } }

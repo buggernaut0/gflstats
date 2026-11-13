@@ -1,4 +1,0 @@
-node_modules
-dist
-# Erzeugt von scripts/export-data.ts (npm run data)
-public/data/
