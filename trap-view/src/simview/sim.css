@@ -36,9 +36,9 @@
 .sim-board__state span { font-family: var(--tv-cond); font-weight: 600; font-size: 15px; letter-spacing: 0.08em; color: #ffd400; }
 
 /* ───────── Hauptbereich ───────── */
-.sim-main { flex: 1 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; padding: 14px 28px 10px; align-items: start; }
+.sim-main { flex: 1 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px; padding: 14px 28px 10px; align-items: start; }
 .sim-stage { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.sim-field-wrap { position: relative; height: min(58vh, 46vw); min-height: 240px; display: flex; align-items: center; justify-content: center; }
+.sim-field-wrap { position: relative; width: 100%; aspect-ratio: 120 / 53.3; max-height: 72vh; display: flex; align-items: center; justify-content: center; }
 .sim-field { display: block; border-radius: 4px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); }
 .sim-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .sim-speeds { display: flex; gap: 4px; }
@@ -94,11 +94,14 @@
 .sim-summary__actions { display: flex; gap: 8px; }
 
 /* ───────── Schmale Bildschirme ───────── */
-@media (max-width: 1000px) {
+@media (max-width: 1200px) {
   .sim-main { grid-template-columns: 1fr; }
   .sim-ticker ol { max-height: 40vh; }
+  /* Feld in voller Breite, darunter Warum-Fenster und Spielverlauf nebeneinander */
+  .sim-side { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
 }
 @media (max-width: 640px) {
+  .sim-side { grid-template-columns: 1fr; }
   .sim-head, .sim-main, .sim-foot { padding-left: 16px; padding-right: 16px; }
   .sim-board, .sim-pick { margin-left: 16px; margin-right: 16px; }
   .sim-pick { grid-template-columns: 1fr; }
@@ -112,4 +115,11 @@
   .sim-summary__score b { font-size: 40px; }
   .sim-summary__score span { font-size: 16px; }
   .sim-summary__leaders { grid-template-columns: 1fr; }
+}
+
+/* Wiederholung eines Spielzugs */
+.tv-root .sim-watch { align-self: flex-start; padding: 6px 12px 5px; }
+.sim-replay {
+  font-style: normal; font-family: var(--tv-cond); font-weight: 700; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--tv-bg); background: #ffd400; padding: 2px 6px 1px; margin-right: 8px; vertical-align: middle;
 }

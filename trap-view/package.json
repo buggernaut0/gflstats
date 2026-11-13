@@ -10,7 +10,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"src/sim/**/*.test.ts\"",
+    "test": "node --test \"src/**/*.test.ts\"",
     "backtest": "node scripts/backtest-sim.ts"
   },
   "keywords": [],

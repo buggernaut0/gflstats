@@ -119,3 +119,23 @@ Einstieg: Button „Spiel simulieren“ oben rechts in der laufenden Trap View (
 - `src/simview/playback.ts` – Dauer je Ereignis (Bewegung + Standbild zum Lesen; Schlüsselspielzüge länger; 1× ≈ 4–5 Minuten pro Spiel) und Positionen
   zum Zeitpunkt t. Die Bewegung folgt dem berechneten Ergebnis – Darstellung, keine Physik.
 - Teamfarben nur, wenn belegt; sonst neutral hell/dunkel, immer unterscheidbar.
+
+### Phase 3: alle 22 Spieler je Spielzug
+
+- `src/simview/roster.ts` – Aufstellung aus derselben Logik wie die 3D-Trap-View (`buildSceneModel`: Shotgun 11 gegen 4-3,
+  gleiche Platzvergabe aus der Starting Lineup). Unbesetzte Plätze bleiben leer (gestrichelter Ring), niemand wird erfunden.
+  Ist ein beteiligter Spieler (Passempfänger, Läufer, Tackler …) kein Starter, wird er für diesen Spielzug auf einen passenden Platz gewechselt.
+- `src/simview/choreo.ts` – Bewegungen passend zum berechneten Ergebnis: Routen (Go, Slant, Out, Curl, Post), Pass Protection,
+  Pass Rush, Mann-Deckung bzw. Zonen, tiefer Safety, Verfolgung nach dem Catch, Lauf durch die Lücke, Sack, Kickoff/Punt mit
+  Coverage und Blockern, Field Goal/PAT. Reine Darstellung: Die Bögen enthalten weder Laufwege noch Deckungszuordnungen.
+  Spezialteams sind namenlos (Besetzung nicht in den Daten), nur Kicker/Returner werden genannt.
+- Beschriftet werden nur die am Ausgang Beteiligten (und der QB bei Pässen); Rückennummern nur aus dem offiziellen Kader.
+
+### Feinschliff
+
+- Yard-Verteilung als Mischung aus enger Streuung und seltenem Breakaway (`PARAMS.breakaway`): 3rd-Down-Quote und First Downs
+  liegen im Rücktest jetzt bei −1 bis −3 % statt −10 %. Die längsten Spielzüge sind dafür etwa 7–12 % kürzer als real.
+- 4th Down: flachere Distanzregel, Versuche pro Spiel wie real (2,4); Punts etwas seltener als real.
+- Spielfeld nutzt die volle Breite (Seitenverhältnis 120 : 53,3); unter 1200 px stehen Warum-Fenster und Spielverlauf darunter.
+- „▶ Spielzug nochmal zeigen“ im Warum-Fenster: spielt einen gewählten Spielzug in Normaltempo erneut ab und kehrt danach
+  an die alte Stelle zurück.

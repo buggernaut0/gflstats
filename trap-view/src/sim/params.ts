@@ -50,14 +50,22 @@ export const PARAMS = {
    * nicht die Länge jedes Spielzugs – die Form ist daher angenommen und wird im Rücktest gegen die
    * echten „Longest“-Werte pro Team-Spiel geprüft.
    */
-  sigma: { pass: 0.95, run: 1.0, loss: 0.5, sack: 0.35, intReturn: 1.0, kickReturn: 0.55, puntReturn: 0.9, punt: 0.18, airDepth: 0.7 },
+  sigma: { pass: 0.6, run: 0.55, loss: 0.5, sack: 0.35, intReturn: 1.0, kickReturn: 0.55, puntReturn: 0.9, punt: 0.18, airDepth: 0.7 },
+
+  /**
+   * Breakaway-Anteil: Ein kleiner Teil der Läufe/Catches wird zum Big Play (Mittelwert × mult), der Rest
+   * streut enger um einen etwas kleineren Wert – der Gesamtmittelwert bleibt gleich. So entstehen
+   * zugleich verlässliche kurze Gewinne (3rd Downs) und gelegentliche lange Spielzüge (Longest-Werte).
+   * Form angenommen, im Rücktest gegen 3rd-Down-Quote und Longest pro Team-Spiel eingestellt.
+   */
+  breakaway: { run: { p: 0.07, mult: 4, sigma: 1.1 }, pass: { p: 0.08, mult: 3.2, sigma: 1.1 } },
 
   /**
    * Ausgleich der Feldbegrenzung: Die echten Durchschnitte (Yards pro Lauf/Catch) enthalten bereits, dass
    * lange Spielzüge an der Goal Line enden. Damit die simulierten Durchschnitte nach dem Abschneiden den
    * echten entsprechen, liegt der Mittelwert vor dem Abschneiden um diesen Faktor höher (im Rücktest eingestellt).
    */
-  fieldLimit: { run: 1.04, pass: 1.13 },
+  fieldLimit: { run: 1.06, pass: 1.15 },
 
   /** Direkte Aufeinandertreffen: Gewicht = n / (n + k), höchstens cap. Saisonwerte bleiben die Basis. */
   h2h: { kTargets: 40, kCarries: 40, kPasses: 60, cap: 0.25 },
@@ -80,7 +88,7 @@ export const PARAMS = {
    * und Feldposition versucht wurde – diese Verschiebungen (Log-Odds) sind Simulationsregeln.
    * base gleicht aus, dass die Abzüge den Schnitt senken (im Rücktest eingestellt).
    */
-  fourth: { base: 1.6, perYard: 0.3, ownTerritory: 1.2, ownTerritoryLine: 35, fgRange: 0.8, k: 20 },
+  fourth: { base: 1.4, perYard: 0.15, ownTerritory: 1.2, ownTerritoryLine: 35, fgRange: 0.8, k: 20 },
 
   /** Field Goals: Treffer sinkt mit der Distanz (Log-Odds pro Yard). Kicker-Niveau aus den Bögen. */
   fg: { slopePerYard: 0.11, snapAndHold: 17, minMaxDistance: 40, maxDistance: 55, maxOverLongest: 3 },

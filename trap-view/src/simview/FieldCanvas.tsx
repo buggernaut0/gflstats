@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { PlayEvent } from '../sim/types';
-import { absOf, frameAt, type Frame } from './playback';
+import { absOf } from './playback';
+import { sceneAt, type Scene } from './choreo';
+import type { TeamUnits } from './roster';
 
 export interface TeamLook { id: string; abbr: string; fill: string; ink: string }
 export interface Pos { index: number; t: number }
@@ -11,6 +13,8 @@ interface Props {
   away: TeamLook;
   /** Spieler-ID je Team → Name/Nummer */
   names: Map<string, { name: string; number: number | null }>;
+  /** Aufstellung je Team (11 Offense / 11 Defense, wie in der Trap View) */
+  units: Record<string, TeamUnits>;
   pos: React.MutableRefObject<Pos>;
   /** Drive-Beginn (absolute Feldposition) je Ereignis, null = kein Drive */
   driveStart: (number | null)[];
@@ -21,13 +25,11 @@ interface Props {
 const FIELD_W = 120;
 const FIELD_H = 53.3;
 
-const lastName = (n: string) => n.split(' ').slice(-1)[0];
-
-/** 2D-Vogelperspektive: Feld, Line of Scrimmage, First-Down-Linie, Drive, Ball und beteiligte Spieler. */
-export function FieldCanvas({ events, home, away, names, pos, driveStart, onFrame }: Props) {
+/** 2D-Vogelperspektive: Feld, Line of Scrimmage, First-Down-Linie, Drive, Ball und alle 22 Spieler. */
+export function FieldCanvas({ events, home, away, names, units, pos, driveStart, onFrame }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const props = useRef({ events, home, away, names, driveStart, onFrame });
-  props.current = { events, home, away, names, driveStart, onFrame };
+  const props = useRef({ events, home, away, names, units, driveStart, onFrame });
+  props.current = { events, home, away, names, units, driveStart, onFrame };
 
   useEffect(() => {
     const canvas = ref.current!;
@@ -60,7 +62,7 @@ export function FieldCanvas({ events, home, away, names, pos, driveStart, onFram
     };
 
     const draw = () => {
-      const { events, home, away, names, driveStart } = props.current;
+      const { events, home, away, names, units, driveStart } = props.current;
       const s = w / FIELD_W;
       const px = (x: number) => (x + 10) * s;
       const py = (y: number) => h / 2 + y * s;
@@ -124,7 +126,7 @@ export function FieldCanvas({ events, home, away, names, pos, driveStart, onFram
       if (!e) return;
       const next = events[index + 1];
       const nextStartAbs = next && next.type !== 'kickoff' && next.type !== 'pat' && next.type !== 'twopoint' ? absOf(next, home.id, next.yardLine) : null;
-      const frame: Frame = frameAt(e, t, { home: home.id, nextStartAbs });
+      const frame: Scene = sceneAt(e, t, { home: home.id, nextStartAbs, units, names });
       const look = (id: string) => (id === home.id ? home : away);
       const offLook = look(e.offense);
 
@@ -164,33 +166,51 @@ export function FieldCanvas({ events, home, away, names, pos, driveStart, onFram
         ctx.fillStyle = '#ffd400';
         ctx.fillRect(px(frame.flag.x) - 0.7 * s, py(frame.flag.y) - 0.7 * s, 1.4 * s, 1.4 * s);
       }
-      // Spieler
-      for (const a of frame.actors) {
-        const L = look(a.team);
-        const info = names.get(`${a.team}|${a.id}`);
-        const x = px(a.at.x), y = py(a.at.y), r = Math.max(1.7 * s, 9);
+      // Spieler: erst alle Punkte, beteiligte zuletzt (oben), dann deren Namen
+      const dots = [...frame.dots].sort((a, b) => Number(a.involved) - Number(b.involved));
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (const d of dots) {
+        const L = look(d.team);
+        const x = px(d.at.x), y = py(d.at.y);
+        const r = d.involved ? Math.max(1.6 * s, 9) : Math.max(1.1 * s, 6);
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = L.fill;
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = L.ink;
-        ctx.stroke();
-        ctx.fillStyle = L.ink;
-        ctx.font = `700 ${Math.round(r * 1.05)}px "Barlow Condensed", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(info?.number != null ? String(info.number) : a.role, x, y + 1);
-        if (info) {
-          const fs = Math.max(Math.round(1.9 * s), 12);
-          ctx.font = `600 ${fs}px "Barlow Condensed", sans-serif`;
-          const label = lastName(info.name).toUpperCase();
-          const tw = ctx.measureText(label).width;
-          ctx.fillStyle = 'rgba(5,6,8,0.78)';
-          ctx.fillRect(x - tw / 2 - 4, y - r - fs - 6, tw + 8, fs + 4);
-          ctx.fillStyle = '#f1f2f0';
-          ctx.fillText(label, x, y - r - fs / 2 - 3);
+        if (d.filled) {
+          ctx.fillStyle = L.fill;
+          ctx.fill();
+          ctx.lineWidth = d.involved ? 2 : 1.5;
+          ctx.strokeStyle = L.ink;
+          ctx.stroke();
+        } else {
+          // Platz laut Daten unbesetzt: nur Umriss (hell, damit er auf dem Rasen sichtbar bleibt)
+          ctx.fillStyle = 'rgba(5,6,8,0.25)';
+          ctx.fill();
+          ctx.setLineDash([2, 2]);
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = 'rgba(241,242,240,0.7)';
+          ctx.stroke();
+          ctx.setLineDash([]);
         }
+        const inner = d.number != null ? String(d.number) : d.involved ? d.pos : r >= 8 ? d.pos : '';
+        if (inner && d.filled) {
+          ctx.fillStyle = L.ink;
+          ctx.font = `700 ${Math.round(r * (inner.length > 2 ? 0.8 : 1.05))}px "Barlow Condensed", sans-serif`;
+          ctx.fillText(inner, x, y + 1);
+        }
+      }
+      for (const d of dots) {
+        if (!d.involved || !d.name) continue;
+        const x = px(d.at.x), y = py(d.at.y);
+        const r = Math.max(1.6 * s, 9);
+        const fs = Math.max(Math.round(1.9 * s), 12);
+        ctx.font = `600 ${fs}px "Barlow Condensed", sans-serif`;
+        const label = d.name.toUpperCase();
+        const tw = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(5,6,8,0.78)';
+        ctx.fillRect(x - tw / 2 - 4, y - r - fs - 6, tw + 8, fs + 4);
+        ctx.fillStyle = '#f1f2f0';
+        ctx.fillText(label, x, y - r - fs / 2 - 3);
       }
       // Ball (mit Schatten, wenn in der Luft)
       const bx = px(frame.ball.x), by = py(frame.ball.y);

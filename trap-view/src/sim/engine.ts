@@ -68,6 +68,12 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
   type Next = { kind: 'kickoff'; team: string; free?: boolean } | { kind: 'play' };
   let next: Next = { kind: 'kickoff', team: other(firstReceiver) };
 
+  /** Raumgewinn: meist enge Streuung, selten Breakaway – Mittelwert bleibt `mean` (siehe PARAMS.breakaway). */
+  const gain = (mean: number, sigma: number, b: { p: number; mult: number; sigma: number }) => {
+    if (rng.chance(b.p)) return rng.lognormal(mean * b.mult, b.sigma);
+    return rng.lognormal(mean * (1 - b.p * b.mult) / (1 - b.p), sigma);
+  };
+
   const pickDefender = (d: TeamProfile, key: keyof Omit<DefenderProfile, 'player'>): SimPlayer | null => {
     if (!d.defenders.length) return null;
     const w = d.defenders.map((x) => x[key] + 0.05); // kleine Grundchance für jeden eingesetzten Verteidiger
@@ -326,7 +332,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
         { value: qb?.ypc ?? L.ypc, ref: L.ypc, e: PARAMS.e.passQb },
       ]);
       ev.expectedYards = Math.round(mean * 10) / 10;
-      let y = Math.round(rng.lognormal(mean * PARAMS.fieldLimit.pass, PARAMS.sigma.pass));
+      let y = Math.round(gain(mean * PARAMS.fieldLimit.pass, PARAMS.sigma.pass, PARAMS.breakaway.pass));
       y = Math.min(y, 100 - yl);
       ev.airYards = Math.max(0, Math.round(y * (L.airPerCatch / L.ypc)));
       ev.outcome = 'complete';
@@ -441,7 +447,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       tackler = pickDefender(D, 'tfl');
     } else {
       const posMean = Math.max(1, (mean * PARAMS.fieldLimit.run - pLoss * L.lossYds) / (1 - pLoss));
-      y = Math.round(rng.lognormal(posMean, PARAMS.sigma.run));
+      y = Math.round(gain(posMean, PARAMS.sigma.run, PARAMS.breakaway.run));
       tackler = pickDefender(D, 'tackle');
     }
     y = Math.min(y, 100 - yl);

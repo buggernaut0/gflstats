@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildProfiles, randomSeed, simulateGame } from '../sim/index.ts';
 import type { GameResult, PlayEvent, SimData } from '../sim/types';
 import { loadSeason } from '../data/load';
-import type { Team } from '../data/types';
+import type { SeasonData, Team } from '../data/types';
+import { buildUnits } from './roster';
 import { FieldCanvas, type Pos, type TeamLook } from './FieldCanvas';
 import { absOf, clockLabel, eventDuration, motionEnd, ordinal, spotLabel, type Speed } from './playback';
 import '../ui/styles.css';
@@ -27,7 +28,7 @@ const inkFor = (fill: string) => (lum(fill) > 0.55 ? '#0b0d10' : '#ffffff');
 /** Belegte Teamfarben, sonst neutral hell/dunkel – und immer klar unterscheidbar. */
 function teamLooks(a: Team, b: Team): [TeamLook, TeamLook] {
   const fa = a.colorsVerified ? a.colors.primary : '#d9dde3';
-  let fb = b.colorsVerified ? b.colors.primary : '#2b313b';
+  let fb = b.colorsVerified ? b.colors.primary : '#55606f';
   if (dist(fa, fb) < 110) fb = lum(fa) > 0.5 ? '#1c2129' : '#f1f2f0';
   return [
     { id: a.id, abbr: a.abbreviation, fill: fa, ink: inkFor(fa) },
@@ -73,6 +74,7 @@ interface Props {
 export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props) {
   const [data, setData] = useState<SimData | null>(null);
   const [teams, setTeams] = useState<Team[] | null>(null);
+  const [season, setSeason] = useState<SeasonData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pick, setPick] = useState<[string, string] | null>(initialTeams ?? null);
   const [game, setGame] = useState<GameResult | null>(null);
@@ -84,6 +86,7 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props
     ])
       .then(([d, s]) => {
         setData(d);
+        setSeason(s);
         const ids = new Set(d.teams.map((t) => t.id));
         const list = s.teams.filter((t) => ids.has(t.id));
         setTeams(list);
@@ -115,7 +118,7 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props
       </div></div>
     );
   }
-  if (!data || !teams || !pick) return <div className="tv-root sim"><div className="tv-boot"><span>Lade Saison {SIM_SEASON} …</span></div></div>;
+  if (!data || !teams || !pick || !season) return <div className="tv-root sim"><div className="tv-boot"><span>Lade Saison {SIM_SEASON} …</span></div></div>;
 
   const teamA = teams.find((t) => t.id === pick[0])!;
   const teamB = teams.find((t) => t.id === pick[1])!;
@@ -163,6 +166,7 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props
     <GamePlayer
       key={game.seed}
       data={data}
+      season={season}
       game={game}
       teamA={teamA}
       teamB={teamB}
@@ -175,8 +179,8 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack }: Props
 
 // ─────────────────────────────────────────────────────────── Wiedergabe
 
-function GamePlayer({ data, game, teamA, teamB, onNew, onTeams, onBack }: {
-  data: SimData; game: GameResult; teamA: Team; teamB: Team;
+function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack }: {
+  data: SimData; season: SeasonData; game: GameResult; teamA: Team; teamB: Team;
   onNew: () => void; onTeams: () => void; onBack?: () => void;
 }) {
   const events = game.events;
@@ -190,6 +194,7 @@ function GamePlayer({ data, game, teamA, teamB, onNew, onTeams, onBack }: {
     return m;
   }, [data, home.id, away.id]);
   const drives = useMemo(() => driveStarts(events, home.id), [events, home.id]);
+  const units = useMemo(() => buildUnits(season, teamA.id, teamB.id), [season, teamA.id, teamB.id]);
   const totalMs = useMemo(() => events.reduce((x, e) => x + eventDuration(e, 1), 0), [events]);
 
   const pos = useRef<Pos>({ index: 0, t: 0 });
@@ -202,13 +207,27 @@ function GamePlayer({ data, game, teamA, teamB, onNew, onTeams, onBack }: {
   const ctl = useRef({ playing, speed });
   ctl.current = { playing, speed };
 
+  /** Wiederholung eines einzelnen Spielzugs: danach geht es an der alten Stelle weiter. */
+  const rewatch = useRef<{ resume: Pos } | null>(null);
+  const [rewatching, setRewatching] = useState<number | null>(null);
+
   const onFrame = useCallback((dt: number) => {
     const { playing, speed } = ctl.current;
-    if (!playing) return;
+    const rw = rewatch.current;
+    if (!playing && !rw) return;
     const p = pos.current;
     const e = events[p.index];
     const before = p.t;
-    p.t += dt / eventDuration(e, speed);
+    p.t += dt / eventDuration(e, rw ? 1 : speed); // Wiederholung immer in Normaltempo
+    if (rw) {
+      if (p.t >= 1) {
+        pos.current = { ...rw.resume };
+        rewatch.current = null;
+        setRewatching(null);
+        setCursor(rw.resume.index);
+      }
+      return;
+    }
     if (before < motionEnd(e) && p.t >= motionEnd(e)) setRevealed((r) => Math.max(r, p.index));
     if (p.t >= 1) {
       if (p.index < events.length - 1) {
@@ -222,6 +241,13 @@ function GamePlayer({ data, game, teamA, teamB, onNew, onTeams, onBack }: {
       }
     }
   }, [events]);
+
+  const watchAgain = (i: number) => {
+    rewatch.current = { resume: { ...(rewatch.current?.resume ?? pos.current) } };
+    pos.current = { index: i, t: 0 };
+    setCursor(i);
+    setRewatching(i);
+  };
 
   const jumpToEnd = () => {
     pos.current = { index: events.length - 1, t: 1 };
@@ -269,8 +295,8 @@ function GamePlayer({ data, game, teamA, teamB, onNew, onTeams, onBack }: {
           </div>
         ))}
         <div className="sim-board__state">
-          {finished ? <b>FINAL</b> : <>
-            <b>Q{e.quarter} · {clockLabel(e.clock)}</b>
+          {finished && rewatching == null ? <b>FINAL</b> : <>
+            <b>{rewatching != null && <em className="sim-replay">Wiederholung</em>}Q{e.quarter} · {clockLabel(e.clock)}</b>
             <span>
               {isScrimmage(e) ? `${ordinal(e.down)} & ${e.yardLine + e.distance >= 100 ? 'Goal' : e.distance} · ${spotLabel(e.yardLine, look(e.offense).abbr, look(e.defense).abbr)}` : e.type === 'kickoff' ? 'Kickoff' : e.type === 'pat' || e.type === 'twopoint' ? 'Extrapunkt' : ''}
             </span>
@@ -282,7 +308,7 @@ function GamePlayer({ data, game, teamA, teamB, onNew, onTeams, onBack }: {
         <section className="sim-stage">
           {finished && <Summary game={game} home={home} away={away} teamOf={teamOf} onReplay={replay} onNew={onNew} />}
           <div className="sim-field-wrap">
-            <FieldCanvas events={events} home={home} away={away} names={names} pos={pos} driveStart={drives} onFrame={onFrame} />
+            <FieldCanvas events={events} home={home} away={away} names={names} units={units} pos={pos} driveStart={drives} onFrame={onFrame} />
           </div>
           <div className="sim-controls">
             <button className="tv-chip" onClick={() => (finished ? replay() : setPlaying((p) => !p))}>{finished ? '↺ Nochmal ansehen' : playing ? '❚❚ Pause' : '▶ Weiter'}</button>
@@ -304,7 +330,7 @@ function GamePlayer({ data, game, teamA, teamB, onNew, onTeams, onBack }: {
         <aside className="sim-side">
           <section className="sim-why">
             <h3>{why ? (selected != null ? 'Ausgewählter Spielzug' : 'Letzter Spielzug') : 'Warum passiert was?'}</h3>
-            {why ? <Why e={why} offAbbr={look(why.offense).abbr} /> : (
+            {why ? <Why e={why} offAbbr={look(why.offense).abbr} onWatch={() => watchAgain(why.index)} watching={rewatching === why.index} /> : (
               <p className="sim-muted">Zu jedem Spielzug stehen hier die berechneten Wahrscheinlichkeiten und woraus sie entstehen. Entschieden wird danach per Zufall.</p>
             )}
             {selected != null && <button className="sim-link" onClick={() => setSelected(null)}>Zurück zum aktuellen Spielzug</button>}
@@ -338,10 +364,11 @@ function GamePlayer({ data, game, teamA, teamB, onNew, onTeams, onBack }: {
   );
 }
 
-function Why({ e, offAbbr }: { e: PlayEvent; offAbbr: string }) {
+function Why({ e, offAbbr, onWatch, watching }: { e: PlayEvent; offAbbr: string; onWatch: () => void; watching: boolean }) {
   return (
     <div className="sim-why__body">
       <div className="sim-why__text">{e.text}</div>
+      <button className="tv-chip sim-watch" onClick={onWatch} disabled={watching}>{watching ? 'Wird gezeigt …' : '▶ Spielzug nochmal zeigen'}</button>
       {e.passRate != null && <div className="sim-muted">Spielzugwahl {offAbbr}: Pass {pct(e.passRate)} · Lauf {pct(1 - e.passRate)} (Teamquote 2026, nach Situation angepasst)</div>}
       {e.chances.length === 0 && <div className="sim-muted">Keine Zufallsentscheidung bei diesem Ereignis.</div>}
       {e.chances.map((c, i) => (
