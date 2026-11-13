@@ -2,19 +2,12 @@ import { memo, useMemo, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneModel, ScenePlayer } from '../data/sceneModel';
-import { resolvePose } from '../players/stances';
-import { STYLES } from '../players/styles';
+import { buildRig, labelAnchor } from '../players/rig';
 import { useTrapView } from '../state/store';
 
 /** Gemeinsame Ablage: Spieler-ID → DOM-Element des Labels. */
 export type LabelRegistry = Map<string, HTMLDivElement>;
 
-/** Höhe knapp über dem Helm in Yards – dort sitzt die Unterkante des Labels. */
-function labelHeight(p: ScenePlayer, scale = 1): number {
-  const pose = resolvePose(p.slot.stance);
-  const top = pose.hipY + Math.cos(pose.lean) * 0.63 + Math.cos(pose.lean + pose.head) * 0.28;
-  return top * 1.15 * scale + 0.14;
-}
 
 const Label = memo(function Label({ p, registry }: { p: ScenePlayer; registry: LabelRegistry }) {
   const visible = useTrapView((s) => s.visibleLabels.includes(p.id));
@@ -52,7 +45,7 @@ const Label = memo(function Label({ p, registry }: { p: ScenePlayer; registry: L
  */
 export function LabelLayer({ model, registry }: { model: SceneModel; registry: LabelRegistry }) {
   return (
-    <div className="tv-labels">
+    <div className="tv-labels" aria-hidden="true">
       {model.players.map((p) => (
         <Label key={p.id} p={p} registry={registry} />
       ))}
@@ -62,10 +55,13 @@ export function LabelLayer({ model, registry }: { model: SceneModel; registry: L
 
 /** Läuft in der 3D-Szene und hält die Labels über den Spielern – immer zur Kamera gerichtet. */
 export function LabelProjector({ model, registry }: { model: SceneModel; registry: RefObject<LabelRegistry> }) {
-  const style = useTrapView((s) => s.modelStyle);
+  // Ankerpunkt knapp über dem Helm – aus demselben Skelett berechnet, das auch das Modell stellt
   const anchors = useMemo(
-    () => model.players.map((p) => ({ id: p.id, pos: new THREE.Vector3(p.world[0], labelHeight(p, STYLES[style].scale), p.world[2]) })),
-    [model, style],
+    () => model.players.map((p) => ({
+      id: p.id,
+      pos: labelAnchor(buildRig({ world: p.world, rotationY: p.rotationY, stance: p.slot.stance, build: p.slot.build }, 0)),
+    })),
+    [model],
   );
   const v = useMemo(() => new THREE.Vector3(), []);
 

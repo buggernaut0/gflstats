@@ -11,6 +11,18 @@ import { buildMainSequence } from './shots/mainSequence';
 const MODE_BLEND = 1.5;
 const smoother = (x: number) => x * x * x * (x * (x * 6 - 15) + 10);
 
+/** Die Einstellungen sind für 16:9 komponiert. */
+const REF_ASPECT = 16 / 9;
+/**
+ * Schmalere Fenster (Hochformat am Handy, 4:3-Tablet): vertikalen Bildwinkel so weit öffnen, dass
+ * derselbe horizontale Ausschnitt sichtbar bleibt. Gedeckelt, damit das Bild im Hochformat nicht verzerrt.
+ */
+function fitFov(fov: number, aspect: number): number {
+  if (aspect >= REF_ASPECT) return fov;
+  const k = Math.min(REF_ASPECT / aspect, 2.4);
+  return THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) * k));
+}
+
 /** Vorbereitete Perspektive auf ein Duell, mit langsamem Schub. */
 function matchupPose(model: SceneModel, id: string, elapsed: number, out: CameraPose) {
   const push = Math.min(elapsed, 30) * 0.05;
@@ -25,7 +37,12 @@ function matchupPose(model: SceneModel, id: string, elapsed: number, out: Camera
  * Sequenz aus und überblendet kontrolliert in die Duell-Ansicht und zurück.
  * Es gibt keinerlei Nutzersteuerung der Kamera.
  */
-export function Director({ model, fadeRef }: { model: SceneModel; fadeRef: RefObject<HTMLDivElement | null> }) {
+export function Director({ model, fadeRef, steady = false }: {
+  model: SceneModel;
+  fadeRef: RefObject<HTMLDivElement | null>;
+  /** Ohne das leichte „Atmen“ der Kamera (prefers-reduced-motion). */
+  steady?: boolean;
+}) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const sequence = useMemo(() => compileSequence(buildMainSequence(model), model), [model]);
 
@@ -47,12 +64,12 @@ export function Director({ model, fadeRef }: { model: SceneModel; fadeRef: RefOb
   const paused = useRef(false);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    Object.assign(window, {
-      __tvSeek: (t: number, pause = true) => {
-        time.current = t;
-        paused.current = pause;
-      },
-    });
+    const w = window as unknown as { __tvSeek?: (t: number, pause?: boolean) => void };
+    w.__tvSeek = (t, pause = true) => {
+      time.current = t;
+      paused.current = pause;
+    };
+    return () => { delete w.__tvSeek; };
   }, []);
 
   useFrame((state, rawDt) => {
@@ -115,7 +132,7 @@ export function Director({ model, fadeRef }: { model: SceneModel; fadeRef: RefOb
     }
 
     // Kaum sichtbares Atmen der Kamera, damit das Bild nie völlig starr ist
-    const e = state.clock.elapsedTime;
+    const e = steady ? 0 : state.clock.elapsedTime;
     camera.position.copy(pose.pos);
     camera.position.y += Math.sin(e * 0.7) * 0.012;
     camera.lookAt(
@@ -123,8 +140,9 @@ export function Director({ model, fadeRef }: { model: SceneModel; fadeRef: RefOb
       pose.look.y + Math.sin(e * 0.61 + 1.3) * 0.015,
       pose.look.z + Math.cos(e * 0.37) * 0.02,
     );
-    if (Math.abs(camera.fov - pose.fov) > 0.001) {
-      camera.fov = pose.fov;
+    const fov = fitFov(pose.fov, state.size.width / Math.max(state.size.height, 1));
+    if (Math.abs(camera.fov - fov) > 0.001) {
+      camera.fov = fov;
       camera.updateProjectionMatrix();
     }
 

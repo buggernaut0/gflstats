@@ -59,26 +59,33 @@ Physische Werte (40-Yard-Zeit, Größe usw.) gibt es in den Daten nicht und werd
 
 ## Spielermodell
 
-Ein gemeinsames, prozedurales Modell für alle Spieler (`src/players/`), gleiche Haltungen und Kameraeinbindung wie
-zuvor. Silhouette: V-förmiger Torso, Schulterpolster unter dem Trikot, kräftigere Oberschenkel (Thigh Pads), dickerer
-Hals. Ausrüstung: Kragen und Ärmelstreifen, Gürtel, Hose bis unters Knie mit Kniepolstern und Seitenstreifen,
-Sockenstreifen, Spats/Tape, Cleats mit Sohle, Handschuhe, Schweißbänder. Helm: Jaw Pads, Ohröffnungen, Bumper,
-Kinnschale, Facemask mit Mittelsteg und Befestigungsclips. Materialien: Trikot mit Lochgewebe und Stoffglanz,
-glänzende Stretch-Hose, Helm mit Klarlack, pulverbeschichtete Facemask, Haut mit leichtem Sheen.
-Teamfarben (`src/data/kits.ts`) und Rückennummer/Name (`numberTexture.ts`) werden dynamisch übertragen.
+Ein gemeinsames, prozedurales Modell für alle Spieler (`src/players/`):
 
-### Modellstile (`src/players/styles.ts`)
+- `parts.ts` – 13 starre Körperteile (Becken, Ober-/Unterschenkel, Schuhe, Rumpf, Ober-/Unterarme, Helm), jedes als
+  eine zusammengeführte Geometrie. Helm mit Facemask, Trikot, Hose, Stutzen und Schuhe sind getrennte Teile mit
+  eigener Farbe und Oberfläche. Schulterbreite ≈ 1,28 × Brustbreite.
+- `squad.ts` – zeichnet jedes Körperteil als **ein InstancedMesh für alle Spieler**: 13 Draw Calls für beide Teams
+  (plus 13 für unbesetzte Plätze), drei Materialien insgesamt. Teamfarben (`src/data/kits.ts`), Hautton und Nummer
+  hängen als Instanz-Attribute am Spieler.
+- `numberAtlas.ts` – Rückennummern und Namen aller Spieler in einer Textur.
+- `rig.ts` – Skelett, Körperbau je Positionsgruppe (`skill`, `big`, `line`) und Idle-Animation (Atmen, ruhiger Blick);
+  `stances.ts` – Haltung je Position. Mit „Bewegung reduzieren“ im Betriebssystem stehen die Spieler still.
 
-Umschaltbar im Auswahlbildschirm und live unten rechts in der Präsentation; Adresse `?model=<stil>` erzwingt einen
-Stil, sonst merkt sich der Browser die letzte Wahl. Gleiches Skelett, gleiche Haltungen, Daten und Kamerafahrten.
+Unbesetzte Plätze erscheinen als durchscheinende Silhouette desselben Modells.
 
-| Stil | Vorbild (US-Übertragungen) | Merkmale |
-|---|---|---|
-| `broadcast` | cinematische Studio-/Pregame-Grafik (FOX, ESPN) | realistische Ausrüstung und Materialien (Standard) |
-| `athletic` | Madden-Avatare, z. B. „Madden NFL Cast“ (NBC/Peacock) | breitere Pads, kräftigere Arme/Beine, 5 % größer |
-| `tracking` | Next-Gen-Stats-Visualisierungen (Prime Vision, Yahoo PlayAR) | einfarbige Figuren in Trikotfarbe, ohne Kleinteile |
-| `hologram` | AR-Grafik bei ESPNs Monday Night Football | leuchtend, durchscheinend, Kantenlicht und Scanlines, keine Schatten |
+## Darstellung, Fallback, Bedienung
+
+- Qualität (`src/scene/quality.ts`): Touch-Geräte und schwache Rechner bekommen geringere Pixeldichte, kein MSAA,
+  kleinere Schatten- und Feldtextur. Bricht die Bildrate ein, sinkt die Pixeldichte auf 1.
+- Ohne WebGL 2, bei einem Fehler oder wenn der Browser den Grafikkontext entzieht, erscheint die Aufstellung als
+  Liste (`src/ui/LineupBoard.tsx`); Duelle und Vergleichsfenster funktionieren weiter. Dieselbe Liste steht
+  Screenreadern auch neben der 3D-Szene zur Verfügung.
+- Hochformat/4:3: der Bildwinkel wird angepasst, damit die für 16:9 komponierten Einstellungen im Bild bleiben.
+- Tastatur: `Esc` schließt das Duell bzw. verlässt die Präsentation.
 
 ## Musik
 
-`public/audio/track.mp3`, abgespielt mit halber Lautstärke (`TRACK_GAIN` in `src/audio/AudioEngine.ts`) (Herkunft und Hinweis zur Nutzung: `public/audio/README.md`). Fehlt die Datei, bleibt es still.
+`public/audio/track.mp3`, in Schleife, mit halber Lautstärke (`TRACK_GAIN` in `src/audio/AudioEngine.ts`); Herkunft
+und Hinweis zur Nutzung: `public/audio/README.md`. Die Musik startet direkt im Klick auf „Enter Trap View“
+(Autoplay-Regeln). Blockiert der Browser trotzdem, zeigt die HUD „Sound on“; fehlt die Datei, „No audio“.
+Im Hintergrund-Tab pausiert die Musik. Stummschaltung bleibt über Neuladen erhalten.

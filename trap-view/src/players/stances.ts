@@ -1,4 +1,5 @@
 import type { Stance } from '../data/types';
+import { FOOT, SHIN, THIGH } from './parts';
 
 /** Gelenkwinkel einer statischen Haltung (Bogenmaß). */
 export interface Pose {
@@ -13,10 +14,6 @@ export interface Pose {
   /** [Schulter vor/zurück, Abspreizen, Ellbogenbeugung] – linker und rechter Arm. */
   arms: [[number, number, number], [number, number, number]];
 }
-
-export const THIGH = 0.44;
-export const SHIN = 0.44;
-export const FOOT = 0.07;
 
 const POSES: Record<Stance, Pose> = {
   shotgun: {

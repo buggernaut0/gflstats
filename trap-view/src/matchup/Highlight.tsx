@@ -2,8 +2,9 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneModel } from '../data/sceneModel';
-import { GEO } from '../players/geometry';
 import { useTrapView } from '../state/store';
+
+const RING = new THREE.RingGeometry(0.62, 0.72, 48);
 
 /**
  * Hebt die beiden Spieler des aktiven Duells hervor: zwei Spots von oben und
@@ -62,7 +63,7 @@ export function Highlight({ model }: { model: SceneModel }) {
         <group key={i}>
           <primitive object={s} />
           <primitive object={s.target} />
-          <mesh ref={(r) => { rings.current[i] = r; }} geometry={GEO.ring} rotation-x={-Math.PI / 2} visible={false}>
+          <mesh ref={(r) => { rings.current[i] = r; }} geometry={RING} dispose={null} rotation-x={-Math.PI / 2} visible={false}>
             <meshBasicMaterial transparent opacity={0} toneMapped={false} depthWrite={false} />
           </mesh>
         </group>

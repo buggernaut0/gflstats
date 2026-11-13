@@ -11,6 +11,8 @@ export interface Kit {
   helmetStripe: string;
   facemask: string;
   socks: string;
+  shoes: string;
+  gloves: string;
 }
 
 /**
@@ -29,6 +31,8 @@ export function resolveKit(colors: TeamColors, variant: 'dark' | 'light'): Kit {
       helmetStripe: colors.secondary,
       facemask: colors.secondary,
       socks: '#e4e3de',
+      shoes: '#0f1013',
+      gloves: '#15161a',
     };
   }
   return {
@@ -41,5 +45,7 @@ export function resolveKit(colors: TeamColors, variant: 'dark' | 'light'): Kit {
     helmetStripe: colors.secondary,
     facemask: '#d5d7da',
     socks: '#e9e8e3',
+    shoes: '#ecebe6',
+    gloves: colors.primary,
   };
 }

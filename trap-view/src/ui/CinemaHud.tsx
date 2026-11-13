@@ -3,13 +3,15 @@ import { playerTag, type SceneModel } from '../data/sceneModel';
 import type { DataIndex } from '../data/types';
 import { MatchupPanel } from '../matchup/MatchupPanel';
 import { useTrapView } from '../state/store';
-import { StylePicker } from './StylePicker';
+import type { AudioStatus } from '../audio/AudioEngine';
 
 /** Zurückhaltende Bedienelemente über der Szene; blenden sich bei Inaktivität aus. */
-export function CinemaHud({ model, index, noAudio, onExit }: {
+export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: {
   model: SceneModel;
   index: DataIndex;
-  noAudio: boolean;
+  audioStatus: AudioStatus;
+  /** Musik starten, nachdem der Browser die automatische Wiedergabe blockiert hat. */
+  onUnlockAudio: () => void;
   onExit: () => void;
 }) {
   const chapter = useTrapView((s) => s.chapter);
@@ -28,14 +30,25 @@ export function CinemaHud({ model, index, noAudio, onExit }: {
       window.clearTimeout(timer);
       timer = window.setTimeout(() => setIdle(true), 3500);
     };
-    window.addEventListener('pointermove', wake);
-    window.addEventListener('keydown', wake);
+    // pointerdown/focusin: auf Touch-Geräten und bei Tastaturbedienung gibt es kein pointermove
+    const events = ['pointermove', 'pointerdown', 'keydown', 'focusin'] as const;
+    events.forEach((e) => window.addEventListener(e, wake));
     return () => {
       window.clearTimeout(timer);
-      window.removeEventListener('pointermove', wake);
-      window.removeEventListener('keydown', wake);
+      events.forEach((e) => window.removeEventListener(e, wake));
     };
   }, []);
+
+  // Escape: erst das Duell schließen, dann die Präsentation verlassen
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (useTrapView.getState().matchupId) setMatchup(null);
+      else onExit();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onExit, setMatchup]);
 
   const active = model.matchups.find((m) => m.id === matchupId);
   const quiet = idle && !active && !ended;
@@ -68,12 +81,13 @@ export function CinemaHud({ model, index, noAudio, onExit }: {
       )}
 
       {model.matchups.length > 0 && (
-        <nav className="tv-matchups tv-fade">
+        <nav className="tv-matchups tv-fade" aria-label="Matchups">
           <span className="tv-matchups__head">Matchups</span>
           {model.matchups.map((m) => (
             <button
               key={m.id}
               className={`tv-matchup${m.id === matchupId ? ' is-active' : ''}`}
+              aria-pressed={m.id === matchupId}
               onClick={() => setMatchup(m.id === matchupId ? null : m.id)}
             >
               <b>{playerTag(m.offense, m.offense.player?.number == null)}</b>
@@ -87,10 +101,10 @@ export function CinemaHud({ model, index, noAudio, onExit }: {
       {active && <MatchupPanel matchup={active} index={index} season={model.season} onClose={() => setMatchup(null)} />}
 
       <div className="tv-controls tv-fade">
-        <StylePicker compact />
-        {noAudio && <span className="tv-tag" title="public/audio/track.mp3 fehlt">No audio</span>}
+        {audioStatus === 'missing' && <span className="tv-tag" title="Musikdatei fehlt oder ist nicht abspielbar">No audio</span>}
+        {audioStatus === 'blocked' && <button className="tv-btn tv-btn--call" onClick={onUnlockAudio}>Sound on</button>}
         <button className="tv-btn" onClick={restart}>{ended ? 'Replay' : 'Restart'}</button>
-        <button className="tv-btn" onClick={toggleMuted}>{muted ? 'Unmute' : 'Mute'}</button>
+        <button className="tv-btn" onClick={toggleMuted} aria-pressed={muted}>{muted ? 'Unmute' : 'Mute'}</button>
         <input
           className="tv-volume"
           type="range" min={0} max={1} step={0.01}

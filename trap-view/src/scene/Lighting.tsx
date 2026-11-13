@@ -7,7 +7,7 @@ import { useTrapView } from '../state/store';
  * Flutlicht-Setup: ein schattenwerfendes Hauptlicht, drei Rim-Lights für die Silhouetten
  * und ein schwaches Himmelslicht. Im Matchup-Modus wird die Grundbeleuchtung abgesenkt.
  */
-export function Lighting({ losX }: { losX: number }) {
+export function Lighting({ losX, shadowMap = 2048 }: { losX: number; shadowMap?: number }) {
   const key = useRef<THREE.DirectionalLight>(null);
   const rims = useRef<(THREE.DirectionalLight | null)[]>([]);
   const hemi = useRef<THREE.HemisphereLight>(null);
@@ -44,7 +44,7 @@ export function Lighting({ losX }: { losX: number }) {
         color="#e6edff"
         intensity={3.8}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[shadowMap, shadowMap]}
         shadow-bias={-0.0003}
         shadow-normalBias={0.03}
         shadow-radius={5}

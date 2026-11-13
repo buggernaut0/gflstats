@@ -14,12 +14,13 @@ function endzoneColor(hex: string): string {
 }
 
 /** Spielfeld mit Markierungen, Line of Scrimmage, First-Down-Linie und Ball. */
-export function Field({ model }: { model: SceneModel }) {
+export function Field({ model, ppy = 32 }: { model: SceneModel; ppy?: number }) {
   const { offense, defense, losX } = model;
 
   const map = useMemo(
     () =>
       createFieldTexture({
+        ppy,
         leftEndzone: {
           color: endzoneColor(offense.colors.primary),
           text: offense.nickname.toUpperCase(),
@@ -31,7 +32,7 @@ export function Field({ model }: { model: SceneModel }) {
           textColor: defense.colors.secondary,
         },
       }),
-    [offense, defense],
+    [offense, defense, ppy],
   );
   const bump = useMemo(() => createGrassBumpTexture(), []);
   useEffect(() => () => map.dispose(), [map]);

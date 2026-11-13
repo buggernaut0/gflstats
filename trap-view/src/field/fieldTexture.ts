@@ -6,9 +6,10 @@ export interface FieldTextureOptions {
   leftEndzone: { color: string; text: string; textColor: string };
   /** Endzone hinter der Defense (+X). */
   rightEndzone: { color: string; text: string; textColor: string };
+  /** Pixel pro Yard (Standard 32; auf schwächeren Geräten 16 – ein Viertel des Texturspeichers) */
+  ppy?: number;
 }
 
-const PPY = 32; // Pixel pro Yard
 const LINE = '#e4e8e1';
 
 /** Deterministischer Zufall, damit das Feld bei jedem Start gleich aussieht. */
@@ -25,6 +26,7 @@ function rng(seed: number) {
  * einmalig in eine Canvas-Textur. Die Textur deckt Feld + Randstreifen ab.
  */
 export function createFieldTexture(opts: FieldTextureOptions): THREE.CanvasTexture {
+  const PPY = opts.ppy ?? 32;
   const totalL = FIELD.length + FIELD.border * 2;
   const totalW = FIELD.width + FIELD.border * 2;
   const canvas = document.createElement('canvas');
