@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Kit } from '../data/kits';
+import type { ModelStyle } from './styles';
 
 /**
  * Stoffstruktur als Bump-Map, einmal erzeugt und von allen Spielern geteilt:
@@ -122,3 +123,114 @@ export const GHOST_SHARED: Omit<typeof SHARED, 'skin'> = {
   sole: GHOST, tape: GHOST, belt: GHOST, inner: GHOST,
   visor: GHOST as unknown as THREE.MeshPhysicalMaterial,
 };
+
+// ─────────────────────────────────────────────────────────── Stile
+
+export type SharedSet = Omit<typeof SHARED, 'skin'>;
+
+/** Alle Materialien eines Teams in einem Darstellungsstil. */
+export interface MaterialSet {
+  kit: KitMaterials;
+  shared: SharedSet;
+  skins: THREE.Material[];
+  /** Torso-Material mit der individuellen Trikottextur (Nummer, Name) */
+  torso: (map: THREE.Texture) => THREE.Material;
+  dispose: () => void;
+}
+
+/**
+ * Hologramm-Material: Kantenlicht (Fresnel) und feine Scanlines in Teamfarbe, additiv und
+ * durchscheinend. Werte über 1 lösen das vorhandene Bloom aus.
+ */
+function hologramMaterial(color: string, strength = 1): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(color) }, uStrength: { value: strength } },
+    vertexShader: /* glsl */ `
+      varying vec3 vNormal;
+      varying vec3 vView;
+      void main() {
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vNormal = normalize(normalMatrix * normal);
+        vView = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uColor;
+      uniform float uStrength;
+      varying vec3 vNormal;
+      varying vec3 vView;
+      void main() {
+        float f = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 2.2);
+        float scan = 0.82 + 0.18 * step(0.5, fract(gl_FragCoord.y * 0.33));
+        vec3 c = uColor * (0.18 + 2.6 * f) * scan * uStrength;
+        gl_FragColor = vec4(c, (0.18 + 0.8 * f) * uStrength);
+      }`,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+}
+
+/** Helle, leicht entsättigte Variante einer Teamfarbe – Hologramme brauchen Leuchtkraft. */
+function glowOf(hex: string) {
+  const c = new THREE.Color(hex);
+  const hsl = { h: 0, s: 0, l: 0 };
+  c.getHSL(hsl);
+  return `#${c.setHSL(hsl.h, Math.min(1, hsl.s * 1.1), Math.max(hsl.l, 0.55)).getHexString()}`;
+}
+
+export function createMaterialSet(kit: Kit, style: ModelStyle): MaterialSet {
+  if (style === 'tracking') {
+    // Einheitliche Figur in Trikotfarbe; nur Helm, Facemask und Nummer heben sich ab
+    const body = new THREE.MeshStandardMaterial({ color: kit.jersey, roughness: 0.6 });
+    const dark = new THREE.MeshStandardMaterial({ color: new THREE.Color(kit.jersey).multiplyScalar(0.55), roughness: 0.7 });
+    const accent = new THREE.MeshStandardMaterial({ color: kit.trim, roughness: 0.5 });
+    const helmet = new THREE.MeshPhysicalMaterial({ color: kit.helmet, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.1 });
+    const mask = new THREE.MeshStandardMaterial({ color: kit.facemask, roughness: 0.4 });
+    const inner = new THREE.MeshStandardMaterial({ color: '#08090b', roughness: 1 });
+    const owned = [body, dark, accent, helmet, mask, inner];
+    return {
+      kit: { jersey: body, pants: body, socks: body, helmet, stripe: accent, trim: accent, facemask: mask },
+      shared: {
+        glove: dark as unknown as THREE.MeshPhysicalMaterial, shoe: dark as unknown as THREE.MeshPhysicalMaterial,
+        sole: dark, tape: body, belt: dark, inner, visor: inner as unknown as THREE.MeshPhysicalMaterial,
+      },
+      skins: [body],
+      torso: (map) => new THREE.MeshStandardMaterial({ map, roughness: 0.6 }),
+      dispose: () => owned.forEach((m) => m.dispose()),
+    };
+  }
+
+  if (style === 'hologram') {
+    const glow = glowOf(kit.helmetStripe);
+    const shell = hologramMaterial(glow, 1);
+    const faint = hologramMaterial(glow, 0.55);
+    const owned: THREE.Material[] = [shell, faint];
+    const k = shell as unknown as THREE.MeshPhysicalMaterial;
+    const f = faint as unknown as THREE.MeshPhysicalMaterial;
+    return {
+      kit: { jersey: k, pants: k, socks: f, helmet: k, stripe: k, trim: k, facemask: k },
+      shared: { glove: f, shoe: f, sole: f as unknown as THREE.MeshStandardMaterial, tape: f, belt: f, inner: f, visor: f },
+      skins: [faint],
+      // Trikottextur leuchtend und durchscheinend – die Rückennummer bleibt lesbar
+      torso: (map) => new THREE.MeshBasicMaterial({
+        map, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+      }),
+      dispose: () => owned.forEach((m) => m.dispose()),
+    };
+  }
+
+  // broadcast / athletic: realistische Materialien
+  const kitMats = createKitMaterials(kit);
+  return {
+    kit: kitMats,
+    shared: SHARED,
+    skins: SHARED.skin,
+    torso: (map) => new THREE.MeshPhysicalMaterial({
+      map, roughness: 0.68, emissive: '#ffffff', emissiveMap: map, emissiveIntensity: 0.14,
+      sheen: 0.3, sheenRoughness: 0.6, sheenColor: sheenOf(kit.jersey),
+      bumpMap: FABRIC.jerseyTorso, bumpScale: 0.35,
+    }),
+    dispose: () => disposeKitMaterials(kitMats),
+  };
+}

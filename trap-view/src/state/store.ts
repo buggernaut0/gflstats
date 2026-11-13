@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { isModelStyle, type ModelStyle } from '../players/styles';
 
 export type Phase = 'select' | 'entering' | 'cinema';
 
@@ -17,6 +18,8 @@ interface TrapViewState {
   muted: boolean;
   /** Wird erhöht, um Timeline und Musik neu zu starten. */
   restartToken: number;
+  /** Darstellungsstil der Spieler */
+  modelStyle: ModelStyle;
 
   setTeams: (offenseId: string, defenseId: string) => void;
   setPhase: (phase: Phase) => void;
@@ -28,6 +31,7 @@ interface TrapViewState {
   toggleMuted: () => void;
   restart: () => void;
   exit: () => void;
+  setModelStyle: (s: ModelStyle) => void;
 }
 
 /** Stummschaltung bleibt über Neuladen hinweg erhalten. */
@@ -47,6 +51,27 @@ function writeMuted(m: boolean) {
   }
 }
 
+/** Modellstil: ?model=… in der Adresse hat Vorrang, sonst die letzte Wahl dieses Browsers. */
+const STYLE_KEY = 'trap-view:model';
+function readStyle(): ModelStyle {
+  try {
+    const q = new URLSearchParams(window.location.search).get('model');
+    if (isModelStyle(q)) return q;
+    const v = localStorage.getItem(STYLE_KEY);
+    if (isModelStyle(v)) return v;
+  } catch {
+    /* Speicher nicht verfügbar */
+  }
+  return 'broadcast';
+}
+function writeStyle(s: ModelStyle) {
+  try {
+    localStorage.setItem(STYLE_KEY, s);
+  } catch {
+    /* nur für diese Sitzung */
+  }
+}
+
 export const useTrapView = create<TrapViewState>((set) => ({
   phase: 'select',
   offenseId: '',
@@ -58,6 +83,7 @@ export const useTrapView = create<TrapViewState>((set) => ({
   volume: 0.7,
   muted: readMuted(),
   restartToken: 0,
+  modelStyle: readStyle(),
 
   setTeams: (offenseId, defenseId) => set({ offenseId, defenseId }),
   setPhase: (phase) => set({ phase }),
@@ -72,4 +98,8 @@ export const useTrapView = create<TrapViewState>((set) => ({
   }),
   restart: () => set((s) => ({ restartToken: s.restartToken + 1, matchupId: null, ended: false })),
   exit: () => set({ phase: 'select', matchupId: null, visibleLabels: [], chapter: null, ended: false }),
+  setModelStyle: (modelStyle) => {
+    writeStyle(modelStyle);
+    set({ modelStyle });
+  },
 }));

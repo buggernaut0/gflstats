@@ -67,6 +67,18 @@ Kinnschale, Facemask mit Mittelsteg und Befestigungsclips. Materialien: Trikot m
 glänzende Stretch-Hose, Helm mit Klarlack, pulverbeschichtete Facemask, Haut mit leichtem Sheen.
 Teamfarben (`src/data/kits.ts`) und Rückennummer/Name (`numberTexture.ts`) werden dynamisch übertragen.
 
+### Modellstile (`src/players/styles.ts`)
+
+Umschaltbar im Auswahlbildschirm und live unten rechts in der Präsentation; Adresse `?model=<stil>` erzwingt einen
+Stil, sonst merkt sich der Browser die letzte Wahl. Gleiches Skelett, gleiche Haltungen, Daten und Kamerafahrten.
+
+| Stil | Vorbild (US-Übertragungen) | Merkmale |
+|---|---|---|
+| `broadcast` | cinematische Studio-/Pregame-Grafik (FOX, ESPN) | realistische Ausrüstung und Materialien (Standard) |
+| `athletic` | Madden-Avatare, z. B. „Madden NFL Cast“ (NBC/Peacock) | breitere Pads, kräftigere Arme/Beine, 5 % größer |
+| `tracking` | Next-Gen-Stats-Visualisierungen (Prime Vision, Yahoo PlayAR) | einfarbige Figuren in Trikotfarbe, ohne Kleinteile |
+| `hologram` | AR-Grafik bei ESPNs Monday Night Football | leuchtend, durchscheinend, Kantenlicht und Scanlines, keine Schatten |
+
 ## Musik
 
-`public/audio/track.mp3` (Herkunft und Hinweis zur Nutzung: `public/audio/README.md`). Fehlt die Datei, bleibt es still.
+`public/audio/track.mp3`, abgespielt mit halber Lautstärke (`TRACK_GAIN` in `src/audio/AudioEngine.ts`) (Herkunft und Hinweis zur Nutzung: `public/audio/README.md`). Fehlt die Datei, bleibt es still.

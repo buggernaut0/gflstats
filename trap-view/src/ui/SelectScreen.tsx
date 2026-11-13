@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Team } from '../data/types';
+import { StylePicker } from './StylePicker';
 
 interface Props {
   teams: Team[];
@@ -88,6 +89,7 @@ export function SelectScreen({ teams, seasons, season, offenseId, defenseId, lea
         <Side role="DEFENSE" teams={teams} selected={defense} blockedId={offense.id} onPick={(id) => onChange(offense.id, id)} />
       </div>
       <footer className="tv-select__foot">
+        <StylePicker />
         <button className="tv-enter" onClick={onEnter} disabled={loading}>
           <span>ENTER TRAP VIEW</span>
         </button>

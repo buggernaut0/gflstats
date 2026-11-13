@@ -3,6 +3,7 @@ import { playerTag, type SceneModel } from '../data/sceneModel';
 import type { DataIndex } from '../data/types';
 import { MatchupPanel } from '../matchup/MatchupPanel';
 import { useTrapView } from '../state/store';
+import { StylePicker } from './StylePicker';
 
 /** Zurückhaltende Bedienelemente über der Szene; blenden sich bei Inaktivität aus. */
 export function CinemaHud({ model, index, noAudio, onExit }: {
@@ -86,6 +87,7 @@ export function CinemaHud({ model, index, noAudio, onExit }: {
       {active && <MatchupPanel matchup={active} index={index} season={model.season} onClose={() => setMatchup(null)} />}
 
       <div className="tv-controls tv-fade">
+        <StylePicker compact />
         {noAudio && <span className="tv-tag" title="public/audio/track.mp3 fehlt">No audio</span>}
         <button className="tv-btn" onClick={restart}>{ended ? 'Replay' : 'Restart'}</button>
         <button className="tv-btn" onClick={toggleMuted}>{muted ? 'Unmute' : 'Mute'}</button>

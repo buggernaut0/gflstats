@@ -3,16 +3,17 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneModel, ScenePlayer } from '../data/sceneModel';
 import { resolvePose } from '../players/stances';
+import { STYLES } from '../players/styles';
 import { useTrapView } from '../state/store';
 
 /** Gemeinsame Ablage: Spieler-ID → DOM-Element des Labels. */
 export type LabelRegistry = Map<string, HTMLDivElement>;
 
 /** Höhe knapp über dem Helm in Yards – dort sitzt die Unterkante des Labels. */
-function labelHeight(p: ScenePlayer): number {
+function labelHeight(p: ScenePlayer, scale = 1): number {
   const pose = resolvePose(p.slot.stance);
   const top = pose.hipY + Math.cos(pose.lean) * 0.63 + Math.cos(pose.lean + pose.head) * 0.28;
-  return top * 1.15 + 0.14;
+  return top * 1.15 * scale + 0.14;
 }
 
 const Label = memo(function Label({ p, registry }: { p: ScenePlayer; registry: LabelRegistry }) {
@@ -61,9 +62,10 @@ export function LabelLayer({ model, registry }: { model: SceneModel; registry: L
 
 /** Läuft in der 3D-Szene und hält die Labels über den Spielern – immer zur Kamera gerichtet. */
 export function LabelProjector({ model, registry }: { model: SceneModel; registry: RefObject<LabelRegistry> }) {
+  const style = useTrapView((s) => s.modelStyle);
   const anchors = useMemo(
-    () => model.players.map((p) => ({ id: p.id, pos: new THREE.Vector3(p.world[0], labelHeight(p), p.world[2]) })),
-    [model],
+    () => model.players.map((p) => ({ id: p.id, pos: new THREE.Vector3(p.world[0], labelHeight(p, STYLES[style].scale), p.world[2]) })),
+    [model, style],
   );
   const v = useMemo(() => new THREE.Vector3(), []);
 

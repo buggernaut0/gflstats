@@ -262,6 +262,18 @@
 .tv-panel__note { margin: 0; font-size: 10.5px; line-height: 1.45; color: var(--tv-dim); max-width: 60ch; user-select: text; }
 
 /* Mittlere Breiten: Fenster links ausrichten, damit es die Matchup-Liste rechts nicht verdeckt */
+/* Spielermodell-Stile */
+.tv-styles { display: flex; align-items: center; gap: 2px; }
+.tv-styles__head { font-family: var(--tv-cond); font-weight: 600; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--tv-dim); margin-right: 10px; }
+.tv-root .tv-style {
+  font-family: var(--tv-cond); font-weight: 600; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 6px 10px 5px; color: var(--tv-dim); border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s;
+}
+.tv-style:hover { color: var(--tv-ink); }
+.tv-style.is-active { color: var(--tv-ink); border-bottom-color: var(--tv-ink); }
+.tv-styles--compact { margin-right: 8px; background: rgba(5, 6, 8, 0.5); border: 1px solid var(--tv-faint); padding: 0 2px; }
+.tv-styles--compact .tv-style { font-size: 11px; padding: 7px 8px 5px; letter-spacing: 0.12em; }
+
 @media (min-width: 761px) and (max-width: 1240px) {
   .tv-panel { left: 24px; transform: none; width: calc(100% - 330px); min-width: 440px; animation-name: tv-panel-l; }
   .tv-root .tv-matchup { max-width: 270px; }
@@ -279,7 +291,8 @@
   .tv-side .tv-side__teams { justify-content: center; }
   .tv-chip span { display: none; }
   .tv-matchups { top: 64px; transform: none; right: 16px; }
-  .tv-controls { right: 16px; bottom: 16px; }
+  .tv-controls { right: 16px; bottom: 16px; flex-wrap: wrap; justify-content: flex-end; left: 16px; }
+  .tv-styles { flex-wrap: wrap; justify-content: center; }
   .tv-chapter { left: 16px; bottom: 64px; }
   .tv-panel { width: calc(100% - 32px); bottom: 64px; padding: 14px 14px 10px; max-height: calc(100% - 200px); }
   .tv-matchups { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; left: 16px; }

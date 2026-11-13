@@ -1,14 +1,16 @@
 import { useEffect, useMemo } from 'react';
 import type { SceneModel } from '../data/sceneModel';
+import { useTrapView } from '../state/store';
 import { PlayerModel } from './PlayerModel';
-import { createKitMaterials, disposeKitMaterials } from './materials';
+import { createMaterialSet } from './materials';
 
-/** Erzeugt alle Spieler der Partie aus dem aufgelösten Szenenmodell. */
+/** Erzeugt alle Spieler der Partie aus dem aufgelösten Szenenmodell – im gewählten Modellstil. */
 export function Roster({ model }: { model: SceneModel }) {
-  const offenseMats = useMemo(() => createKitMaterials(model.offenseKit), [model.offenseKit]);
-  const defenseMats = useMemo(() => createKitMaterials(model.defenseKit), [model.defenseKit]);
-  useEffect(() => () => disposeKitMaterials(offenseMats), [offenseMats]);
-  useEffect(() => () => disposeKitMaterials(defenseMats), [defenseMats]);
+  const style = useTrapView((s) => s.modelStyle);
+  const offenseMats = useMemo(() => createMaterialSet(model.offenseKit, style), [model.offenseKit, style]);
+  const defenseMats = useMemo(() => createMaterialSet(model.defenseKit, style), [model.defenseKit, style]);
+  useEffect(() => () => offenseMats.dispose(), [offenseMats]);
+  useEffect(() => () => defenseMats.dispose(), [defenseMats]);
 
   return (
     <group>
@@ -24,6 +26,7 @@ export function Roster({ model }: { model: SceneModel }) {
           stance={p.slot.stance}
           kit={p.kit}
           materials={p.side === 'offense' ? offenseMats : defenseMats}
+          style={style}
           seed={i * 7 + (p.player?.number ?? i)}
         />
       ))}

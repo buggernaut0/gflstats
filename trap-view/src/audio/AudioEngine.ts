@@ -3,6 +3,9 @@
  * bleibt es still. Muss aus einer Nutzeraktion heraus
  * gestartet werden (Browser-Autoplay-Regeln) – auf der Auswahloberfläche bleibt es still.
  */
+/** Grundpegel des Tracks: halbe Lautstärke. Der Regler (0–1) skaliert darunter. */
+const TRACK_GAIN = 0.5;
+
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -76,7 +79,7 @@ export class AudioEngine {
   }
 
   private level() {
-    return this.muted ? 0 : this.volume;
+    return this.muted ? 0 : this.volume * TRACK_GAIN;
   }
 
   private apply() {
