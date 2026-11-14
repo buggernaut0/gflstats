@@ -62,6 +62,36 @@ INT + abgewehrte Pässe, Tackles, Sacks + Tackles for Loss – jeweils pro Spiel
 
 Physische Werte (40-Yard-Zeit, Größe usw.) gibt es in den Daten nicht und werden nicht angezeigt.
 
+## Player Spotlight (Prototyp, 14.11.2026)
+
+Während der Kamerafahrt werden bis zu drei herausragende Offense-Spieler des Offense-Teams und bis zu drei
+Defense-Spieler des Defense-Teams vorgestellt – abwechselnd (O1, D1, O2, D2, O3, D3), in drei Blöcken zwischen den
+bestehenden Einstellungen: Trenches → **Spotlight** → Backfield → Duelle → **Spotlight** → Defense → **Spotlight** →
+Final Shot. Die bestehenden Einstellungen sind unverändert; mit sechs Spielern wird eine Runde ≈ 44 s länger.
+
+**Auswahl** (`src/spotlight/scoring.ts` – einzige Stelle mit Regeln und Gewichten, läuft beim Datenexport):
+
+- Grundlage nur die gewählte Saison; Vergleichsgruppe = alle Spieler der Liga mit derselben Statistik-Rolle
+  (QB, RB, WR/TE, DEF), mind. 3 Spiele und Mindestvolumen (50 Pässe, 25 Ballkontakte, 10 Receptions, 8 Tackles).
+- Kennzahlen pro Spiel bzw. als Quote (Yards/Pass, Completion %, INT-Quote, Yards/Carry, Yards/Catch,
+  Catch-/Drop-Quote, verlorene Fumbles pro Ballkontakt), zum Gruppenschnitt geglättet (3 Spiele bzw. 12–80 Versuche).
+  Negative Kennzahlen (INT, Fumbles, Drops) zählen umgekehrt. Spalten, die eine Saison nicht erfasst, entfallen.
+- Perzentil je Kennzahl, Profilwert = gewichteter Mittelwert (0–100). QB-Profil × 1,05.
+- Defense: DL/LB/DB sind ohne Kader nicht belegt → drei Statistikprofile (Pass Rusher, Tackler, Ballhawk), das
+  beste zählt; mit Kader nur die zur Position passenden.
+- Kandidaten nur aus der Starting Lineup (die Karte gehört zu einem Spieler auf dem Feld). Star ab 60, Elite ab 80.
+  Erreicht eine Seite niemand, erscheint höchstens ihr bester Spieler als „Schlüsselspieler“ (ab 45) – sonst keine Karte.
+- Gründe auf der Karte: die drei Kennzahlen mit dem größten Beitrag, mit echten Saisonwerten und „Top x %“.
+
+**Darstellung:** `src/camera/shots/spotlight.ts` (Kamerafahrt auf den Spieler, Blickwinkel mit der geringsten
+Verdeckung, Spieler im Bilddrittel gegenüber der Karte; innerhalb eines Blocks weicher Kameraflug zum nächsten Spieler),
+`src/matchup/Highlight.tsx` (Spot und Bodenring), `src/spotlight/SpotlightCard.tsx` + `spotlight.css` (Karte),
+`src/spotlight/PlayerPortrait.tsx` (stilisierte Büste in der Ausrüstung des Spielers, getöntes Visier, Nummer aus dem Kader).
+
+**Spielerfotos ergänzen:** Datei `web/public/trapview/photos/<spieler-id>.webp` (oder `.jpg`/`.png`) ablegen,
+`npm run data:trapview` – die Karte zeigt dann das Foto statt der Büste (Hochformat, Kopf im oberen Drittel).
+Lädt ein Foto nicht, fällt die Karte automatisch auf die Büste zurück.
+
 ## Spielermodell
 
 Ein gemeinsames, prozedurales Modell für alle Spieler (`src/players/`):

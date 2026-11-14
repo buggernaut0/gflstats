@@ -12,6 +12,11 @@ interface TrapViewState {
   visibleLabels: string[];
   /** Aktueller Abschnitt der Präsentation für die Bauchbinde. */
   chapter: { index: number; title: string; subtitle: string } | null;
+  /**
+   * Laufendes Player Spotlight (setzt der Kamera-Director): Index in model.spotlights, Dauer der
+   * Einstellung und ein Schlüssel, der sich bei jeder Wiederholung ändert (startet die Karten-Animation neu).
+   */
+  spotlight: { index: number; duration: number; key: string } | null;
   ended: boolean;
   volume: number;
   muted: boolean;
@@ -23,6 +28,7 @@ interface TrapViewState {
   setMatchup: (id: string | null) => void;
   setVisibleLabels: (ids: string[]) => void;
   setChapter: (c: TrapViewState['chapter']) => void;
+  setSpotlight: (s: TrapViewState['spotlight']) => void;
   setEnded: (ended: boolean) => void;
   setVolume: (v: number) => void;
   toggleMuted: () => void;
@@ -54,6 +60,7 @@ export const useTrapView = create<TrapViewState>((set) => ({
   matchupId: null,
   visibleLabels: [],
   chapter: null,
+  spotlight: null,
   ended: false,
   volume: 0.7,
   muted: readMuted(),
@@ -64,12 +71,13 @@ export const useTrapView = create<TrapViewState>((set) => ({
   setMatchup: (matchupId) => set({ matchupId }),
   setVisibleLabels: (visibleLabels) => set({ visibleLabels }),
   setChapter: (chapter) => set({ chapter }),
+  setSpotlight: (spotlight) => set({ spotlight }),
   setEnded: (ended) => set({ ended }),
   setVolume: (volume) => set({ volume }),
   toggleMuted: () => set((s) => {
     writeMuted(!s.muted);
     return { muted: !s.muted };
   }),
-  restart: () => set((s) => ({ restartToken: s.restartToken + 1, matchupId: null, ended: false })),
-  exit: () => set({ phase: 'select', matchupId: null, visibleLabels: [], chapter: null, ended: false }),
+  restart: () => set((s) => ({ restartToken: s.restartToken + 1, matchupId: null, spotlight: null, ended: false })),
+  exit: () => set({ phase: 'select', matchupId: null, visibleLabels: [], chapter: null, spotlight: null, ended: false }),
 }));

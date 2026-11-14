@@ -6,7 +6,15 @@
  * Form. Darstellung (Formation, Körperhaltung, Kamera) ist davon getrennt und erfindet keine Daten.
  */
 
+import type { SpotlightPick as ScoredPick } from '../spotlight/scoring';
+
 export type Side = 'offense' | 'defense';
+
+/** Ein vorgestellter Spieler (Player Spotlight) – Auswahl und Gründe aus spotlight/scoring.ts. */
+export interface SpotlightPick extends ScoredPick {
+  /** Pfad unter public/trapview/ zu einem echten Spielerfoto, sonst null (stilisierte Silhouette) */
+  photo: string | null;
+}
 
 /** Platz in der dargestellten Formation (reine Darstellung, keine Positionsangabe der Daten). */
 export type Position =
@@ -102,6 +110,8 @@ export interface Team {
   /** Namen aller Spieler mit Einsatz für das Team in der Saison (zur Unterscheidung gleicher Nachnamen) */
   squad: string[];
   lineup: Lineup;
+  /** Bis zu drei herausragende Spieler je Seite (fehlt in älteren Datenständen) */
+  spotlight?: { offense: SpotlightPick[]; defense: SpotlightPick[] };
 }
 
 export interface SeasonData {

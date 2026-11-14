@@ -153,6 +153,7 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
     setStage(reason);
     const s = useTrapView.getState();
     s.setChapter(null);
+    s.setSpotlight(null);
     s.setVisibleLabels([]);
   };
 

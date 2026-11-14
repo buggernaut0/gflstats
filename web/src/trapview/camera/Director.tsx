@@ -108,6 +108,11 @@ export function Director({ model, fadeRef, steady = false }: {
       shotIndex.current = index;
       const shot = sequence.shots[index];
       s.setChapter({ index, title: shot.shot.title, subtitle: shot.shot.subtitle });
+      // Player Spotlight: Runde im Schlüssel, damit die Karte bei jeder Wiederholung neu einfährt
+      const round = loops && time.current >= sequence.firstDuration ? Math.floor((time.current - sequence.firstDuration) / sequence.loopDuration) + 1 : 0;
+      s.setSpotlight(shot.shot.spotlight !== undefined
+        ? { index: shot.shot.spotlight, duration: shot.shot.duration, key: `${restartSeen.current}-${round}-${index}` }
+        : null);
       if (!inMatchup) s.setVisibleLabels(shot.labelIds);
     }
     const ended = !loops && time.current >= sequence.firstDuration - 0.01;

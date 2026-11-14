@@ -1,4 +1,4 @@
-import type { DataGroup, FormationSlot, LineupEntry, Player, SeasonData, Side, Team } from './types';
+import type { DataGroup, FormationSlot, LineupEntry, Player, SeasonData, Side, SpotlightPick, Team } from './types';
 import { resolveKit, type Kit } from './kits';
 import { DUELS, FORMATION } from './formation';
 import { GROUP_LABEL, initialName, lastName } from './names';
@@ -38,6 +38,19 @@ export interface ScenePlayer {
   rotationY: number;
 }
 
+/** Ein vorgestellter Spieler (Player Spotlight) mit seinem Platz auf dem Feld. */
+export interface SceneSpotlight {
+  /** Reihenfolge in der Präsentation (0 = zuerst) */
+  order: number;
+  side: Side;
+  /** 1–3 innerhalb seiner Seite (1 = höchster Profilwert) */
+  rank: number;
+  /** Anzahl vorgestellter Spieler dieser Seite */
+  ofSide: number;
+  pick: SpotlightPick;
+  player: ScenePlayer;
+}
+
 export interface SceneMatchup {
   id: string;
   offense: ScenePlayer;
@@ -55,6 +68,8 @@ export interface SceneModel {
   players: ScenePlayer[];
   byRole: Map<string, ScenePlayer>;
   matchups: SceneMatchup[];
+  /** Player Spotlights: Offense-Stars des einen und Defense-Stars des anderen Teams, abwechselnd */
+  spotlights: SceneSpotlight[];
 }
 
 const v = (p: Player | null, k: string) => p?.stats[k] ?? 0;
@@ -166,7 +181,29 @@ export function buildSceneModel(season: SeasonData, offenseId: string, defenseId
     offense, defense, offenseKit, defenseKit,
     losX: losWorldX(ballOn),
     players, byRole, matchups,
+    spotlights: spotlightOrder(players, offense.spotlight?.offense ?? [], defense.spotlight?.defense ?? []),
   };
+}
+
+/**
+ * Reihenfolge der Spotlights: abwechselnd Offense und Defense (O1, D1, O2, D2, …), solange beide Seiten
+ * Spieler haben. Ein Pick wird nur gezeigt, wenn der Spieler in der dargestellten Formation steht –
+ * die Karte gehört immer zu einem sichtbaren Spieler auf dem Feld.
+ */
+function spotlightOrder(players: ScenePlayer[], offense: SpotlightPick[], defense: SpotlightPick[]): SceneSpotlight[] {
+  const place = (side: Side, picks: SpotlightPick[]) =>
+    picks
+      .map((pick) => ({ pick, player: players.find((p) => p.side === side && p.player?.id === pick.id) }))
+      .filter((x): x is { pick: SpotlightPick; player: ScenePlayer } => !!x.player)
+      .map((x, i, all) => ({ ...x, side, rank: i + 1, ofSide: all.length }));
+  const o = place('offense', offense);
+  const d = place('defense', defense);
+  const out: SceneSpotlight[] = [];
+  for (let i = 0; i < Math.max(o.length, d.length); i++) {
+    if (o[i]) out.push({ ...o[i], order: out.length });
+    if (d[i]) out.push({ ...d[i], order: out.length });
+  }
+  return out;
 }
 
 /** Kurzbezeichnung eines Spielers für Bauchbinden und Buttons: "WR #1 Harris" bzw. "DEF Crosswell". */

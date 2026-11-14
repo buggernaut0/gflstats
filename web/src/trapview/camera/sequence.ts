@@ -31,6 +31,8 @@ export interface Shot {
   transition: Transition;
   /** Welche Spieler-Labels während der Einstellung sichtbar sind. */
   labels: string[];
+  /** Player Spotlight: Index in model.spotlights – die HUD zeigt währenddessen die Spielerkarte. */
+  spotlight?: number;
 }
 
 export interface CameraPose {
