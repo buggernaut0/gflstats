@@ -1,6 +1,7 @@
 import { playerTag, type SceneModel } from '../../data/sceneModel';
 import type { AnchorSpec } from '../anchors';
 import type { Shot } from '../sequence';
+import { spotlightBlocks } from './spotlight';
 
 /** Ab dieser Einstellung wiederholt sich die Fahrt endlos (der Einstieg läuft nur einmal). */
 export const LOOP_FROM = 'line-of-scrimmage';
@@ -19,8 +20,13 @@ const orbit = (deg: number, r: number, h: number): AnchorSpec => {
 const linesLook = (dx: number): AnchorSpec => ({ at: LINES, offset: [dx, 0.75, 0] });
 
 /**
- * Die Hauptpräsentation: A Einstieg → B Line of Scrimmage (O-Line und D-Line) → C Backfield →
- * D Receiver-Duelle → E Defense → F Final Shot → nahtlos wieder B, C, … (Endlosschleife).
+ * Die Hauptpräsentation: A Einstieg → B Line of Scrimmage (O-Line und D-Line) → S1 Player Spotlight →
+ * C Backfield → D Receiver-Duelle → S2 Player Spotlight → E Defense → S3 Player Spotlight → F Final Shot →
+ * nahtlos wieder B, … (Endlosschleife).
+ *
+ * Player Spotlights (S1–S3, je ein Offense- und ein Defense-Spieler, siehe spotlight.ts) sind zwischen die
+ * bestehenden Einstellungen gesetzt, die selbst unverändert bleiben. Gibt es weniger vorgestellte Spieler,
+ * entfallen die hinteren Blöcke – die Fahrt wird nur so lang, wie es etwas zu zeigen gibt.
  *
  * Einstieg und Final Shot münden per `flow` in denselben Startpunkt der Line-Einstellung – mit
  * gemeinsamer Tangente und gleicher Geschwindigkeit (siehe sequence.ts). So geht die Fahrt nach
@@ -59,6 +65,8 @@ export function buildMainSequence(model: SceneModel): Shot[] {
   /** Startpunkt der Line-Einstellung – hier münden Einstieg und Final Shot. */
   const lineStart = orbit(40, 15, 6.4);
 
+  const [spotA = [], spotB = [], spotC = []] = spotlightBlocks(model);
+
   return [
     {
       // Schneller Einstieg aus der Totalen, bremst weich ab und geht ohne Schnitt in die Line über
@@ -90,6 +98,7 @@ export function buildMainSequence(model: SceneModel): Shot[] {
       transition: { type: 'flow' },
       labels: ['group:OL', 'group:DL'],
     },
+    ...spotA,
     {
       id: 'backfield',
       title: 'Backfield',
@@ -110,6 +119,7 @@ export function buildMainSequence(model: SceneModel): Shot[] {
       labels: ['role:QB', 'role:RB', 'role:RB2'],
     },
     ...duels,
+    ...spotB,
     {
       id: 'defense',
       title: 'The Defense',
@@ -129,6 +139,7 @@ export function buildMainSequence(model: SceneModel): Shot[] {
       transition: { type: 'dip' },
       labels: ['group:LB', 'group:DB'],
     },
+    ...spotC,
     {
       // Totale hinter der Offense – beide Teams Auge in Auge –, dann im Bogen hinab an die Line:
       // endet exakt am Startpunkt der Line-Einstellung, die Fahrt beginnt dort von vorn

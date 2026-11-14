@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { playerTag, type SceneModel } from '../data/sceneModel';
 import type { DataIndex } from '../data/types';
 import { MatchupPanel } from '../matchup/MatchupPanel';
+import { SpotlightCard } from '../spotlight/SpotlightCard';
 import { useTrapView } from '../state/store';
 import type { AudioStatus } from '../audio/AudioEngine';
 
@@ -17,6 +18,7 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit, on
   onSimulate?: (() => void) | null;
 }) {
   const chapter = useTrapView((s) => s.chapter);
+  const spotlight = useTrapView((s) => s.spotlight);
   const matchupId = useTrapView((s) => s.matchupId);
   const ended = useTrapView((s) => s.ended);
   const volume = useTrapView((s) => s.volume);
@@ -54,10 +56,11 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit, on
 
   const active = model.matchups.find((m) => m.id === matchupId);
   const quiet = idle && !active && !ended;
+  const spot = spotlight && !active ? model.spotlights[spotlight.index] : undefined;
   const provisional = [model.offense, model.defense].some((t) => t.lineup.basis === 'provisional');
 
   return (
-    <div className={`tv-hud${quiet ? ' is-quiet' : ''}`}>
+    <div className={`tv-hud${quiet ? ' is-quiet' : ''}${spot ? ' has-spotlight' : ''}`}>
       <div className="tv-bars" />
 
       <div className="tv-title" key={restartToken}>
@@ -92,6 +95,10 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit, on
             <small>{chapter.subtitle}</small>
           </span>
         </div>
+      )}
+
+      {spot && spotlight && (
+        <SpotlightCard key={spotlight.key} model={model} spot={spot} duration={spotlight.duration} index={index} />
       )}
 
       {model.matchups.length > 0 && (

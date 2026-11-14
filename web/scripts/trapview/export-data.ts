@@ -32,6 +32,7 @@ import {
   type LineupPlayer,
   type TeamRoster,
 } from '../../src/lib/lineup.ts';
+import { buildPools, describeMethod, pickSpotlight, type SpotlightPick } from '../../src/trapview/spotlight/scoring.ts';
 
 type Stats = Record<string, number>;
 interface PgRow { g: string; p: string; t: string; s: Stats }
@@ -164,6 +165,18 @@ function exportLogo(t: WebTeam): string | null {
   return existsSync(join(WEB_PUBLIC, t.logo)) ? t.logo.replace(/^\//, '') : null;
 }
 
+/**
+ * Spielerfoto für die Spotlight-Karte, falls vorhanden: web/public/trapview/photos/<spieler-id>.(webp|jpg|png).
+ * Fehlt es, zeigt die Karte die stilisierte Silhouette. Ein Foto ergänzen = Datei ablegen, `npm run data:trapview`.
+ */
+const PHOTO_DIR = join(WEB_PUBLIC, 'trapview', 'photos');
+function photoOf(id: string): string | null {
+  for (const ext of ['webp', 'jpg', 'png']) {
+    if (existsSync(join(PHOTO_DIR, `${id}.${ext}`))) return `photos/${id}.${ext}`;
+  }
+  return null;
+}
+
 const out = {
   generatedAt: new Date().toISOString(),
   source: {
@@ -180,6 +193,7 @@ const out = {
     slots: Object.fromEntries(SLOTS.map((s) => [s.position, { basis: s.basis, min: s.minLabel }])),
     provisionalSlots: Object.fromEntries(PROVISIONAL_SLOTS.map((s) => [s.position, { basis: s.basis, min: s.minLabel }])),
     metrics: Object.fromEntries(Object.entries(METRICS).map(([k, m]) => [k, { label: m.label, peers: m.peers }])),
+    spotlight: describeMethod(),
   },
   fields: Object.fromEntries(fields.filter((f) => KEEP.includes(f.key)).map((f) => [f.key, { label: f.label, abbr: f.abbr }])),
   seasons: [] as unknown[],
@@ -220,6 +234,12 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
     }
     pools.set(key, pool);
   }
+
+  // Player Spotlight: Vergleichsgruppen der ganzen Liga (nur diese Saison), Auswahl je Team weiter unten
+  const spotlightPools = buildPools(
+    [...byPT.values()].map((e) => ({ id: e.id, team: e.team, role: roleOf(e.id), games: e.games.size, stats: e.stats })),
+    Object.entries(meta.availability).filter(([, s]) => s.includes(season)).map(([k]) => k),
+  );
 
   const seasonTeams = [...new Set(rows.map((r) => r.t))]
     .map((id) => teams.find((t) => t.id === id))
@@ -273,6 +293,11 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
       ? { primary: t.colors.primary, secondary: t.colors.secondary ?? t.colors.primary, source: t.colors.source ?? null }
       : null;
 
+    // Bis zu drei herausragende Spieler je Seite, nur aus der Starting Lineup (sie stehen auf dem Feld)
+    const spotlightOf = (entries: LineupPlayer[]): SpotlightPick[] =>
+      pickSpotlight(spotlightPools, t.id, entries.flatMap((lp) => (lp.player ? [{ id: lp.player, group: lp.position }] : [])))
+        .map((pick) => ({ ...pick, photo: photoOf(pick.id) }));
+
     teamOut.push({
       id: t.id,
       name: t.name,
@@ -291,6 +316,10 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
         flex: lineup.flex,
         offense: lineup.offense.map(playerOut),
         defense: lineup.defense.map(playerOut),
+      },
+      spotlight: {
+        offense: spotlightOf(lineup.offense),
+        defense: spotlightOf(lineup.defense),
       },
     });
   }
