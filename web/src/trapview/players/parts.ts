@@ -3,6 +3,8 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 
 /**
  * Das eine Spielermodell: 13 starre Körperteile, jedes als EINE zusammengeführte Geometrie.
+ * Proportionen ändern: die Querschnittslisten (`keys`) der Körperteile weiter unten – je Zeile eine Höhe mit
+ * Breite, Tiefe vorn und Tiefe hinten. Farben kommen aus dem Kit (data/kits.ts), Körperbau aus rig.ts (BUILD).
  * Alle Spieler teilen sich diese Geometrien; gezeichnet wird je Körperteil ein InstancedMesh
  * (siehe squad.ts) – 13 Draw Calls für alle Spieler zusammen, unabhängig von der Spielerzahl.
  *
@@ -32,7 +34,7 @@ export const HEAD_JOINT: [number, number, number] = [0, 0.585, -0.004];
 export const HELMET_CENTER: [number, number, number] = [0, 0.1, 0.012];
 export const HELMET_R = 0.124;
 /** Höhenbereich des Trikot-Rumpfs über der Hüftmitte – der Nummern-Atlas bildet genau ihn ab. */
-export const JERSEY_Y: [number, number] = [0.03, 0.545];
+export const JERSEY_Y: [number, number] = [0.06, 0.56];
 
 // ───────────────────────────────────────────────── Bausteine
 
@@ -68,35 +70,73 @@ function paint(g: THREE.BufferGeometry, p: Paint): THREE.BufferGeometry {
   return g;
 }
 
-/** Querschnitt in einer Höhe: [y, halbe Breite (x), halbe Tiefe (z), z-Versatz, Kantigkeit (2 = Ellipse)]. */
-type Key = [y: number, a: number, b: number, z?: number, n?: number];
+/**
+ * Querschnitt an einer Stelle des Profils:
+ * [y, halbe Breite (x), Tiefe nach vorn (+z), Tiefe nach hinten (−z), Kantigkeit (2 = Ellipse), z-Versatz].
+ * Getrennte Tiefen für vorn und hinten erlauben Brust, Lendenkrümmung, Gesäß und Wade.
+ */
+type Key = [y: number, w: number, f: number, b: number, n?: number, c?: number];
+type Section = [y: number, w: number, f: number, b: number, n: number, c: number];
 
-function sample(keys: Key[], y: number): [number, number, number, number] {
-  let i = 1;
-  while (i < keys.length - 1 && y > keys[i][0]) i++;
-  const k0 = keys[i - 1];
-  const k1 = keys[i];
-  const t = THREE.MathUtils.smoothstep(y, k0[0], k1[0]);
-  const mix = (j: 1 | 2 | 3 | 4, d: number) => (k0[j] ?? d) + ((k1[j] ?? d) - (k0[j] ?? d)) * t;
-  return [mix(1, 0), mix(2, 0), mix(3, 0), mix(4, 2)];
+/** Glatte Kurve (Catmull-Rom) durch alle Querschnitte; t zählt die Querschnitte (0 … keys.length − 1). */
+function section(keys: Key[], t: number): Section {
+  const last = keys.length - 1;
+  const i = Math.min(Math.max(Math.floor(t), 0), last - 1);
+  const s = t - i;
+  const at = (k: number, j: number, d: number) => keys[Math.min(Math.max(k, 0), last)][j] ?? d;
+  const cr = (j: number, d: number) => {
+    const p0 = at(i - 1, j, d);
+    const p1 = at(i, j, d);
+    const p2 = at(i + 1, j, d);
+    const p3 = at(i + 2, j, d);
+    return 0.5 * (2 * p1 + (p2 - p0) * s + (2 * p0 - 5 * p1 + 4 * p2 - p3) * s * s + (3 * p1 - p0 - 3 * p2 + p3) * s * s * s);
+  };
+  // y bleibt linear zwischen den Querschnitten, damit Höhenangaben exakt getroffen werden
+  const y = at(i, 0, 0) + (at(i + 1, 0, 0) - at(i, 0, 0)) * s;
+  return [y, Math.max(cr(1, 0), 0), Math.max(cr(2, 0), 0), Math.max(cr(3, 0), 0), Math.max(cr(4, 2), 1.6), cr(5, 0)];
+}
+
+/** Profil-Parameter t zu einer Höhe y (y wächst mit t). */
+function tAt(keys: Key[], y: number): number {
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (y <= keys[i + 1][0]) return i + Math.min(Math.max((y - keys[i][0]) / (keys[i + 1][0] - keys[i][0]), 0), 1);
+  }
+  return keys.length - 1;
 }
 
 interface TubeOpts {
-  /** Ausschnitt des Profils (Standard: ganze Höhe) */
+  /** Ausschnitt des Profils als Höhenbereich (Standard: ganze Höhe) */
   y0?: number;
   y1?: number;
+  /** Reihen über den Ausschnitt (Standard: 2 je Querschnittsabstand) */
   rows?: number;
   segs?: number;
   /** Ausschnitt des Umfangs, 0–1 (0 = Naht bei +X, 0.25 hinten, 0.5 bei −X, 0.75 vorn) */
   arc?: [number, number];
   /** Aufdickung in Metern – für Stoffschichten und Streifen, die auf dem Körper liegen */
   inflate?: number;
+  /** Zusätzliche Wölbung in der Mitte des Ausschnitts, läuft zu den Rändern auf 0 aus (Pads) */
+  bulge?: number;
+  /** Runde Kappe am unteren bzw. oberen Ende (Höhe in Metern) – macht das Ende zur Gelenkkugel */
+  capBottom?: number;
+  capTop?: number;
+  /** Reihen je Kappe (Standard 6) */
+  capRows?: number;
+  /**
+   * Nummern-Koordinaten nach Bogenlänge: `center` ist die Atlas-Spalte der Flächenmitte (0.75 Brust, 0.25 Rücken),
+   * `perU` die Meter je Atlas-Breite. So bleiben Ziffern auf der gekrümmten Fläche unverzerrt.
+   */
+  num?: { center: number; perU: number };
+  /**
+   * Ausschnitt auf ein Rechteck des Nummern-Atlas legen (Schulternummern): Atlas-u läuft entlang der Höhe des
+   * Ausschnitts, Atlas-v entlang des Umfangs; `flipU`/`flipV` drehen die jeweilige Richtung um (je Körperseite verschieden).
+   */
+  rect?: { at: [number, number, number, number]; flipU: boolean; flipV: boolean };
 }
 
 /**
- * Schlauch entlang +Y mit frei geformten Querschnitten (Superellipse). Grundform für Rumpf,
- * Gliedmaßen, Schuhe sowie – als Ausschnitt mit `inflate` – für Ärmel, Bündchen und Streifen.
- * u läuft einmal um den Körper, v über die volle Profilhöhe (auch bei Ausschnitten).
+ * Schlauch entlang +Y mit frei geformten Querschnitten (Superellipse, vorn und hinten getrennt). Grundform für
+ * Rumpf, Gliedmaßen und Schuhe sowie – als Ausschnitt mit `inflate`/`bulge` – für Ärmel, Streifen und Pads.
  *
  * Orientierung: u läuft – von außen betrachtet – gegen den Uhrzeigersinn um die Hochachse, sodass
  * (∂P/∂u, ∂P/∂v) zusammen mit der Außennormalen ein Rechtssystem bilden. Nur dann erscheint eine
@@ -104,31 +144,75 @@ interface TubeOpts {
  * Die Dreiecke sind passend dazu gegen den Uhrzeigersinn (Normale nach außen) gewickelt.
  */
 function tube(keys: Key[], o: TubeOpts = {}): THREE.BufferGeometry {
-  const yMin = keys[0][0];
-  const yMax = keys[keys.length - 1][0];
-  const y0 = o.y0 ?? yMin;
-  const y1 = o.y1 ?? yMax;
-  const rows = o.rows ?? 12;
+  const t0 = o.y0 === undefined ? 0 : tAt(keys, o.y0);
+  const t1 = o.y1 === undefined ? keys.length - 1 : tAt(keys, o.y1);
+  const rows = o.rows ?? Math.max(1, Math.round((t1 - t0) * 2));
   const segs = o.segs ?? 20;
   const [u0, u1] = o.arc ?? [0, 1];
-  const inf = o.inflate ?? 0;
+  const pw = (v: number, n: number) => Math.sign(v) * Math.pow(Math.abs(v), 2 / n);
+  const CAP = o.capRows ?? 6;
+
+  // Reihen von unten nach oben: [Querschnitt, Skalierung, Anteil 0–1 über den Ausschnitt]
+  const list: [Section, number, number][] = [];
+  const end0 = section(keys, t0);
+  const end1 = section(keys, t1);
+  if (o.capBottom) {
+    for (let k = CAP; k >= 1; k--) {
+      const a = (k / CAP) * (Math.PI / 2);
+      list.push([[end0[0] - o.capBottom * Math.sin(a), end0[1], end0[2], end0[3], end0[4], end0[5]], Math.cos(a), 0]);
+    }
+  }
+  for (let i = 0; i <= rows; i++) list.push([section(keys, t0 + ((t1 - t0) * i) / rows), 1, i / rows]);
+  if (o.capTop) {
+    for (let k = 1; k <= CAP; k++) {
+      const a = (k / CAP) * (Math.PI / 2);
+      list.push([[end1[0] + o.capTop * Math.sin(a), end1[1], end1[2], end1[3], end1[4], end1[5]], Math.cos(a), 1]);
+    }
+  }
+
   const pos: number[] = [];
   const uv: number[] = [];
   const idx: number[] = [];
-  const pw = (v: number, n: number) => Math.sign(v) * Math.pow(Math.abs(v), 2 / n);
-
-  for (let i = 0; i <= rows; i++) {
-    const y = y0 + ((y1 - y0) * i) / rows;
-    const [a, b, zo, n] = sample(keys, y);
+  const w = segs + 1;
+  const jc = segs / 2;
+  for (const [[y, a, f, b, n, c], k, v] of list) {
+    const rowStart = pos.length / 3;
     for (let j = 0; j <= segs; j++) {
-      const u = u0 + ((u1 - u0) * j) / segs;
+      const frac = j / segs;
+      const u = u0 + (u1 - u0) * frac;
       const phi = -Math.PI * 2 * u;
-      pos.push((a + inf) * pw(Math.cos(phi), n), y, zo + (b + inf) * pw(Math.sin(phi), n));
-      uv.push(u, (y - yMin) / (yMax - yMin));
+      const sn = Math.sin(phi);
+      const inf = (o.inflate ?? 0) + (o.bulge ? o.bulge * Math.pow(Math.max(Math.sin(Math.PI * v) * Math.sin(Math.PI * frac), 0), 0.55) : 0);
+      pos.push(k * (a + inf) * pw(Math.cos(phi), n), y, c + k * ((sn >= 0 ? f : b) + inf) * pw(sn, n));
+      if (o.rect) {
+        const [ru0, rv0, ru1, rv1] = o.rect.at;
+        const a = o.rect.flipU ? 1 - v : v;
+        const b = o.rect.flipV ? 1 - frac : frac;
+        uv.push(ru0 + (ru1 - ru0) * a, rv0 + (rv1 - rv0) * b);
+      }
+      else uv.push(u, 0);
+    }
+    if (o.num) {
+      // Bogenlänge ab der Mittelspalte, gemessen am Netz selbst
+      const P = (j: number) => new THREE.Vector3().fromArray(pos, (rowStart + j) * 3);
+      const vv = THREE.MathUtils.clamp((y - JERSEY_Y[0]) / (JERSEY_Y[1] - JERSEY_Y[0]), 0, 1);
+      let s = 0;
+      uv[(rowStart + jc) * 2] = o.num.center;
+      uv[(rowStart + jc) * 2 + 1] = vv;
+      for (let j = jc + 1; j <= segs; j++) {
+        s += P(j).distanceTo(P(j - 1));
+        uv[(rowStart + j) * 2] = o.num.center + s / o.num.perU;
+        uv[(rowStart + j) * 2 + 1] = vv;
+      }
+      s = 0;
+      for (let j = jc - 1; j >= 0; j--) {
+        s += P(j).distanceTo(P(j + 1));
+        uv[(rowStart + j) * 2] = o.num.center - s / o.num.perU;
+        uv[(rowStart + j) * 2 + 1] = vv;
+      }
     }
   }
-  const w = segs + 1;
-  for (let i = 0; i < rows; i++) {
+  for (let i = 0; i < list.length - 1; i++) {
     for (let j = 0; j < segs; j++) {
       const a = i * w + j;
       const b = a + 1;
@@ -141,21 +225,40 @@ function tube(keys: Key[], o: TubeOpts = {}): THREE.BufferGeometry {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   g.setIndex(idx);
-  g.computeVertexNormals();
-  if (!o.arc) {
-    // Naht schließen: Normalen der ersten und letzten Spalte mitteln
+  return g;
+}
+
+/**
+ * Glättet die Normalen über Nähte hinweg: Punkte an derselben Stelle (Schlauchnaht, Kappenspitze, Grenze
+ * zwischen zwei Farbabschnitten desselben Profils) bekommen dieselbe Normale – keine sichtbare Kante.
+ */
+function weld(list: THREE.BufferGeometry[]): THREE.BufferGeometry[] {
+  const sum = new Map<string, [number, number, number]>();
+  const key = (p: THREE.BufferAttribute, i: number) =>
+    `${Math.round(p.getX(i) * 2e4)},${Math.round(p.getY(i) * 2e4)},${Math.round(p.getZ(i) * 2e4)}`;
+  for (const g of list) {
+    g.computeVertexNormals();
+    const p = g.attributes.position as THREE.BufferAttribute;
     const nor = g.attributes.normal as THREE.BufferAttribute;
-    const v0 = new THREE.Vector3();
-    const v1 = new THREE.Vector3();
-    for (let i = 0; i <= rows; i++) {
-      v0.fromBufferAttribute(nor, i * w);
-      v1.fromBufferAttribute(nor, i * w + segs);
-      v0.add(v1).normalize();
-      nor.setXYZ(i * w, v0.x, v0.y, v0.z);
-      nor.setXYZ(i * w + segs, v0.x, v0.y, v0.z);
+    for (let i = 0; i < p.count; i++) {
+      const k = key(p, i);
+      const a = sum.get(k) ?? [0, 0, 0];
+      a[0] += nor.getX(i);
+      a[1] += nor.getY(i);
+      a[2] += nor.getZ(i);
+      sum.set(k, a);
     }
   }
-  return g;
+  const v = new THREE.Vector3();
+  for (const g of list) {
+    const p = g.attributes.position as THREE.BufferAttribute;
+    const nor = g.attributes.normal as THREE.BufferAttribute;
+    for (let i = 0; i < p.count; i++) {
+      v.fromArray(sum.get(key(p, i))!).normalize();
+      nor.setXYZ(i, v.x, v.y, v.z);
+    }
+  }
+  return list;
 }
 
 /** Ellipsoid. */
@@ -194,111 +297,174 @@ const KNIT = { rough: 0.85 };
 const SKIN = { rough: 0.55 };
 
 // ───────────────────────────────────────────────── Körperteile
+//
+// Jedes Gelenk ist eine Kugel in einer Pfanne: Das Ende eines Teils ist eine runde Kappe (capTop/capBottom),
+// die im Nachbarteil steckt. So bleibt der Übergang in jeder Haltung geschlossen und glatt.
+// Mehrere Farbabschnitte desselben Profils teilen sich die Normalen (weld) – ohne sichtbare Kante.
 
-/** Becken mit Hose und Gürtel. Slots: A Hose. */
+/** Ein Profil in Farbabschnitten: jeder Abschnitt ist ein Stück desselben Schlauchs, die Normalen laufen durch. */
+function skin(keys: Key[], segs: number, bands: (TubeOpts & { paint: Paint })[]): THREE.BufferGeometry[] {
+  const tubes = weld(bands.map(({ paint: _p, ...o }) => tube(keys, { segs, ...o })));
+  return tubes.map((g, i) => paint(g, bands[i].paint));
+}
+
+/** Ein aufliegendes Stück (Streifen, Bündchen, Pad) – eigene Normalen. */
+function layer(keys: Key[], o: TubeOpts, p: Paint): THREE.BufferGeometry {
+  return paint(weld([tube(keys, o)])[0], p);
+}
+
+/**
+ * Becken: Football-Hose vom Schritt bis zum Bund, als geschlossener Körper. Seitenlinie von hinten:
+ * Gesäß (am weitesten hinten) → Hüfte → Bund – darüber setzt der Rumpf mit der Lendenkrümmung an.
+ * Das Trikot steckt in der Hose: Der Rumpf taucht von oben in das Becken ein. Slots: A Hose.
+ */
 function pelvis() {
+  // Bewusst schmaler als die Hüftkugeln der Oberschenkel: Diese treten seitlich klar hervor (saubere Schnittkante)
   const keys: Key[] = [
-    [-0.135, 0.02, 0.02, 0, 2.3], [-0.1, 0.1, 0.085, -0.005, 2.3], [-0.04, 0.16, 0.115, -0.008, 2.3],
-    [0.03, 0.158, 0.11, -0.004, 2.3], [0.09, 0.15, 0.102, 0, 2.3],
+    [-0.132, 0.055, 0.05, 0.056, 2.2], [-0.112, 0.105, 0.08, 0.09, 2.3], [-0.085, 0.14, 0.095, 0.11, 2.4],
+    [-0.05, 0.15, 0.1, 0.116, 2.4], [-0.015, 0.151, 0.101, 0.114, 2.4], [0.02, 0.151, 0.101, 0.109, 2.4],
+    [0.055, 0.152, 0.1, 0.106, 2.4], [0.076, 0.152, 0.099, 0.105, 2.4],
   ];
   return merge([
-    paint(tube(keys, { rows: 10, segs: 24 }), { slot: 1, ...STRETCH }),
-    paint(tube(keys, { y0: 0.06, y1: 0.09, rows: 1, segs: 24, inflate: 0.004 }), { color: BELT, rough: 0.5 }),
+    ...skin(keys, 28, [{ capRows: 4, capBottom: 0.014, capTop: 0.022, paint: { slot: 1, ...STRETCH } }]),
+    layer(keys, { y0: 0.046, y1: 0.074, rows: 2, segs: 28, inflate: 0.003 }, { color: BELT, rough: 0.5 }),
   ]);
 }
 
-/** Oberschenkel mit Seitenstreifen außen. Slots: A Hose, B Zierfarbe. */
+/** Oberschenkel: Hüftkugel, Quadrizeps, angedeutetes Oberschenkelpad, Seitenstreifen. Slots: A Hose, B Zierfarbe. */
 function thigh(side: 1 | -1) {
   const keys: Key[] = [
-    [-0.46, 0.058, 0.062], [-0.44, 0.064, 0.066], [-0.3, 0.078, 0.084, 0.004], [-0.14, 0.092, 0.098, 0.006],
-    [-0.03, 0.094, 0.098, 0.002], [0.03, 0.07, 0.08], [0.06, 0.02, 0.02],
+    [-0.44, 0.052, 0.054, 0.052], [-0.4, 0.058, 0.063, 0.058], [-0.3, 0.076, 0.083, 0.076],
+    [-0.18, 0.088, 0.097, 0.092], [-0.09, 0.09, 0.099, 0.1], [-0.04, 0.089, 0.096, 0.098], [0, 0.086, 0.09, 0.094],
   ];
   // Streifen jeweils außen: u = 0 liegt bei +X, u = 0.5 bei −X
-  const arc: [number, number] = side === 1 ? [-0.03, 0.03] : [0.47, 0.53];
+  const arc: [number, number] = side === 1 ? [-0.028, 0.028] : [0.472, 0.528];
   return merge([
-    paint(tube(keys, { rows: 12, segs: 18 }), { slot: 1, ...STRETCH }),
-    paint(tube(keys, { y0: -0.45, y1: -0.02, rows: 10, segs: 3, arc, inflate: 0.002 }), { slot: 2, ...STRETCH }),
+    ...skin(keys, 22, [{ capBottom: 0.046, capTop: 0.08, paint: { slot: 1, ...STRETCH } }]),
+    layer(keys, { y0: -0.43, y1: -0.04, rows: 10, segs: 3, arc, inflate: 0.0015 }, { slot: 2, ...STRETCH }),
+    layer(keys, { y0: -0.34, y1: -0.12, rows: 8, segs: 8, arc: [0.64, 0.86], inflate: 0.0006, bulge: 0.008 }, { slot: 1, ...STRETCH }),
   ]);
 }
 
-/** Unterschenkel: Hosenbein übers Knie, Stutzen mit zwei Streifen, Tape am Knöchel. Slots: A Stutzen, B Hose, C Zierfarbe. */
+/** Unterschenkel: Kniekugel (zugleich das Kniepad), Hosenbein mit Bündchen, Wade, Stutzen mit zwei Streifen, getapter Knöchel. Slots: A Stutzen, B Hose, C Zierfarbe. */
 function shin() {
   const keys: Key[] = [
-    [-0.44, 0.04, 0.042], [-0.36, 0.043, 0.046, -0.002], [-0.2, 0.06, 0.066, -0.01], [-0.1, 0.064, 0.068, -0.008],
-    [0, 0.06, 0.064], [0.03, 0.05, 0.055],
+    [-0.44, 0.037, 0.04, 0.04], [-0.4, 0.036, 0.039, 0.04], [-0.32, 0.04, 0.041, 0.047], [-0.22, 0.05, 0.046, 0.066],
+    [-0.13, 0.056, 0.05, 0.074], [-0.055, 0.06, 0.061, 0.065], [0, 0.07, 0.073, 0.069],
   ];
   return merge([
-    paint(tube(keys, { y0: -0.37, y1: -0.07, rows: 9, segs: 16 }), { slot: 1, ...KNIT }),
-    paint(tube(keys, { y0: -0.122, y1: -0.104, rows: 1, segs: 16, inflate: 0.002 }), { slot: 3, ...KNIT }),
-    paint(tube(keys, { y0: -0.156, y1: -0.138, rows: 1, segs: 16, inflate: 0.002 }), { slot: 3, ...KNIT }),
-    paint(tube(keys, { y0: -0.085, y1: 0.03, rows: 4, segs: 16, inflate: 0.006 }), { slot: 2, ...STRETCH }),
-    paint(ball([0.067, 0.067, 0.07], [0, 0, 0.004], 14, 10), { slot: 2, ...STRETCH }),
-    paint(tube(keys, { y0: -0.44, y1: -0.36, rows: 2, segs: 16, inflate: 0.004 }), { color: TAPE, rough: 0.8 }),
-  ]);
-}
-
-/** Schuh mit Sohle; liegt entlang +Z, Boden bei y = −FOOT. Slots: A Schuh. */
-function foot() {
-  // Profil entlang der Schuhlänge; die „Tiefe“ des Schlauchs wird nach dem Kippen zur Höhe
-  const upper: Key[] = [
-    [-0.075, 0.018, 0.02], [-0.06, 0.034, 0.04], [0, 0.042, 0.046], [0.07, 0.046, 0.034],
-    [0.13, 0.042, 0.026], [0.165, 0.026, 0.017], [0.176, 0.004, 0.004],
-  ].map(([l, a, b]) => [l, a, b, 0.066 - b, 3] as Key);
-  const sole: Key[] = upper.map(([l, a]) => [l, a + 0.004, 0.008, 0.063, 3] as Key);
-  const lay = (g: THREE.BufferGeometry) => g.rotateX(Math.PI / 2);
-  return merge([
-    paint(lay(tube(upper, { rows: 12, segs: 14 })), { slot: 1, rough: 0.35 }),
-    paint(lay(tube(sole, { rows: 12, segs: 14 })), { color: SOLE, rough: 0.9 }),
+    ...skin(keys, 20, [
+      { y1: -0.35, capBottom: 0.038, paint: { color: TAPE, rough: 0.8 } },
+      { y0: -0.35, y1: -0.08, paint: { slot: 1, ...KNIT } },
+      { y0: -0.08, capTop: 0.07, paint: { slot: 2, ...STRETCH } },
+    ]),
+    layer(keys, { y0: -0.094, y1: -0.076, rows: 1, segs: 20, inflate: 0.003 }, { slot: 3, ...STRETCH }),
+    layer(keys, { y0: -0.135, y1: -0.117, rows: 1, segs: 20, inflate: 0.0015 }, { slot: 3, ...KNIT }),
+    layer(keys, { y0: -0.168, y1: -0.15, rows: 1, segs: 20, inflate: 0.0015 }, { slot: 3, ...KNIT }),
   ]);
 }
 
 /**
- * Rumpf: Trikot mit Nummernfläche, kompakte Schulterpolster, Kragen, Hals.
- * Die Polster ragen je Seite rund 5 cm über den Brustkorb – Schulterbreite ≈ 1,28 × Brustbreite.
+ * Football-Cleat entlang +Z; das Sprunggelenk sitzt im Ursprung, der Boden bei y = −FOOT.
+ * Schaft mit Fersenkappe und Zehenbox, Zunge mit Schnürung, gepolsterter Kragen ums Gelenk,
+ * Sohlenplatte in der Zierfarbe, sieben Stollen.
+ * Slots: A Schuh, B Zierfarbe.
+ */
+function foot() {
+  const SOLE_TOP = -0.05;
+  // [Länge, halbe Breite, Oberkante (y)] von der Ferse bis zur Spitze
+  const shape: [number, number, number][] = [
+    [-0.074, 0.03, 0.01], [-0.045, 0.038, 0.016], [0, 0.043, 0.015], [0.04, 0.045, 0.007],
+    [0.082, 0.048, -0.005], [0.124, 0.047, -0.015], [0.156, 0.039, -0.022],
+  ];
+  // Der Schlauch läuft entlang der Schuhlänge und wird danach gekippt: „vorn“ zeigt dann nach unten, „hinten“ nach oben
+  const upper: Key[] = shape.map(([l, w, top]) => {
+    const mid = (top + SOLE_TOP) / 2;
+    return [l, w, mid - SOLE_TOP, top - mid, 2.7, -mid] as Key;
+  });
+  const sole: Key[] = shape.map(([l, w]) => [l, w + 0.004, 0.006, 0.006, 4, 0.054] as Key);
+  const lay = (g: THREE.BufferGeometry) => g.rotateX(Math.PI / 2);
+  const TOP: [number, number] = [0.18, 0.32]; // Oberseite des Schuhs (nach dem Kippen)
+  const lace = (l: number) =>
+    lay(layer(upper, { y0: l, y1: l + 0.007, rows: 1, segs: 4, arc: [0.2, 0.3], inflate: 0.0085 }, { color: TAPE, rough: 0.8 }));
+  const stud = (x: number, z: number) =>
+    paint(new THREE.CylinderGeometry(0.0085, 0.006, 0.012, 6).translate(x, -FOOT + 0.006, z), { color: SOLE, rough: 0.6 });
+  const collar = new THREE.TorusGeometry(0.041, 0.006, 5, 14).rotateX(Math.PI / 2).scale(1, 1, 1.1).translate(0, 0.017, -0.004);
+  return merge([
+    ...skin(upper, 14, [{ capRows: 3, capBottom: 0.012, capTop: 0.022, paint: { slot: 1, rough: 0.38 } }]).map(lay),
+    // Zunge mit Schnürung
+    lay(layer(upper, { y0: 0.022, y1: 0.105, rows: 6, segs: 6, arc: TOP, inflate: 0.0006, bulge: 0.007 }, { slot: 1, rough: 0.5 })),
+    lace(0.04), lace(0.056), lace(0.072), lace(0.088),
+    ...skin(sole, 12, [{ rows: 6, capRows: 3, capBottom: 0.012, capTop: 0.022, paint: { slot: 2, rough: 0.5 } }]).map(lay),
+    paint(collar, { slot: 1, rough: 0.6 }),
+    stud(0.026, 0.116), stud(-0.026, 0.116), stud(0.03, 0.076), stud(-0.03, 0.076), stud(0, 0.146),
+    stud(0.02, -0.045), stud(-0.02, -0.045),
+  ]);
+}
+
+/** Meter je Breite einer Nummern-Kachel (siehe numberAtlas.ts). */
+export const NUM_PER_U = 1.4;
+/** Rechteck der Kachel für die Schulternummer – liegt in dem Streifen, den Brust und Rücken frei lassen. */
+export const SHOULDER_RECT: [number, number, number, number] = [0.44, 0.04, 0.56, 0.46];
+
+/**
+ * Rumpf: Trikot über Shoulder Pads. Die Pads sind kein aufgesetztes Teil, sondern die Form des Trikots selbst:
+ * Brustplatte, breites gewölbtes Joch mit Überstand über dem Oberarm, flach zum Kragen ansteigend.
+ * Unten taucht der Rumpf in die Hose ein. Brust und Rücken tragen die Nummer, die Schultern eine kleine dazu.
  * Slots: A Trikot, B Zierfarbe, C Haut.
  */
 function torso() {
-  const n = 2.4;
   const keys: Key[] = [
-    [JERSEY_Y[0], 0.146, 0.098, 0, n], [0.12, 0.148, 0.1, 0, n], [0.24, 0.162, 0.108, 0.004, n],
-    [0.34, 0.176, 0.117, 0.008, n], [0.41, 0.178, 0.116, 0.006, n], [0.455, 0.172, 0.105, 0.002, n],
-    [0.495, 0.13, 0.088, -0.004, n], [0.525, 0.082, 0.072, -0.006, n], [JERSEY_Y[1], 0.066, 0.064, -0.006, n],
+    [-0.03, 0.146, 0.092, 0.098, 2.4], [0.04, 0.148, 0.094, 0.101, 2.4], [0.1, 0.147, 0.096, 0.099, 2.4],
+    [0.17, 0.152, 0.102, 0.098, 2.4], [0.25, 0.165, 0.112, 0.106, 2.4], [0.32, 0.18, 0.124, 0.116, 2.5],
+    [0.375, 0.212, 0.131, 0.121, 2.8], [0.415, 0.25, 0.125, 0.119, 3.2], [0.45, 0.262, 0.115, 0.113, 3.4],
+    [0.482, 0.25, 0.106, 0.106, 3.4], [0.503, 0.19, 0.096, 0.099, 3], [0.522, 0.125, 0.084, 0.089, 2.6],
+    [0.54, 0.082, 0.07, 0.074, 2.3], [0.556, 0.07, 0.064, 0.066, 2.2],
   ];
-  const pad = (s: 1 | -1) =>
-    new THREE.SphereGeometry(1, 18, 12).scale(0.072, 0.05, 0.098).rotateZ(-s * 0.25).translate(s * 0.158, 0.462, -0.002);
+  const jersey = { slot: 1 as Slot, ...CLOTH, numbers: true };
+  // Von vorn lesbar: Ziffern laufen zur +X-Seite, die Oberkante zeigt nach hinten
+  const shoulderNumber = (arc: [number, number], flipU: boolean, flipV: boolean) =>
+    layer(keys, { y0: 0.485, y1: 0.514, rows: 5, segs: 6, arc, inflate: 0.0012, rect: { at: SHOULDER_RECT, flipU, flipV } }, jersey);
   return merge([
-    paint(tube(keys, { rows: 20, segs: 36 }), { slot: 1, ...CLOTH, numbers: true }),
-    paint(pad(1), { slot: 1, ...CLOTH }),
-    paint(pad(-1), { slot: 1, ...CLOTH }),
-    paint(new THREE.TorusGeometry(0.07, 0.011, 8, 24).rotateX(Math.PI / 2).scale(1, 1, 0.95).translate(0, 0.54, -0.006), { slot: 2, ...CLOTH }),
-    paint(new THREE.CylinderGeometry(0.056, 0.061, 0.09, 14, 1, true).translate(0, 0.57, -0.006), { slot: 3, ...SKIN }),
+    ...skin(keys, 20, [
+      { arc: [0, 0.5], num: { center: 0.25, perU: NUM_PER_U }, paint: jersey },
+      { arc: [0.5, 1], num: { center: 0.75, perU: NUM_PER_U }, paint: jersey },
+    ]),
+    shoulderNumber([-0.07, 0.07], true, false),
+    shoulderNumber([0.43, 0.57], false, true),
+    layer(keys, { y0: 0.538, y1: 0.556, rows: 1, segs: 24, inflate: 0.003 }, { slot: 2, ...CLOTH }),
+    paint(new THREE.CylinderGeometry(0.055, 0.06, 0.08, 16, 1, true).translate(0, 0.585, -0.004), { slot: 3, ...SKIN }),
   ]);
 }
 
-/** Oberarm mit Ärmel und Ärmelbündchen. Slots: A Trikot, B Zierfarbe, C Haut. */
+/** Oberarm: Schulterkugel (steckt unter dem Pad), Ärmel mit Bündchen, Bizeps, Ellbogenkugel. Slots: A Trikot, B Zierfarbe, C Haut. */
 function upperArm() {
   const keys: Key[] = [
-    [-0.3, 0.036, 0.038], [-0.29, 0.04, 0.042], [-0.2, 0.046, 0.05, 0.002], [-0.1, 0.05, 0.053],
-    [-0.02, 0.052, 0.054], [0.03, 0.045, 0.046], [0.052, 0.012, 0.012],
+    [-0.29, 0.043, 0.044, 0.044], [-0.26, 0.042, 0.043, 0.044], [-0.2, 0.046, 0.05, 0.048], [-0.13, 0.052, 0.056, 0.054],
+    [-0.06, 0.055, 0.058, 0.057], [0, 0.054, 0.056, 0.056],
   ];
   return merge([
-    paint(tube(keys, { y0: -0.3, y1: -0.11, rows: 6, segs: 14 }), { slot: 3, ...SKIN }),
-    paint(tube(keys, { y0: -0.125, y1: 0.052, rows: 7, segs: 14, inflate: 0.005 }), { slot: 1, ...CLOTH }),
-    paint(tube(keys, { y0: -0.136, y1: -0.112, rows: 1, segs: 14, inflate: 0.0065 }), { slot: 2, ...CLOTH }),
+    ...skin(keys, 20, [{ y1: -0.11, capBottom: 0.043, paint: { slot: 3, ...SKIN } }]),
+    ...skin(keys, 20, [{ y0: -0.125, capTop: 0.054, inflate: 0.004, paint: { slot: 1, ...CLOTH } }]),
+    layer(keys, { y0: -0.14, y1: -0.118, rows: 1, segs: 20, inflate: 0.0055 }, { slot: 2, ...CLOTH }),
   ]);
 }
 
-/** Unterarm mit Ellbogen, Tape am Handgelenk und Handschuh. Slots: A Haut, B Handschuh. */
+/** Unterarm: Ellbogenkugel, Tape am Handgelenk, Handschuh (Handfläche zeigt zum Körper). Slots: A Haut, B Handschuh. */
 function forearm() {
-  const keys: Key[] = [
-    [-0.26, 0.028, 0.026], [-0.2, 0.034, 0.032], [-0.08, 0.042, 0.042], [0, 0.04, 0.04], [0.02, 0.03, 0.03],
+  const arm: Key[] = [
+    [-0.25, 0.027, 0.025, 0.025], [-0.235, 0.028, 0.026, 0.026], [-0.16, 0.035, 0.034, 0.034],
+    [-0.09, 0.0415, 0.0425, 0.0415], [-0.04, 0.0375, 0.0385, 0.038], [0, 0.035, 0.036, 0.036],
+  ];
+  const hand: Key[] = [
+    [-0.348, 0.014, 0.03, 0.024, 2.4, 0.01], [-0.318, 0.017, 0.04, 0.03, 2.6, 0.007], [-0.28, 0.018, 0.04, 0.033, 2.6, 0.004],
+    [-0.245, 0.024, 0.027, 0.027, 2.2, 0],
   ];
   return merge([
-    paint(tube(keys, { rows: 8, segs: 14 }), { slot: 1, ...SKIN }),
-    paint(ball([0.041, 0.041, 0.041], [0, 0, 0], 12, 8), { slot: 1, ...SKIN }),
-    paint(tube(keys, { y0: -0.25, y1: -0.2, rows: 1, segs: 14, inflate: 0.003 }), { color: TAPE, rough: 0.8 }),
-    paint(ball([0.03, 0.05, 0.021], [0, -0.3, 0.004], 12, 10), { slot: 2, rough: 0.5 }),
-    paint(ball([0.011, 0.024, 0.012], [0, -0.287, 0.025], 8, 6), { slot: 2, rough: 0.5 }),
+    ...skin(arm, 20, [{ capTop: 0.035, paint: { slot: 1, ...SKIN } }]),
+    layer(arm, { y0: -0.25, y1: -0.205, rows: 2, segs: 20, inflate: 0.0025 }, { color: TAPE, rough: 0.8 }),
+    ...skin(hand, 12, [{ capRows: 3, capBottom: 0.016, paint: { slot: 2, rough: 0.5 } }]),
+    paint(ball([0.011, 0.027, 0.012], [0, -0.29, 0.043], 8, 6), { slot: 2, rough: 0.5 }),
   ]);
 }
 
@@ -333,7 +499,7 @@ function head() {
     paint(post(0.036), mask),
     paint(post(-0.036), mask),
     paint(rod(new THREE.Vector3(0, -0.028, MR), new THREE.Vector3(0, R * 0.42, R * 0.93), 0.0055), mask),
-    paint(ball([0.03, 0.02, 0.022], [0, -0.116, 0.096], 12, 8), { color: TAPE, rough: 0.7 }),
+    paint(ball([0.026, 0.016, 0.018], [0, -0.1, 0.088], 12, 8), { color: TAPE, rough: 0.7 }),
     paint(ear(1), { color: INNER, rough: 1 }),
     paint(ear(-1), { color: INNER, rough: 1 }),
   ]);

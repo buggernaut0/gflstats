@@ -28,6 +28,9 @@ const MOTION: Record<Stance, number> = {
   shotgun: 1, upright: 1, ready: 0.8, receiver: 0.7, lineSet: 0.5, threePoint: 0.35,
 };
 
+/** Anteil der Oberkörper-Vorbeuge, den das Becken mitmacht. */
+const PELVIS_TILT = 0.5;
+
 export interface Rig {
   root: THREE.Object3D;
   nodes: Record<PartName, THREE.Object3D>;
@@ -68,7 +71,8 @@ export function buildRig(p: RigInput, seed: number): Rig {
 
   const hip = node(root);
   hip.position.set(0, pose.hipY, pose.hipZ);
-  node(hip, 'pelvis', [b.wide, b.deep]);
+  // Das Becken kippt beim Vorbeugen mit (Hüftbeugung) – der untere Rücken läuft so ohne Knick ins Gesäß
+  node(hip, 'pelvis', [b.wide, b.deep]).rotation.x = pose.lean * PELVIS_TILT;
 
   ([-1, 1] as const).forEach((s, i) => {
     const [a, k] = pose.legs[i];
