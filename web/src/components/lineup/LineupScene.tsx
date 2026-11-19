@@ -8,6 +8,12 @@
  */
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import "@fontsource/anton";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { resolveKit } from "@/trapview/data/kits";
+import type { Build, Stance } from "@/trapview/data/types";
+import { createSquadFrom, type SquadPlayer } from "@/trapview/players/squad";
+import { animateRig, type Rig } from "@/trapview/players/rig";
 import type { FieldPlayer, Unit } from "./types";
 
 interface Props {
@@ -20,9 +26,14 @@ interface Props {
   onActive: (index: number | null) => void;
   onOpen: (index: number) => void;
   onFail: () => void;
+  /** Erstes Bild gezeichnet – bis dahin zeigt LineupField die flache Aufstellung */
+  onReady?: () => void;
 }
 
 const FIELD_W = 56;
+/** Figuren etwas groesser als massstaeblich, damit Nummern in der Totale lesbar bleiben */
+const FIG_SCALE = 1.3;
+const FIG_SCALE_NARROW = 1.8;
 const FIELD_D = 90;
 
 function fieldTexture(): THREE.CanvasTexture {
@@ -70,22 +81,6 @@ function fieldTexture(): THREE.CanvasTexture {
   return t;
 }
 
-function numberTexture(n: number, ink: string): THREE.CanvasTexture {
-  const c = document.createElement("canvas");
-  c.width = 256;
-  c.height = 256;
-  const g = c.getContext("2d")!;
-  g.clearRect(0, 0, 256, 256);
-  g.font = '700 190px "Barlow Condensed", "Arial Narrow", Arial, sans-serif';
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.fillStyle = ink;
-  g.fillText(String(n), 128, 140);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-
 function blobTexture(): THREE.CanvasTexture {
   const c = document.createElement("canvas");
   c.width = c.height = 128;
@@ -99,28 +94,49 @@ function blobTexture(): THREE.CanvasTexture {
 }
 
 interface Figure {
+  /** Bodenschatten, Auswahlring und Klickfläche */
   group: THREE.Group;
-  body: THREE.Group;
+  /** Skelett der Figur im instanzierten Spielermodell */
+  rig: Rig;
+  /** Grundskalierung des Skeletts (Koerperbau), auf die der Buehnenfaktor kommt */
+  base: number;
   ring: THREE.Mesh;
-  jersey: THREE.MeshStandardMaterial | null;
   hit: THREE.Mesh;
   index: number;
   unit: Unit;
+  filled: boolean;
   lift: number;
-  phase: number;
 }
 
-export default function LineupScene({ players, unit, colors, logo, active, onActive, onOpen, onFail }: Props) {
+/** Haltung und Körperbau je Positionsgruppe – wie in der Trap View (trapview/data/formation.ts). */
+const LOOK: Record<string, { stance: Stance; build: Build }> = {
+  QB: { stance: "shotgun", build: "big" },
+  RB: { stance: "ready", build: "big" },
+  WR: { stance: "receiver", build: "skill" },
+  TE: { stance: "threePoint", build: "big" },
+  OL: { stance: "lineSet", build: "line" },
+  DL: { stance: "threePoint", build: "line" },
+  LB: { stance: "ready", build: "big" },
+  DB: { stance: "ready", build: "skill" },
+};
+
+/** Nachname fuer den Trikotruecken (wie in der Trap View). */
+const surname = (name: string) => name.trim().split(/\s+/).pop() ?? name;
+
+export default function LineupScene({ players, unit, colors, logo, active, onActive, onOpen, onFail, onReady }: Props) {
   const mount = useRef<HTMLDivElement>(null);
-  const state = useRef({ unit, active, onActive, onOpen });
-  state.current = { unit, active, onActive, onOpen };
+  const state = useRef({ unit, active, onActive, onOpen, onReady });
+  state.current = { unit, active, onActive, onOpen, onReady };
   const api = useRef<{ invalidate: () => void } | null>(null);
 
   useEffect(() => {
     // Erst die Schrift fuer die Rueckennummern laden, dann die Szene bauen (Canvas-Texturen werden einmal gezeichnet)
     let cancelled = false;
     let cleanup: (() => void) | undefined;
-    const fonts = document.fonts?.load('700 190px "Barlow Condensed"').catch(() => undefined) ?? Promise.resolve();
+    // Nummern und Namen zeichnet der Nummern-Atlas der Trap View in Anton und Barlow Condensed
+    const fonts = document.fonts
+      ? Promise.all([document.fonts.load("100px Anton"), document.fonts.load('600 26px "Barlow Condensed"')]).catch(() => undefined)
+      : Promise.resolve();
     Promise.race([fonts, new Promise((r) => setTimeout(r, 1500))]).then(() => {
       if (!cancelled) cleanup = build();
     });
@@ -151,6 +167,14 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x0f3324, 38, 78); // ferner Rasen laeuft in den Hintergrund der Buehne aus
     const camera = new THREE.PerspectiveCamera(34, 2, 0.1, 200);
+    // Reflexionen fuer Helm-Klarlack und Polster (gleiches Material wie in der Trap View)
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+    scene.environment = envMap;
+    scene.environmentIntensity = 0.35;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
     scene.add(new THREE.HemisphereLight(0xffffff, 0x1a3a2a, 1.25));
     const sun = new THREE.DirectionalLight(0xffffff, 1.5);
     sun.position.set(-12, 24, 10);
@@ -159,6 +183,7 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
     let disposed = false;
     const disposables: { dispose: () => void }[] = [];
     const keep = <T extends { dispose: () => void }>(x: T): T => (disposables.push(x), x);
+    keep(envMap);
 
     // Feld
     const fieldMat = keep(new THREE.MeshStandardMaterial({ map: keep(fieldTexture()), roughness: 0.95 }));
@@ -195,74 +220,46 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
       });
     }
 
-    // Geometrien und Materialien (geteilt)
+    // Spielerfiguren: dasselbe Modell wie in der Trap View (players/parts.ts, instanziert) – je Einheit ein Satz
+    const kit = resolveKit({ primary: colors.primary, secondary: colors.secondary, accent: colors.secondary }, "dark");
+    const toSquad = (p: FieldPlayer, index: number): SquadPlayer => {
+      const look = LOOK[p.spot] ?? LOOK.DB;
+      return {
+        id: `${p.unit}-${index}`,
+        player: p.id ? { id: p.id, number: p.number } : null,
+        shortName: p.name ? surname(p.name) : null,
+        world: [p.x, 0, p.z],
+        // Modell blickt nach +z: Offense spielt Richtung -z, Defense schaut zur Offense
+        rotationY: p.unit === "offense" ? Math.PI : 0,
+        stance: look.stance,
+        build: look.build,
+        kit,
+      };
+    };
+    const units = (["offense", "defense"] as const).map((u) => {
+      const idx = players.map((p, i) => (p.unit === u ? i : -1)).filter((i) => i >= 0);
+      const squad = createSquadFrom(idx.map((i) => toSquad(players[i], i)));
+      squad.group.traverse((o) => ((o as THREE.Mesh).castShadow = false));
+      scene.add(squad.group);
+      disposables.push(squad);
+      return { unit: u, idx, squad };
+    });
+
     const geo = {
-      leg: keep(new THREE.CylinderGeometry(0.17, 0.14, 0.86, 10)),
-      torso: keep(new THREE.CylinderGeometry(0.42, 0.33, 0.78, 14)),
-      pads: keep(new THREE.CapsuleGeometry(0.3, 0.72, 4, 12)),
-      arm: keep(new THREE.CylinderGeometry(0.12, 0.1, 0.62, 8)),
-      helmet: keep(new THREE.SphereGeometry(0.31, 20, 14)),
-      stripe: keep(new THREE.TorusGeometry(0.312, 0.035, 6, 20, Math.PI)),
-      mask: keep(new THREE.TorusGeometry(0.2, 0.025, 6, 14, Math.PI)),
-      num: keep(new THREE.PlaneGeometry(0.62, 0.62)),
       blob: keep(new THREE.PlaneGeometry(1.9, 1.9)),
       ring: keep(new THREE.RingGeometry(0.72, 0.86, 40)),
       hit: keep(new THREE.CylinderGeometry(0.85, 0.85, 2.6, 8)),
     };
-    const primary = new THREE.Color(colors.primary);
-    const hsl = { h: 0, s: 0, l: 0 };
-    primary.getHSL(hsl);
-    const light = hsl.l > 0.6; // helles Trikot: dunkle Nummer und dunkle Hose fuer Kontrast
-    const secondary = new THREE.Color(colors.secondary);
     const mat = {
-      pants: keep(new THREE.MeshStandardMaterial({ color: light ? 0x566377 : 0xe9edf2, roughness: 0.8 })),
-      helmet: keep(new THREE.MeshStandardMaterial({ color: primary, roughness: 0.25, metalness: 0.25 })),
-      accent: keep(new THREE.MeshStandardMaterial({ color: secondary, roughness: 0.5 })),
-      skin: keep(new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.9 })),
-      ghost: keep(new THREE.MeshStandardMaterial({ color: 0xcfd8e3, transparent: true, opacity: 0.2, roughness: 1, depthWrite: false })),
       blob: keep(new THREE.MeshBasicMaterial({ map: keep(blobTexture()), transparent: true, depthWrite: false })),
       ring: keep(new THREE.MeshBasicMaterial({ color: 0xf5c63c, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false })),
       hit: keep(new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })),
     };
 
     const figures: Figure[] = players.map((p, index) => {
-      const ghost = !p.id;
+      const u = units.find((x) => x.unit === p.unit)!;
+      const rig = u.squad.rigs[u.idx.indexOf(index)];
       const group = new THREE.Group();
-      const body = new THREE.Group();
-      group.add(body);
-      const jersey = ghost ? null : keep(new THREE.MeshStandardMaterial({ color: primary, roughness: 0.62, emissive: 0xffffff, emissiveIntensity: 0 }));
-      const m = (g: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z = 0) => {
-        const mesh = new THREE.Mesh(g, ghost ? mat.ghost : material);
-        mesh.position.set(x, y, z);
-        body.add(mesh);
-        return mesh;
-      };
-      m(geo.leg, mat.pants, -0.2, 0.43);
-      m(geo.leg, mat.pants, 0.2, 0.43);
-      m(geo.torso, jersey ?? mat.ghost, 0, 1.2).scale.set(1, 1, 0.72);
-      const pads = m(geo.pads, jersey ?? mat.ghost, 0, 1.58);
-      pads.rotation.z = Math.PI / 2;
-      pads.scale.set(1, 1, 0.82);
-      m(geo.arm, mat.skin, -0.66, 1.2).rotation.z = -0.12;
-      m(geo.arm, mat.skin, 0.66, 1.2).rotation.z = 0.12;
-      m(geo.helmet, mat.helmet, 0, 2.08);
-      if (!ghost) {
-        const stripe = m(geo.stripe, mat.accent, 0, 2.08);
-        stripe.rotation.y = Math.PI / 2;
-        const mask = m(geo.mask, mat.pants, 0, 2.0, -0.2);
-        mask.rotation.x = Math.PI / 2;
-        mask.rotation.z = Math.PI;
-        if (p.number !== null) {
-          const numMat = keep(new THREE.MeshBasicMaterial({ map: keep(numberTexture(p.number, light ? "#141c28" : "#ffffff")), transparent: true, depthWrite: false }));
-          const num = m(geo.num, numMat, 0, 1.3, 0.335);
-          num.renderOrder = 2;
-        }
-      }
-      // Linemen stehen tiefer und leicht nach vorn geneigt
-      if (p.down) {
-        body.scale.y = 0.9;
-        body.rotation.x = -0.16;
-      }
       const blob = new THREE.Mesh(geo.blob, mat.blob);
       blob.rotation.x = -Math.PI / 2;
       blob.position.y = 0.03;
@@ -275,24 +272,29 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
       hit.position.y = 1.3;
       hit.userData.index = index;
       group.add(hit);
-      // Offense blickt in Spielrichtung (-z), Defense zur Offense (+z): Die Kamera steht jeweils dahinter.
-      group.rotation.y = p.unit === "defense" ? Math.PI : 0;
-      group.position.set(p.x * 1.0, 0, p.z);
-      group.scale.setScalar(1.18);
+      group.position.set(p.x, 0, p.z);
       scene.add(group);
-      return { group, body, ring, jersey, hit, index, unit: p.unit, lift: 0, phase: index * 1.7 };
+      return { group, rig, base: rig.root.scale.x, ring, hit, index, unit: p.unit, filled: !!p.id, lift: 0 };
     });
 
     // Kamera: steht hinter der gewaehlten Einheit; Wechsel als Schwenk um das Feld
     let angle = state.current.unit === "offense" ? 0 : Math.PI;
     let fade = state.current.unit === "offense" ? 0 : 1; // 0 = Offense sichtbar, 1 = Defense
+    // Mitte der gezeigten Einheit (Offense steht bei +z, Defense bei -z) – die Formation fuellt so das Bild
+    const centerZ = (u: Unit) => {
+      const zs = players.filter((p) => p.unit === u).map((p) => p.z);
+      return zs.length ? (Math.min(...zs) + Math.max(...zs)) / 2 : 0;
+    };
+    const center = { offense: centerZ("offense"), defense: centerZ("defense") };
     const placeCamera = (t: number) => {
       const narrow = el.clientWidth < 560;
-      const dist = narrow ? 27 : 27;
-      const height = narrow ? 22 : 15;
+      const dist = narrow ? 26 : 23;
+      const height = narrow ? 21 : 12.5;
       const sway = reduced ? 0 : Math.sin(t * 0.25) * 0.5;
-      camera.position.set(Math.sin(angle) * dist + Math.cos(angle) * sway, height, Math.cos(angle) * dist + 3 * Math.cos(angle));
-      camera.lookAt(0, 0.4, -Math.cos(angle) * (narrow ? -1 : 3.5));
+      const cz = center.offense + (center.defense - center.offense) * fade;
+      camera.position.set(Math.sin(angle) * dist + Math.cos(angle) * sway, height, cz + Math.cos(angle) * dist);
+      // Blick leicht vor die Einheit, damit oben noch etwas Feld (und das Logo) zu sehen ist
+      camera.lookAt(0, 0.6, cz - Math.cos(angle) * 2);
     };
 
     const size = () => {
@@ -302,7 +304,7 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
       renderer.domElement.style.width = "100%";
       renderer.domElement.style.height = "100%";
       camera.aspect = w / Math.max(1, h);
-      camera.fov = w < 560 ? 62 : 38;
+      camera.fov = w < 560 ? 54 : 38;
       camera.updateProjectionMatrix();
       invalidate();
     };
@@ -311,11 +313,15 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
     let raf = 0;
     let visible = true;
     let dirty = true;
-    const clock = new THREE.Clock();
+    let readySent = false;
+    const t0 = performance.now();
+    let last = t0;
     const frame = () => {
       raf = 0;
-      const dt = Math.min(clock.getDelta(), 0.1);
-      const t = clock.elapsedTime;
+      const now = performance.now();
+      const dt = Math.min((now - last) / 1000, 0.1);
+      last = now;
+      const t = (now - t0) / 1000;
       // zeitbasiertes Angleichen, damit Uebergaenge auf langsamen Geraeten gleich lang dauern
       const ease = (rate: number) => 1 - Math.exp(-dt * rate);
       const target = state.current.unit === "offense" ? 0 : Math.PI;
@@ -331,12 +337,18 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
         const liftTarget = on ? 1 : 0;
         f.lift = reduced ? liftTarget : f.lift + (liftTarget - f.lift) * ease(14);
         if (Math.abs(liftTarget - f.lift) > 0.01) settling = true;
-        const s = (el.clientWidth < 560 ? 1.7 : 1.18) * (0.6 + 0.4 * show) * (1 + 0.1 * f.lift);
+        const s = (el.clientWidth < 560 ? FIG_SCALE_NARROW : FIG_SCALE) * (0.6 + 0.4 * show) * (1 + 0.08 * f.lift);
         f.group.scale.setScalar(s);
-        f.body.position.y = f.lift * 0.12 + (reduced ? 0 : Math.sin(t * 1.4 + f.phase) * 0.012);
+        // Ausgewaehlte Figur hebt sich leicht an; das Modell selbst traegt Atmen und Blick (animateRig)
+        f.rig.root.scale.setScalar(f.base * s);
+        f.rig.root.position.y = f.lift * 0.14;
+        if (f.filled) animateRig(f.rig, reduced ? 0 : t);
         (f.ring.material as THREE.MeshBasicMaterial).opacity = f.lift * 0.95;
-        if (f.jersey) f.jersey.emissiveIntensity = f.lift * 0.16;
         f.hit.visible = f.unit === state.current.unit;
+      }
+      for (const u of units) {
+        u.squad.group.visible = (u.unit === "offense" ? 1 - fade : fade) > 0.02;
+        u.squad.sync();
       }
       (los.material as THREE.MeshBasicMaterial).opacity = reduced ? 0.12 : 0.1 + Math.sin(t * 1.6) * 0.05;
       if (decal) {
@@ -345,6 +357,10 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
       }
       placeCamera(t);
       renderer.render(scene, camera);
+      if (!readySent) {
+        readySent = true;
+        state.current.onReady?.();
+      }
       dirty = false;
       if (visible && (!reduced || settling)) raf = requestAnimationFrame(frame);
     };

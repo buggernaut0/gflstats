@@ -166,7 +166,7 @@ body {
 }
 @media (max-width: 640px) {
   .lineup-stage {
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1 / 1;
   }
 }
 .lineup-flat {

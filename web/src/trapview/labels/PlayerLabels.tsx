@@ -71,6 +71,9 @@ export function LabelLayer({ model, registry }: { model: SceneModel; registry: L
   // Nur bei Wechsel der Sichtbarkeit neu berechnet; memo() rendert danach nur Labels mit geändertem Zustand
   const states = useMemo(() => {
     const on = new Set(visible);
+    // Unbelegte Plätze stehen schon als Geist im Bild. In Gruppen-Einstellungen würden ihre
+    // „nicht belegt“-Labels die echten Namen zustapeln – dort bleiben sie aus, einzeln (QB, Duell) nicht.
+    if (on.size > 3) for (const p of model.players) if (!p.player) on.delete(p.id);
     const focusGroups = new Set(inMatchup ? model.players.filter((p) => on.has(p.id)).map((p) => p.group) : []);
     const out = new Map<string, LabelState>();
     for (const p of model.players) {
