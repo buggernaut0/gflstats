@@ -31,6 +31,7 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
   const [active, setActive] = useState<number | null>(null);
   const [mode, setMode] = useState<"flat" | "3d">("flat");
   const [failed, setFailed] = useState(false);
+  const [ready, setReady] = useState(false);
 
   // 3D erst laden, wenn der Bereich in die Naehe des Bildschirms kommt
   useEffect(() => {
@@ -75,10 +76,10 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
       </div>
 
       <div ref={box} className="lineup-stage relative overflow-hidden rounded-xl border border-line">
-        {mode === "3d" && !failed ? (
-          <LineupScene players={players} unit={unit} colors={colors} logo={logo ? `${BASE}/${logo}` : null} active={active} onActive={setActive} onOpen={(i) => players[i].id && router.push(`/spieler/${players[i].id}/`)} onFail={() => setFailed(true)} />
-        ) : (
-          <FlatField list={list} unit={unit} active={active} onActive={setActive} />
+        {/* Flache Aufstellung, bis die 3D-Szene ihr erstes Bild hat – das Feld ist nie leer */}
+        {(mode !== "3d" || failed || !ready) && <FlatField list={list} unit={unit} active={active} onActive={setActive} />}
+        {mode === "3d" && !failed && (
+          <LineupScene players={players} unit={unit} colors={colors} logo={logo ? `${BASE}/${logo}` : null} active={active} onActive={setActive} onOpen={(i) => players[i].id && router.push(`/spieler/${players[i].id}/`)} onFail={() => setFailed(true)} onReady={() => setReady(true)} />
         )}
 
         {/* Infotafel wie eine Bauchbinde im TV */}

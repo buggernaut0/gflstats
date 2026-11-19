@@ -39,6 +39,7 @@ export default function LineupSection({ team, season }: { team: Team; season: nu
       slot: p.slot, position: p.position, positionLabel: POSITION_LABELS[p.position] ?? p.position, unit,
       id: p.player, name: p.player ? (names.get(p.player)?.name ?? p.rosterName) : null, number: p.number, games: p.games,
       stats: p.player ? def.show.map((key) => ({ label: stat(key).abbr, value: formatStat(stat(key), p.stats[key] ?? 0) })) : [],
+      spot: p.spot[0],
       down: p.spot[0] === "OL" || p.spot[0] === "DL",
       x, z,
     };

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import type { SceneModel, ScenePlayer } from '../data/sceneModel';
+import type { SceneModel } from '../data/sceneModel';
 import type { Kit } from '../data/kits';
+import type { Build, Stance } from '../data/types';
 import { playerGeometries, type GeoName } from './parts';
 import { createPlayerMaterial } from './playerMaterial';
 import { createNumberAtlas } from './numberAtlas';
@@ -26,8 +27,26 @@ const PALETTE: Record<GeoName, (k: Kit, skin: string) => [string, string, string
 
 const SKIN_TONES = ['#c99572', '#8a5a3c', '#e0b08c', '#5f3d28'];
 
+/**
+ * Was das Modell von einem Platz wissen muss – unabhängig davon, ob er aus der Trap View
+ * (SceneModel) oder aus der Starting Lineup der Teamseite stammt.
+ */
+export interface SquadPlayer {
+  /** Platz-ID (Formation) */
+  id: string;
+  /** null = Platz unbesetzt → durchscheinende Silhouette */
+  player: { id: string; number: number | null } | null;
+  /** Name auf dem Rücken */
+  shortName: string | null;
+  world: [number, number, number];
+  rotationY: number;
+  stance: Stance;
+  build: Build;
+  kit: Kit;
+}
+
 /** Stabiler Wert je Spieler – bestimmt Hautton und Atemtakt, unabhängig von der Reihenfolge. */
-function seedOf(p: ScenePlayer): number {
+function seedOf(p: SquadPlayer): number {
   const key = p.player?.id ?? p.id;
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
@@ -36,6 +55,10 @@ function seedOf(p: ScenePlayer): number {
 
 export interface Squad {
   group: THREE.Group;
+  /** Skelett je Eingabe-Platz (gleiche Reihenfolge). Wurzel verschieben/skalieren, danach sync(). */
+  rigs: Rig[];
+  /** Matrizen aller Instanzen aus den Skeletten neu schreiben (nach Änderungen an rigs). */
+  sync: () => void;
   /** Idle-Bewegung fortschreiben (t in Sekunden). */
   update: (t: number) => void;
   dispose: () => void;
@@ -47,6 +70,14 @@ export interface Squad {
  * dieselben; Teamfarben, Hautton und Nummern-Kachel hängen als Instanz-Attribute an jedem Spieler.
  */
 export function createSquad(model: SceneModel): Squad {
+  return createSquadFrom(model.players.map((p) => ({
+    id: p.id, player: p.player, shortName: p.shortName, world: p.world, rotationY: p.rotationY,
+    stance: p.slot.stance, build: p.slot.build, kit: p.kit,
+  })));
+}
+
+/** Wie createSquad, aber für beliebige Plätze (z. B. die Starting Lineup auf der Teamseite). */
+export function createSquadFrom(players: SquadPlayer[]): Squad {
   const geo = playerGeometries();
   const group = new THREE.Group();
   const owned: { dispose: () => void }[] = [];
@@ -62,8 +93,10 @@ export function createSquad(model: SceneModel): Squad {
     });
   };
 
-  const filled = model.players.filter((p) => p.player);
-  const empty = model.players.filter((p) => !p.player);
+  const filled = players.filter((p) => p.player);
+  const empty = players.filter((p) => !p.player);
+  const rigOf = new Map<SquadPlayer, Rig>();
+  const allSets: { rigs: Rig[]; meshes: THREE.InstancedMesh[] }[] = [];
 
   if (filled.length) {
     const atlas = createNumberAtlas(filled.map((p) => ({ number: p.player!.number, name: p.shortName })));
@@ -73,11 +106,12 @@ export function createSquad(model: SceneModel): Squad {
     owned.push(atlas.texture, body, jersey, helmet);
 
     const seeds = filled.map(seedOf);
-    const rigs = filled.map((p, i) => buildRig({ world: p.world, rotationY: p.rotationY, stance: p.slot.stance, build: p.slot.build }, seeds[i]));
+    const rigs = filled.map((p, i) => buildRig({ world: p.world, rotationY: p.rotationY, stance: p.stance, build: p.build }, seeds[i]));
+    filled.forEach((p, i) => rigOf.set(p, rigs[i]));
     const n = filled.length;
 
     /** Je Spieler ein Farbwert als Instanz-Attribut. */
-    const perPlayer = (pick: (p: ScenePlayer, i: number) => string) => {
+    const perPlayer = (pick: (p: SquadPlayer, i: number) => string) => {
       const a = new Float32Array(n * 3);
       filled.forEach((p, i) => color.set(pick(p, i)).toArray(a, i * 3));
       return new THREE.InstancedBufferAttribute(a, 3);
@@ -112,24 +146,35 @@ export function createSquad(model: SceneModel): Squad {
     const set = { rigs, meshes };
     write(set);
     sets.push(set);
+    allSets.push(set);
   }
 
   if (empty.length) {
     // Unbesetzter Platz: farblose, durchscheinende Silhouette – es wird kein Spieler erfunden
     const ghost = new THREE.MeshStandardMaterial({ color: '#9aa4b2', roughness: 0.9, transparent: true, opacity: 0.16, depthWrite: false });
     owned.push(ghost);
-    const rigs = empty.map((p) => buildRig({ world: p.world, rotationY: p.rotationY, stance: p.slot.stance, build: p.slot.build }, seedOf(p)));
+    const rigs = empty.map((p) => buildRig({ world: p.world, rotationY: p.rotationY, stance: p.stance, build: p.build }, seedOf(p)));
+    empty.forEach((p, i) => rigOf.set(p, rigs[i]));
     const meshes = PART_NAMES.map((name) => {
       const mesh = new THREE.InstancedMesh(geo[GEO_OF[name]], ghost, empty.length);
       mesh.frustumCulled = false;
       group.add(mesh);
       return mesh;
     });
-    write({ rigs, meshes });
+    const set = { rigs, meshes };
+    write(set);
+    allSets.push(set);
   }
 
   return {
     group,
+    rigs: players.map((p) => rigOf.get(p)!),
+    sync: () => {
+      for (const set of allSets) {
+        for (const rig of set.rigs) rig.root.updateMatrixWorld(true);
+        write(set);
+      }
+    },
     update: (t) => {
       for (const set of sets) {
         for (const rig of set.rigs) animateRig(rig, t);

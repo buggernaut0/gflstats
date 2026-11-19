@@ -13,6 +13,8 @@ export interface FieldPlayer {
   number: number | null;
   games: number;
   stats: { label: string; value: string }[];
+  /** Formationsgruppe (QB, RB, WR, TE, OL, DL, LB, DB) – bestimmt Haltung und Koerperbau der Figur */
+  spot: string;
   /** Lineman-Platz der Formation (tiefe Haltung) */
   down: boolean;
   /** Schematische Lage in Yards (x quer, z in Spielrichtung) */

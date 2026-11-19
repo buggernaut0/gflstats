@@ -48,7 +48,7 @@ export default function TeamView({ seasons, teams }: { seasons: TeamSeasonView[]
   }, [data, role, q, sort]);
 
   const th = (key: string, label: string, title?: string) => (
-    <th scope="col" aria-sort={sort.key === key ? (sort.desc ? "descending" : "ascending") : "none"} className={`px-2 py-2 text-right font-medium ${sort.key === key ? "bg-accent-soft text-ink" : ""}`}>
+    <th key={key} scope="col" aria-sort={sort.key === key ? (sort.desc ? "descending" : "ascending") : "none"} className={`px-2 py-2 text-right font-medium ${sort.key === key ? "bg-accent-soft text-ink" : ""}`}>
       <button type="button" title={title} onClick={() => setSort((s) => ({ key, desc: s.key === key ? !s.desc : true }))} className="hover:text-ink">
         {label}
       </button>
