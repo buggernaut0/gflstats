@@ -19,6 +19,7 @@ export const method = {
   playersText: (merged: string, cleaned: string) =>
     `Die Quelle kennt keine Spieler-IDs, nur Namen. ${merged} Spieler stehen dort unter mehreren Schreibweisen und wurden zusammengeführt, ${cleaned} weitere Namen wurden nur bereinigt (Leerzeichen, unsichtbare Zeichen). Zwei Namen werden nie zusammengeführt, wenn beide im selben Spiel im Statistikbogen stehen.`,
   showMerges: (n: string) => `Alle ${n} Zusammenführungen anzeigen`,
+  showRenamed: (n: string) => `${n} Namen nach offiziellem Kader 2026 geschrieben (Spieler-ID unverändert)`,
   colPlayer: "Spieler",
   colVariants: "Schreibweisen in der Quelle",
   colReason: "Grund",

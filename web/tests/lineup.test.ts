@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
-import { MIN_GAME_SHARE, REGULAR_GAME_SHARE, SLOTS, provisionalLineup, startingLineup, type TeamRoster } from "../src/lib/lineup.ts";
+import { MIN_GAME_SHARE, OL_MIN_GAMES, REGULAR_GAME_SHARE, SLOTS, provisionalLineup, startingLineup, type TeamRoster } from "../src/lib/lineup.ts";
 
 const row = (g: number, p: string, s: Record<string, number>, t = "a") => ({ g: `g${g}`, p, t, s });
 const roster = (players: [string | null, number, string][]): TeamRoster => ({ source: "test", retrieved: null, note: null, players: players.map(([player, number, position]) => ({ player, name: player ?? "ohne Statistik", number, position: position as never })) });
@@ -58,12 +58,20 @@ test("Nur Spieler der Positionsgruppe laut Kader; Spiele anderer Teams zaehlen n
   assert.equal(l.defense.find((x) => x.slot === "DB1")!.player, "db");
 });
 
-test("Offensive Line: nur mit belegten Einsaetzen, ohne Durchnummerierung", () => {
-  const rows = [...Array.from({ length: 10 }, (_, i) => row(i, "qb", { pass: 20 })), ...Array.from({ length: 6 }, (_, i) => row(i, "ol-a", { tackletotal: 1 })), row(0, "ol-b", { penalty: 1 })];
-  const l = startingLineup(rows, "a", roster([["qb", 1, "QB"], ["ol-a", 70, "OL"], ["ol-b", 71, "OL"], [null, 72, "OL"]]))!;
+test("Offensive Line: jeder belegte Einsatz zaehlt, Rangfolge nach Einsaetzen, ohne Durchnummerierung", () => {
+  const rows = [
+    ...Array.from({ length: 10 }, (_, i) => row(i, "qb", { pass: 20 })),
+    ...Array.from({ length: 6 }, (_, i) => row(i, "ol-a", { tackletotal: 1 })),
+    row(0, "ol-b", { penalty: 1 }),
+    row(1, "ol-c", { fumblerecovered: 1 }), row(2, "ol-c", {}),
+    ...Array.from({ length: 3 }, (_, i) => row(i, "dl", { tackletotal: 2 })), // kein OL laut Kader
+  ];
+  const l = startingLineup(rows, "a", roster([["qb", 1, "QB"], ["ol-a", 70, "OL"], ["ol-b", 71, "OL"], ["ol-c", 74, "OL"], [null, 72, "OL"], ["dl", 90, "DL"]]))!;
   const ol = l.offense.filter((x) => x.position === "OL");
   assert.equal(ol.length, 5);
-  assert.deepEqual(ol.map((x) => x.player), ["ol-a", null, null, null, null]);
+  // ol-a 6 Spiele, ol-c 2, ol-b 1; der Lineman ohne Einsatz im Bogen (null) wird nicht aufgestellt
+  assert.deepEqual(ol.map((x) => x.player), ["ol-a", "ol-c", "ol-b", null, null]);
+  assert.deepEqual(ol.map((x) => x.number), [70, 74, 71, null, null]);
   assert.ok(ol.every((x) => x.slot === "OL"));
 });
 
@@ -134,7 +142,27 @@ test("Echte Daten Ravensburg 2026: jeder Starter steht im Kader, erfuellt die Sc
     const e = r.players.find((p) => p.player === x.player)!;
     assert.equal(e.position, x.position);
     assert.equal(e.number, x.number);
-    assert.ok(x.games >= l.minGames, `${x.player}: ${x.games} Spiele`);
+    // Offensive Line: jeder belegte Einsatz zaehlt (OL_MIN_GAMES), sonst die Einsatzschwelle
+    assert.ok(x.games >= (x.position === "OL" ? OL_MIN_GAMES : l.minGames), `${x.player}: ${x.games} Spiele`);
   }
   assert.equal(l.offense.find((x) => x.slot === "QB1")!.player, "broghean-mcgovern");
+});
+
+test("Echte Daten 2026: alle Kader-Teams – Nummern/Positionen aus dem Kader, OL mit Namen, keiner doppelt", { skip: !fs.existsSync(data("rosters.json")) && "keine Daten erzeugt" }, () => {
+  const rosters = JSON.parse(fs.readFileSync(data("rosters.json"), "utf8"))["2026"] as Record<string, TeamRoster>;
+  const rows = JSON.parse(fs.readFileSync(data("pg/2026.json"), "utf8"));
+  assert.ok(Object.keys(rosters).length >= 14);
+  for (const [team, r] of Object.entries(rosters)) {
+    const l = startingLineup(rows, team, r)!;
+    const filled = [...l.offense, ...l.defense].filter((x) => x.player);
+    assert.equal(new Set(filled.map((x) => x.player)).size, filled.length, `${team}: kein Spieler doppelt`);
+    for (const x of filled) {
+      const e = r.players.find((p) => p.player === x.player)!;
+      assert.ok(e, `${team}: ${x.player} steht im Kader`);
+      assert.equal(e.position, x.position);
+      assert.equal(e.number, x.number);
+    }
+    // jedes Team hat O-Liner mit belegtem Einsatz im Kader -> mindestens vier OL-Plaetze mit Name und Nummer
+    assert.ok(l.offense.filter((x) => x.position === "OL" && x.player && x.number !== null).length >= 4, `${team}: OL`);
+  }
 });

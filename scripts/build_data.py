@@ -177,10 +177,43 @@ def build_rosters(rosters, player_ids, team_ids):
                     if pid in seen:
                         raise SystemExit(f"rosters.json: Spieler {pid} steht doppelt im Kader {team} {season}")
                     seen.add(pid)
-                players.append({"player": pid, "name": e["name"], "number": e["number"], "position": e["position"]})
+                if "nameFix" in e and (pid is None or not str(e["nameFix"]).strip()):
+                    raise SystemExit(f"rosters.json: nameFix ohne Spieler-ID oder Begruendung ({e['name']})")
+                players.append({"player": pid, "name": e["name"], "number": e["number"], "position": e["position"],
+                                **({"detail": e["detail"]} if e.get("detail") else {})})
             out.setdefault(str(season), {})[team] = {"source": r["source"], "retrieved": r.get("retrieved"),
-                                                      "note": r.get("note"), "players": players}
+                                                      "note": r.get("note"), "file": r.get("file"), "players": players}
     return out
+
+
+def attach_rosters(out_players, rosters, report):
+    """Verknuepft die offiziellen Kader mit den Spielern (einzige Stelle fuer Rueckennummer/Position je Spieler).
+
+    Je Saison und Team bekommt der Saisoneintrag des Spielers in players.json die Rueckennummer, die
+    Positionsgruppe und ggf. die feinere Positionsangabe aus dem Kader - nur fuer genau diese Saison, nie fuer
+    andere Saisons (Nummern wechseln). Bricht ab, wenn ein Kader-Spieler in dieser Saison nicht fuer das Team
+    im Statistikbogen steht. 'nameFix': Anzeigename nach offiziellem Kader (ID bleibt), erscheint unter Korrekturen.
+    """
+    by_id = {p["id"]: p for p in out_players}
+    for season, teams in rosters.items():
+        for team, r in teams.items():
+            for e in r["players"]:
+                pid = e.get("player")
+                if pid is None:
+                    continue
+                p = by_id[pid]
+                s = next((x for x in p["seasons"] if x["season"] == int(season)), None)
+                if s is None or team not in s["teams"]:
+                    raise SystemExit(f"rosters.json: {pid} steht {season} nicht fuer {team} im Statistikbogen ({e['name']})")
+                if "number" in s:
+                    raise SystemExit(f"rosters.json: {pid} steht {season} in zwei Kadern")
+                s["number"], s["position"], s["rosterTeam"] = e["number"], e["position"], team
+                if e.get("detail"):
+                    s["positionDetail"] = e["detail"]
+                if e.get("nameFix") and p["name"] != e["name"]:
+                    report["corrections"].append({"type": "Name nach offiziellem Kader", "id": pid,
+                                                  "detail": f"{p['name']!r} -> {e['name']}", "reason": e["nameFix"]})
+                    p["name"] = e["name"]
 
 
 # --------------------------------------------------------------------------- game highlight videos
@@ -566,6 +599,7 @@ def build(write=True):
                           "sources": t.get("sources", []), "note": t.get("note")})
 
     out_rosters = build_rosters(cur["rosters"], {p["id"] for p in out_players}, {t["id"] for t in out_teams})
+    attach_rosters(out_players, cur["rosters"], report)
 
     meta = {
         "builtAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -621,7 +655,8 @@ def build(write=True):
     for pl in out_players:
         last = pl["seasons"][-1]
         span = f'{pl["seasons"][0]["season"]}' + (f'-{last["season"]}' if len(pl["seasons"]) > 1 else "")
-        extra = " ".join(filter(None, [last["role"], "/".join(abbr.get(t, t) for t in last["teams"]), span]))
+        jersey = f'#{last["number"]}' if "number" in last else None
+        extra = " ".join(filter(None, [jersey, last.get("position") or last["role"], "/".join(abbr.get(t, t) for t in last["teams"]), span]))
         search.append(["p", pl["id"], pl["name"], extra])
     dump("search.json", search)
     print(f"Geschrieben nach {OUT.relative_to(ROOT)}")

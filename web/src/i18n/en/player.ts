@@ -4,6 +4,7 @@ import type * as de from "../de/player";
 export const player: Widen<typeof de.player> = {
   derivedRole: "(derived from stats)",
   roleUnclear: "Role unclear",
+  officialRoster: (season) => `(official ${season} roster)`,
   eliteLine: (season) => `League top 10 in ${season} at the position group`,
   eliteRank: (rank, of, group) => ` (#${rank} of ${of} ${group})`,
   shared: "Combined entry of two players in the source; not counted in leaderboards.",

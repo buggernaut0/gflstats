@@ -8,7 +8,7 @@ import TeamView, { type RosterRow, type TeamSeasonView } from "@/components/Team
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import SeasonNotice from "@/components/SeasonNotice";
 import { T, Titled } from "@/i18n/react";
-import { getGames, getMeta, getPlayerGames, getTeamSeasons, getTeams, playerMap, teamMap, teamNameIn } from "@/lib/data";
+import { getGames, getMeta, getPlayerGames, getRosters, getTeamSeasons, getTeams, playerMap, teamMap, teamNameIn } from "@/lib/data";
 import { TEAM_METRICS, teamRank, teamSeasonMetrics, type TeamSeasonMetrics } from "@/lib/team";
 import { addStats } from "@/lib/stats";
 import type { Scope } from "@/lib/types";
@@ -50,10 +50,19 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
     for (const r of getPlayerGames(season)) {
       if (r.t !== id) continue;
       const p = players.get(r.p)!;
-      const e = roster.get(r.p) ?? { player: r.p, name: p.name, role: p.seasons.find((s) => s.season === season)?.role ?? null, games: 0, stats: {} };
+      const ps = p.seasons.find((s) => s.season === season);
+      // Rückennummer/Position nur aus dem offiziellen Kader dieses Teams in dieser Saison (players.json, build_data.py)
+      const own = ps?.rosterTeam === id;
+      const e = roster.get(r.p) ?? { player: r.p, name: p.name, role: ps?.role ?? null, number: own ? ps!.number! : null, position: own ? ps!.position ?? null : null, games: 0, stats: {} };
       e.games += 1;
       addStats(e.stats, r.s);
       roster.set(r.p, e);
+    }
+    // Spieler aus dem offiziellen Kader ohne Eintrag im Statistikbogen (v. a. Offensive Line): Name, Nummer, Position
+    const official = getRosters()[String(season)]?.[id];
+    for (const e of official?.players ?? []) {
+      if (e.player) continue;
+      roster.set(`kader:${e.number}:${e.name}`, { player: null, name: e.name, role: null, number: e.number, position: e.position, games: 0, stats: {} });
     }
     const schedule = games
       .filter((g) => g.season === season && (g.home === id || g.away === id))
@@ -67,6 +76,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
       hasPlayoffs: schedule.some((g) => g.playoff),
       metrics: { all: metric("all"), regular: metric("regular"), playoff: metric("playoff") },
       // Nur die Felder, die die Kader-Tabelle zeigt (haelt die Seite klein)
+      rosterSource: official ? { url: official.source, retrieved: official.retrieved } : null,
       roster: [...roster.values()].map((r) => ({ ...r, stats: Object.fromEntries(Object.entries(r.stats).filter(([k]) => ["passingyards", "touchdownpass", "runyards", "touchdownrun", "catched", "receivingyards", "touchdowncatch", "tackletotal", "sacktotal", "intercepted"].includes(k))) })),
       schedule,
     };

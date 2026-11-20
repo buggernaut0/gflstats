@@ -61,9 +61,27 @@ offiziellen Kaders), `retrieved` (Abrufdatum) und `players` ergänzen:
 ```
 
 `position` ist eine der Gruppen QB, RB, WR, TE, OL, DL, LB, DB, K, P; `player` ist die Spieler-ID der Website
-(letzter Teil von `/spieler/<id>/`) oder fehlt, wenn der Spieler in keinem Statistikbogen steht.
-Der Build bricht ab bei unbekanntem Team, unbekannter Spieler-ID, doppelt zugeordnetem Spieler oder
-ungültiger Position/Nummer. Regel: Nummern und Positionen nur aus dem offiziellen Kader, nie raten.
+(letzter Teil von `/spieler/<id>/`) oder `null`, wenn der Spieler in keinem Statistikbogen steht.
+Optional: `detail` (Positionsangabe der Quelle, wenn sie von der Gruppe abweicht, z. B. „DE“, „Guard“),
+`nameFix` (Begründung, warum der Anzeigename nach dem Kader statt nach dem Statistikbogen geschrieben wird –
+die Spieler-ID bleibt dabei unverändert; erscheint auf der Methodik-Seite) und auf Team-Ebene `file`
+(direkter Link zur Kader-Datei, wenn `source` die Kaderseite ist).
+Der Build bricht ab bei unbekanntem Team, unbekannter Spieler-ID, doppelt zugeordnetem Spieler,
+ungültiger Position/Nummer oder wenn ein Kader-Spieler in dieser Saison nicht für das Team im Statistikbogen steht.
+Regel: Nummern und Positionen nur aus dem offiziellen Kader, nie raten. Zuordnung nie nur über die Nummer,
+sondern über Team + Name (Schreibweisen, Zweitnamen, Kurzformen geprüft); unklare Fälle bleiben `null`.
+
+**Eine Datenquelle für alles:** `scripts/build_data.py` hängt Nummer, Positionsgruppe und `detail` an den
+Saisoneintrag des Spielers in `players.json` (`seasons[].number`, `.position`, `.positionDetail`, `.rosterTeam`) –
+nur für genau diese Saison. Spielerprofil, Team-Kader (inkl. Kader-Spieler ohne Statistik), Suche,
+Starting Lineup und Trap View lesen von dort bzw. aus `rosters.json`; nirgends werden Nummern separat gepflegt.
+
+**Offensive Line in der Aufstellung:** Linemen stehen nur vereinzelt im Statistikbogen (Fumble-Recovery, Strafe).
+Aufgestellt werden die OL laut Kader mit den meisten belegten Einsätzen (mind. einer, `OL_MIN_GAMES` in
+`web/src/lib/lineup.ts`) – das ist keine Starter-Angabe. Ohne belegten Einsatz bleibt ein Platz frei.
+
+Stand Kader 2026 (abgerufen 20.11.2026): 14 von 15 Teams. Für die Saarland Hurricanes liegt kein Kader vor
+(vorläufige Aufstellung ohne Nummern). Krefeld Ravens spielen nicht in der GFL-Datenbank und sind nicht enthalten.
 
 Ohne Kader zeigt die Teamseite eine **vorläufige** Aufstellung nur aus der Statistik (abgeleitete Rollen, keine
 Nummern, Receiver und Defense nicht feiner getrennt). Sobald hier ein Kader steht, wechselt das Team automatisch

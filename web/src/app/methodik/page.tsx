@@ -19,6 +19,7 @@ export default function MethodikPage() {
       sha={meta.source.databaseSha256 ?? ""}
       merged={merged.map((c) => ({ id: c.id, name: c.name ?? c.id, variants: (c.variants ?? []).map(visible), reason: c.reason }))}
       cleaned={cleaned.length}
+      renamed={by("Name nach offiziellem Kader").map((c) => ({ id: c.id, detail: c.detail, reason: c.reason }))}
       excluded={excluded.map((c) => ({ id: c.id, detail: c.detail, reason: c.reason }))}
       swapped={swapped.map((c) => ({ id: c.id, detail: c.detail, reason: c.reason }))}
       availabilityRule={meta.availabilityRule}

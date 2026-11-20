@@ -21,6 +21,8 @@ export default function MethodView(p: {
   sha: string;
   merged: { id: string; name: string; variants: string[]; reason: string }[];
   cleaned: number;
+  /** Anzeigename nach offiziellem Kader (curation/rosters.json, nameFix) */
+  renamed: Correction[];
   excluded: Correction[];
   swapped: Correction[];
   availabilityRule: string;
@@ -96,6 +98,25 @@ export default function MethodView(p: {
             </table>
           </div>
         </details>
+        {p.renamed.length > 0 && (
+          <details className="mt-3 max-w-[980px] rounded-lg border border-line bg-surface">
+            <summary className="cursor-pointer px-4 py-3 text-[14px] font-medium text-ink">{t.showRenamed(f.fmt(p.renamed.length))}</summary>
+            <div className="overflow-x-auto border-t border-line">
+              <table className="w-full min-w-[720px] border-collapse text-[13px]">
+                <tbody>
+                  {p.renamed.map((c) => (
+                    <tr key={c.id} className="border-b border-line align-top last:border-0">
+                      <td className="py-2 pl-4 pr-3">
+                        <Link href={`/spieler/${c.id}/`} className="text-ink hover:underline hover:underline-offset-4">{c.detail}</Link>
+                      </td>
+                      <td className="py-2 pr-4 text-ink-3" lang="de">{c.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        )}
       </Section>
 
       <Section id="felder" title={t.fieldsTitle}>

@@ -2,6 +2,7 @@
 export const player = {
   derivedRole: "(aus Statistik abgeleitet)",
   roleUnclear: "Rolle nicht eindeutig",
+  officialRoster: (season: number) => `(offizieller Kader ${season})`,
   eliteLine: (season: number) => `Top 10 der Liga ${season} in der Positionsgruppe`,
   eliteRank: (rank: number, of: number, group: string) => ` (Platz ${rank} von ${of} ${group})`,
   shared: "Gemeinsamer Eintrag zweier Spieler in der Quelle; wird in Ranglisten nicht gewertet.",

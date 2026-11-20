@@ -21,6 +21,7 @@ export const method: Widen<typeof de> = {
   playersText: (merged, cleaned) =>
     `The source has no player IDs, only names. ${merged} players appear there under several spellings and were merged; ${cleaned} further names were only cleaned (spaces, invisible characters). Two names are never merged if both appear in the stat sheet of the same game.`,
   showMerges: (n) => `Show all ${n} merges`,
+  showRenamed: (n) => `${n} names spelled as on the official 2026 roster (player ID unchanged)`,
   colPlayer: "Player",
   colVariants: "Spellings in the source",
   colReason: "Reason",

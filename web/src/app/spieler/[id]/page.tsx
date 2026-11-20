@@ -18,7 +18,7 @@ import { axesFor, comparisonGroup, qualified, type Entry } from "@/lib/profile";
 import { allEntries } from "@/lib/serverCache";
 import { ROLE_HEADLINE, ROLE_MIN, addStats, stat, statAvailable, value } from "@/lib/stats";
 import { Num, StatLabel, StatValue, T, Titled } from "@/i18n/react";
-import { RoleName, QualifierText, StatFormula, EliteGroup, SourceNames } from "@/components/I18nBits";
+import { RoleName, PositionName, QualifierText, StatFormula, EliteGroup, SourceNames } from "@/components/I18nBits";
 import { GAMELOG_COLS } from "@/lib/tables";
 import type { Scope, Stats } from "@/lib/types";
 import SeasonNotice from "@/components/SeasonNotice";
@@ -101,6 +101,11 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
           <div>
             <h1 className="display text-[44px] font-bold leading-none tracking-tight text-ink sm:text-[56px]">{p.name}</h1>
             <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] text-ink-2">
+              {lastSeason.position && (
+                <span title={lastSeason.positionDetail}>
+                  <PositionName group={lastSeason.position} /> <span className="text-ink-3"><T k="player.officialRoster" a={[lastSeason.season]} /></span>
+                </span>
+              )}
               {role ? (
                 <span>
                   <RoleName role={role} /> <span className="text-ink-3"><T k="player.derivedRole" /></span>
@@ -139,7 +144,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
           <Info label={<T k="player.games" />} value={<Num v={careerGames} />} hint="player.gamesHint" />
           <Info label={<T k={lastSeason.season === meta.currentSeason ? "player.currentTeam" : "player.lastTeam"} />} value={currentTeams.map((t) => teams[t]?.short).join(", ")} hint="player.asOfSeason" hintArgs={[lastSeason.season]} />
           <Info label={<T k="player.formerTeams" />} value={formerTeams.length ? formerTeams.map((t) => teams[t]?.short).join(", ") : "–"} />
-          <Info label={<T k="player.jersey" />} value={<T k="player.noInfo" />} muted />
+          {lastSeason.number !== undefined ? (
+            // nur die Nummer der letzten Saison aus deren offiziellem Kader - nie auf andere Saisons übertragen
+            <Info label={<T k="player.jersey" />} value={<span className="num font-semibold">#{lastSeason.number}</span>} hint="player.asOfSeason" hintArgs={[lastSeason.season]} />
+          ) : (
+            <Info label={<T k="player.jersey" />} value={<T k="player.noInfo" />} muted />
+          )}
           <Info label={<T k="player.sizeWeight" />} value={<T k="player.noInfo" />} muted />
         </dl>
       </section>

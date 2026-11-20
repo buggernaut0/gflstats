@@ -40,6 +40,14 @@ export interface PlayerSeasonInfo {
   games: number;
   role: Role;
   source: "abgeleitet" | "manuell";
+  /** Aus dem offiziellen Kader dieser Saison (curation/rosters.json) – nur für genau diese Saison, sonst fehlt es */
+  number?: number;
+  /** Positionsgruppe laut Kader (QB, RB, WR, TE, OL, DL, LB, DB, K, P) */
+  position?: string;
+  /** feinere Positionsangabe der Quelle (z. B. "DE", "Guard") */
+  positionDetail?: string;
+  /** Team, in dessen Kader der Spieler steht */
+  rosterTeam?: string;
 }
 
 export interface Player {

@@ -14,6 +14,13 @@ Datenschicht + Website, Lieblingsteam, Teamlogos (15 mit Quellen), Navigation + 
 - Game Highlights: 253 weitere Videos (jetzt 379 von 388 Spielen), gleiche Prüfregel; 251 offizielle Sporteurope.TV-Highlights, 2 Spielberichte Sachsen Fernsehen. Ohne Video: 9 Spiele (u. a. German Bowl 2024, Relegation 2025).
 - Tests: typecheck OK, `npm test` 38/38, build_data 106/106, `next build` OK.
 
+## 2b. Offizielle Kader 2026 (20.11.2026, **nicht committet**)
+- `curation/rosters.json`: Kader für 14 von 15 Teams (neu: 13; Ravensburg erneut geprüft, unverändert). 862 Einträge, 694 mit Spieler-ID verknüpft; Bericht mit Quellen, unklaren Fällen und möglichen Doppel-Profilen: `curation/KADER_ABGLEICH_2026.md`. Saarland: kein Kader (kein Link). Krefeld: nicht in der GFL-Datenbank.
+- Zentrale Verknüpfung in `scripts/build_data.py` (`attach_rosters`): Nummer/Position je Spieler-Saison in `players.json` (nur diese Saison); `nameFix` setzt 21 Anzeigenamen nach offiziellem Kader (IDs unverändert, Liste auf `/methodik/`).
+- Website: Spielerprofil (Rückennummer, Position laut Kader), Team-Kader mit `#`/Pos.-Spalten, Positionsfilter und Kader-Spielern ohne Statistik (v. a. OL), Suche zeigt `#Nr Pos`.
+- Lineup-Regel OL geändert (`OL_MIN_GAMES = 1` in `web/src/lib/lineup.ts`): OL laut Kader mit den meisten belegten Einsätzen, keine Starter-Angabe. Trap View und Starting Lineup zeigen dadurch O-Liner mit Name und Nummer.
+- Tests: `npm test` 63/63, typecheck OK, `build_data` 106/106, Python-Tests 15/15, `next build` OK (2439 Seiten).
+
 ## 3. 3D-Erweiterung „Interactive 3D Football Experience“
 | Phase | Inhalt | Stand |
 |---|---|---|

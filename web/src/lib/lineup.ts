@@ -16,8 +16,10 @@
  *     besetzen - er steht in der Rangfolge aber immer hinter den Spielern, die das Volumen erreichen.
  *   - Rangfolge nach einer Produktionszahl der Gruppe (score), bei Gleichstand mehr Einsaetze.
  *   - Offensive Line: Es gibt keine Leistungswerte. Einziger Beleg sind Einsaetze im Statistikbogen
- *     (Linemen stehen dort nur mit Tackles nach Ballverlust, Fumble-Recoveries oder Strafen). Wer die
- *     Einsatzschwelle nicht belegt, bleibt weg; der Platz ist dann unbesetzt (player = null).
+ *     (Linemen stehen dort nur mit Tackles nach Ballverlust, Fumble-Recoveries oder Strafen). Die
+ *     Einsatzschwelle gilt hier nicht (sie erreicht praktisch kein Lineman); es zaehlt jeder belegte Einsatz
+ *     (OL_MIN_GAMES), Rangfolge nach Zahl der belegten Spiele. Das ist keine Starter-Angabe. Linemen ohne
+ *     Einsatz im Bogen bleiben weg; fehlen Kandidaten, bleibt der Platz unbesetzt (player = null).
  *   - Plaetze, fuer die niemand die Kriterien erfuellt, bleiben leer statt mit Randspielern gefuellt.
  *
  * Grundformation: elf Offense-Plaetze (1 QB, 1 RB, 2 WR, 1 TE, 5 OL und ein elfter Platz, der nach Statistik
@@ -46,6 +48,8 @@ export interface TeamRoster {
 
 export const MIN_GAME_SHARE = 0.4;
 export const REGULAR_GAME_SHARE = 0.6;
+/** Offensive Line: Mindestzahl belegter Einsaetze (siehe startingLineup) */
+export const OL_MIN_GAMES = 1;
 
 const v = (s: Stats, k: string) => s[k] ?? 0;
 
@@ -68,7 +72,7 @@ export const SLOTS: SlotDef[] = [
   { position: "RB", unit: "offense", count: 2, basis: "Ballkontakte (Carries + Receptions)", score: (s) => v(s, "run") + v(s, "catched"), min: (s) => v(s, "run") + v(s, "catched") >= 25, minLabel: "mind. 25 Ballkontakte", show: ["runyards", "touchdownrun"] },
   { position: "WR", unit: "offense", count: 3, basis: "Receiving Yards", score: (s) => v(s, "receivingyards"), min: (s) => v(s, "catched") >= 10, minLabel: "mind. 10 Receptions", show: ["receivingyards", "catched"] },
   { position: "TE", unit: "offense", count: 1, basis: "Receiving Yards", score: (s) => v(s, "receivingyards"), min: (s) => v(s, "catched") >= 5, minLabel: "mind. 5 Receptions", show: ["receivingyards", "catched"] },
-  { position: "OL", unit: "offense", count: 5, basis: "Einsätze im Statistikbogen (keine Leistungswerte vorhanden)", score: () => 0, min: () => true, minLabel: "nur Einsatzschwelle", show: ["tackletotal", "fumblerecovered"] },
+  { position: "OL", unit: "offense", count: 5, basis: "Einsätze im Statistikbogen (keine Leistungswerte vorhanden)", score: () => 0, min: () => true, minLabel: "mind. 1 belegter Einsatz", show: ["tackletotal", "fumblerecovered"] },
   { position: "DL", unit: "defense", count: 4, basis: "Tackles + 2 × Sacks + Tackles for Loss", score: (s) => v(s, "tackletotal") + 2 * v(s, "sacktotal") + v(s, "tackleforloss"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "sacktotal"] },
   { position: "LB", unit: "defense", count: 3, basis: "Tackles + Tackles for Loss + Sacks", score: (s) => v(s, "tackletotal") + v(s, "tackleforloss") + v(s, "sacktotal"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "tackleforloss"] },
   { position: "DB", unit: "defense", count: 4, basis: "Tackles + 3 × Interceptions + 1,5 × abgewehrte Pässe", score: (s) => v(s, "tackletotal") + 3 * v(s, "intercepted") + 1.5 * v(s, "brokenuppass"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "intercepted"] },
@@ -131,10 +135,15 @@ export function startingLineup(rows: PlayerGame[], team: string, roster: TeamRos
       .map((e) => ({ entry: e, ...agg.get(e.player!)!, score: Math.round(def.score(agg.get(e.player!)!.stats) * 100) / 100 }))
       .sort((a, b) => b.score - a.score || b.games - a.games || a.entry.name.localeCompare(b.entry.name));
     const regularGames = Math.ceil(teamGames * REGULAR_GAME_SHARE);
-    const eligible = [
-      ...candidates.filter((c) => c.games >= minGames && def.min(c.stats)),
-      ...candidates.filter((c) => c.games >= regularGames && !def.min(c.stats) && def.position !== "OL"),
-    ];
+    // Offensive Line: Linemen stehen nur vereinzelt im Statistikbogen (Fumble-Recovery, Tackle nach Ballverlust,
+    // Strafe) - die Einsatzschwelle der anderen Gruppen erreicht dort praktisch niemand. Deshalb zaehlt jeder
+    // belegte Einsatz; Rangfolge nach Zahl der belegten Spiele (candidates ist bei score 0 schon so sortiert).
+    const eligible = def.position === "OL"
+      ? candidates.filter((c) => c.games >= OL_MIN_GAMES)
+      : [
+          ...candidates.filter((c) => c.games >= minGames && def.min(c.stats)),
+          ...candidates.filter((c) => c.games >= regularGames && !def.min(c.stats)),
+        ];
     const single = def.count === 1;
     for (let i = 0; i < def.count; i++) {
       const c = eligible[i];
