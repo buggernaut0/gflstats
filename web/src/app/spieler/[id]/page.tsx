@@ -14,10 +14,11 @@ import { eliteSeason } from "@/lib/elite";
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { gameMap, getMeta, getPlayers, getTeams, leagueRank, playerGameRows, playerMap, teamNameIn } from "@/lib/data";
 import { teamsAttr } from "@/lib/favorite";
-import { fmt } from "@/lib/format";
 import { axesFor, comparisonGroup, qualified, type Entry } from "@/lib/profile";
 import { allEntries } from "@/lib/serverCache";
-import { ROLE_HEADLINE, ROLE_LABELS, ROLE_MIN, addStats, formatStat, stat, statAvailable, value } from "@/lib/stats";
+import { ROLE_HEADLINE, ROLE_MIN, addStats, stat, statAvailable, value } from "@/lib/stats";
+import { Num, StatLabel, StatValue, T, Titled } from "@/i18n/react";
+import { RoleName, QualifierText, StatFormula, EliteGroup, SourceNames } from "@/components/I18nBits";
 import { GAMELOG_COLS } from "@/lib/tables";
 import type { Scope, Stats } from "@/lib/types";
 import SeasonNotice from "@/components/SeasonNotice";
@@ -102,10 +103,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
             <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] text-ink-2">
               {role ? (
                 <span>
-                  {ROLE_LABELS[role]} <span className="text-ink-3">(aus Statistik abgeleitet)</span>
+                  <RoleName role={role} /> <span className="text-ink-3"><T k="player.derivedRole" /></span>
                 </span>
               ) : (
-                <span className="text-ink-3">Rolle nicht eindeutig</span>
+                <span className="text-ink-3"><T k="player.roleUnclear" /></span>
               )}
               <span {...teamsAttr(currentTeams)} className="fav-plain contents">
                 <FavBadge />
@@ -125,21 +126,21 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                   <EliteBadge key={e.profile} entry={e} size="md" season={eliteNow.season} />
                 ))}
                 <span>
-                  Top 10 der Liga {eliteNow.season} in der Positionsgruppe
-                  {eliteNow.entries.length === 1 ? ` (Platz ${eliteNow.entries[0].rank} von ${eliteNow.entries[0].of} ${eliteNow.entries[0].group})` : ""}
+                  <T k="player.eliteLine" a={[eliteNow.season]} />
+                  {eliteNow.entries.length === 1 && <EliteGroup entry={eliteNow.entries[0]} />}
                 </span>
               </p>
             )}
-            {p.shared && <p className="mt-2 text-[13.5px] text-ink-3">Gemeinsamer Eintrag zweier Spieler in der Quelle; wird in Ranglisten nicht gewertet.</p>}
+            {p.shared && <p className="mt-2 text-[13.5px] text-ink-3"><T k="player.shared" /></p>}
           </div>
         </div>
         <dl className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-[13.5px] sm:grid-cols-3 lg:w-[480px]">
-          <Info label="Saisons" value={`${span} (${p.seasons.length})`} />
-          <Info label="Spiele" value={fmt(careerGames)} hint="mit Eintrag im Statistikbogen" />
-          <Info label={lastSeason.season === meta.currentSeason ? "Aktuelles Team" : "Letztes Team"} value={currentTeams.map((t) => teams[t]?.short).join(", ")} hint={`Stand Saison ${lastSeason.season}`} />
-          <Info label="Frühere Teams" value={formerTeams.length ? formerTeams.map((t) => teams[t]?.short).join(", ") : "–"} />
-          <Info label="Rückennummer" value="keine Angabe" muted />
-          <Info label="Größe, Gewicht" value="keine Angabe" muted />
+          <Info label={<T k="player.seasons" />} value={`${span} (${p.seasons.length})`} />
+          <Info label={<T k="player.games" />} value={<Num v={careerGames} />} hint="player.gamesHint" />
+          <Info label={<T k={lastSeason.season === meta.currentSeason ? "player.currentTeam" : "player.lastTeam"} />} value={currentTeams.map((t) => teams[t]?.short).join(", ")} hint="player.asOfSeason" hintArgs={[lastSeason.season]} />
+          <Info label={<T k="player.formerTeams" />} value={formerTeams.length ? formerTeams.map((t) => teams[t]?.short).join(", ") : "–"} />
+          <Info label={<T k="player.jersey" />} value={<T k="player.noInfo" />} muted />
+          <Info label={<T k="player.sizeWeight" />} value={<T k="player.noInfo" />} muted />
         </dl>
       </section>
 
@@ -150,7 +151,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
       )}
 
       <section aria-labelledby="karriere-h" className="mt-10">
-        <Head id="karriere-h" title="Karriere seit 2023" note={`Summe aller Spiele (Regular Season und Playoffs). Rang = Platz in der Liga ${lastSeason.season}.`}>
+        <Head id="karriere-h" title={<T k="player.careerTitle" a={[meta.seasons[0]]} />} note={<T k="player.careerNote" a={[lastSeason.season]} />}>
           <SourceTag kind="original" />
           <SourceTag kind="rank" />
         </Head>
@@ -160,11 +161,11 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
             const anyAvail = p.seasons.some((s) => statAvailable(d, s.season, meta.availability));
             const rank = d.kind === "original" ? leagueRank(k, lastSeason.season, id) : null;
             return (
-              <div key={k} className="rounded-xl border border-line bg-surface px-4 py-3" title={d.formula ? `${d.label}: ${d.formula}` : d.label}>
-                <p className="text-[12.5px] text-ink-3">{d.label}</p>
-                <p className="num display mt-0.5 text-[30px] font-semibold leading-tight text-ink">{anyAvail ? formatStat(d, value(d, career, careerGames)) : "n. e."}</p>
-                <p className="text-[12px] text-ink-3">{rank ? `${lastSeason.season}: Rang ${rank.rank} von ${rank.of}` : d.kind === "derived" ? "berechnet" : " "}</p>
-              </div>
+              <Titled key={k} as="div" stat={k} className="rounded-xl border border-line bg-surface px-4 py-3">
+                <p className="text-[12.5px] text-ink-3"><StatLabel k={k} /></p>
+                <p className="num display mt-0.5 text-[30px] font-semibold leading-tight text-ink">{anyAvail ? <StatValue k={k} v={value(d, career, careerGames)} /> : <T k="common.notRecorded" />}</p>
+                <p className="text-[12px] text-ink-3">{rank ? <T k="player.seasonRank" a={[lastSeason.season, rank.rank, rank.of]} /> : d.kind === "derived" ? <T k="common.derivedMark" /> : " "}</p>
+              </Titled>
             );
           })}
         </div>
@@ -174,44 +175,44 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         <section aria-labelledby="profil-h" className="mt-14">
           <Head
             id="profil-h"
-            title={`Profil ${profileEntry.season}`}
-            note={`Perzentil je Kennzahl innerhalb der Vergleichsgruppe ${ROLE_LABELS[role]} ${profileEntry.season} (${ROLE_MIN[role].label}, mind. 4 Spiele; ${axes[0]?.groupSize ?? 0} Spieler). 90 heißt: besser als 90 % der Gruppe.`}
+            title={<T k="player.profileTitle" a={[profileEntry.season]} />}
+            note={<><QualifierText role={role} season={profileEntry.season} n={axes[0]?.groupSize ?? 0} /></>}
           >
-            <SourceTag kind="derived" detail="Perzentil nach Mittelrang-Methode" />
+            <SourceTag kind="derived" detail="player.midrank" />
           </Head>
           {!inGroup && (
             <p className="mb-4 max-w-[70ch] rounded-lg border border-dashed border-line px-4 py-2.5 text-[13.5px] text-ink-2">
-              {p.name} erreicht {profileEntry.season} das Mindestvolumen nicht. Die Werte sind gegen die Gruppe eingeordnet, er selbst gehört nicht dazu.
+              <T k="player.notInGroup" a={[p.name, profileEntry.season]} />
             </p>
           )}
           <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,560px)_1fr]">
-            <ProfileRadar name={p.name} axes={axes.map((a) => ({ label: a.label, pct: a.pct, raw: a.available ? formatStat(stat(a.key), a.value) : "nicht erfasst" }))} />
+            <ProfileRadar name={p.name} axes={axes.map((a) => ({ key: a.key, pct: a.pct, value: a.available ? a.value : null }))} />
             <div>
               <table className="w-full border-collapse text-[14px]">
                 <thead>
                   <tr className="border-b border-line text-[12px] text-ink-3">
-                    <th scope="col" className="py-2 text-left font-medium">Kennzahl</th>
-                    <th scope="col" className="py-2 text-right font-medium">Wert</th>
-                    <th scope="col" className="py-2 text-right font-medium">Median Gruppe</th>
-                    <th scope="col" className="py-2 pl-4 text-right font-medium">Perzentil</th>
+                    <th scope="col" className="py-2 text-left font-medium"><T k="player.colStat" /></th>
+                    <th scope="col" className="py-2 text-right font-medium"><T k="player.colValue" /></th>
+                    <th scope="col" className="py-2 text-right font-medium"><T k="player.colMedian" /></th>
+                    <th scope="col" className="py-2 pl-4 text-right font-medium"><T k="player.colPct" /></th>
                   </tr>
                 </thead>
                 <tbody>
                   {axes.map((a) => (
                     <tr key={a.key} className="border-b border-line last:border-0">
-                      <td className="py-2 text-ink" title={stat(a.key).formula}>
-                        {a.label}
-                        {a.lowerIsBetter && <span className="ml-1 text-[12px] text-ink-3">(weniger ist besser)</span>}
-                      </td>
-                      <td className="num py-2 text-right text-ink">{a.available ? formatStat(stat(a.key), a.value) : "n. e."}</td>
-                      <td className="num py-2 text-right text-ink-2">{formatStat(stat(a.key), a.median)}</td>
+                      <Titled as="td" stat={a.key} className="py-2 text-ink">
+                        <StatLabel k={a.key} />
+                        {a.lowerIsBetter && <span className="ml-1 text-[12px] text-ink-3"><T k="player.lowerBetter" /></span>}
+                      </Titled>
+                      <td className="num py-2 text-right text-ink">{a.available ? <StatValue k={a.key} v={a.value} /> : <T k="common.notRecorded" />}</td>
+                      <td className="num py-2 text-right text-ink-2"><StatValue k={a.key} v={a.median} /></td>
                       <td className="num py-2 pl-4 text-right font-semibold text-ink">{a.pct === null ? "–" : Math.round(a.pct)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               <Link href={`/vergleich/?p=${id}:${profileEntry.season}`} className="mt-4 inline-block rounded-md border border-line px-3 py-1.5 text-[14px] text-ink hover:border-line-strong">
-                Mit anderen Spielern vergleichen
+                <T k="player.compareLink" />
               </Link>
             </div>
           </div>
@@ -221,28 +222,28 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
       {role && p.seasons.length > 1 && <Development role={role} seasons={allEntries().filter((e) => e.player === id)} availability={meta.availability} />}
 
       <section aria-labelledby="stats-h" className="mt-14">
-        <Head id="stats-h" title="Statistiken nach Saison" note="Je Saison und Team. Filter nach Spielphase und Team.">
+        <Head id="stats-h" title={<T k="player.statsTitle" />} note={<T k="player.statsNote" />}>
           <SourceTag kind="original" />
-          <SourceTag kind="derived" detail="Quoten und pro-Spiel-Werte" />
+          <SourceTag kind="derived" detail="player.ratesDetail" />
         </Head>
         <PlayerStats rows={[...split.values()]} teams={teams} availability={meta.availability} hasPlayoffs={rows.some((r) => games.get(r.g)!.type === "playoff")} />
       </section>
 
       <section aria-labelledby="log-h" className="mt-14">
-        <Head id="log-h" title="Spielprotokoll" note="Jedes Spiel mit Eintrag im Statistikbogen." />
+        <Head id="log-h" title={<T k="player.logTitle" />} note={<T k="player.logNote" />} />
         <GameLog rows={log} cols={GAMELOG_COLS[role ?? "default"] ?? GAMELOG_COLS.default} teams={teams} availability={meta.availability} />
       </section>
 
       <section aria-labelledby="video-h" className="mt-14">
-        <Head id="video-h" title="Highlights" note="Videos, die diesem Spieler zugeordnet sind." />
+        <Head id="video-h" title={<T k="player.videosTitle" />} note={<T k="player.videosNote" />} />
         <Videos videos={p.videos} />
       </section>
 
       {p.sourceNames.length > 1 && (
         <p className="mt-12 max-w-[70ch] text-[13px] text-ink-3">
-          In der Quelle unter {p.sourceNames.length} Schreibweisen geführt: {p.sourceNames.map((n) => `„${n.trim()}“`).join(", ")}.{" "}
+          <SourceNames names={p.sourceNames.map((n) => n.trim())} />{" "}
           <Link href="/methodik/#spieler" className="underline underline-offset-4">
-            Warum zusammengeführt?
+            <T k="player.whyMerged" />
           </Link>
         </p>
       )}
@@ -257,18 +258,18 @@ function Development({ role, seasons, availability }: { role: string; seasons: E
   const max = Math.max(1, ...pts.map((x) => x.v ?? 0));
   return (
     <section aria-labelledby="dev-h" className="mt-14">
-      <Head id="dev-h" title="Entwicklung" note={`${d.label} je Saison (${d.formula ?? d.label}).`}>
+      <Head id="dev-h" title={<T k="player.devTitle" />} note={<StatFormula k={key} kind="dev" />}>
         <SourceTag kind="derived" />
       </Head>
-      <div className="flex max-w-[640px] items-end gap-4 rounded-xl border border-line bg-surface px-5 pb-4 pt-6" role="img" aria-label={`${d.label} je Saison: ${pts.map((x) => `${x.season} ${formatStat(d, x.v)}`).join(", ")}`}>
+      <div className="flex max-w-[640px] items-end gap-4 rounded-xl border border-line bg-surface px-5 pb-4 pt-6" role="img">
         {pts.map((x) => (
           <div key={x.season} className="flex flex-1 flex-col items-center gap-1.5">
-            <span className="num display text-[17px] font-semibold text-ink">{formatStat(d, x.v)}</span>
+            <span className="num display text-[17px] font-semibold text-ink"><StatValue k={key} v={x.v} /></span>
             <div className="flex h-[120px] w-full max-w-[64px] items-end">
               <div className="w-full rounded-t-[4px]" style={{ height: `${((x.v ?? 0) / max) * 100}%`, background: "var(--bar)" }} />
             </div>
             <span className="num text-[13px] text-ink-2">{x.season}</span>
-            <span className="text-[11.5px] text-ink-3">{x.games} Sp</span>
+            <span className="text-[11.5px] text-ink-3"><T k="player.gamesShort" a={[x.games]} /></span>
           </div>
         ))}
       </div>
@@ -276,7 +277,7 @@ function Development({ role, seasons, availability }: { role: string; seasons: E
   );
 }
 
-function Head({ id, title, note, children }: { id: string; title: string; note?: string; children?: React.ReactNode }) {
+function Head({ id, title, note, children }: { id: string; title: React.ReactNode; note?: React.ReactNode; children?: React.ReactNode }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
       <div className="max-w-[78ch]">
@@ -290,12 +291,12 @@ function Head({ id, title, note, children }: { id: string; title: string; note?:
   );
 }
 
-function Info({ label, value, hint, muted }: { label: string; value: string; hint?: string; muted?: boolean }) {
+function Info({ label, value, hint, hintArgs, muted }: { label: React.ReactNode; value: React.ReactNode; hint?: "player.gamesHint" | "player.asOfSeason"; hintArgs?: unknown[]; muted?: boolean }) {
   return (
-    <div title={hint}>
+    <Titled as="div" k={hint} a={hintArgs}>
       <dt className="text-[12px] text-ink-3">{label}</dt>
       <dd className={muted ? "text-ink-3" : "text-ink"}>{value || "–"}</dd>
-    </div>
+    </Titled>
   );
 }
 
@@ -308,7 +309,7 @@ function Avatar({ name }: { name: string }) {
     .map((w) => w[0]?.toUpperCase())
     .join("");
   return (
-    <svg width="88" height="88" viewBox="0 0 88 88" role="img" aria-label="Kein Spielerfoto vorhanden" className="shrink-0">
+    <svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true" className="shrink-0">
       <rect width="88" height="88" rx="16" fill="var(--surface-2)" stroke="var(--line)" />
       <path d="M26 30l10-8h16l10 8 8 10-9 6-5-5v31H32V41l-5 5-9-6z" fill="var(--surface)" stroke="var(--line-strong)" strokeWidth="1.2" strokeLinejoin="round" />
       <text x="44" y="64" textAnchor="middle" fontSize="17" fontWeight="700" fill="var(--ink-2)" fontFamily="Barlow Condensed, sans-serif">

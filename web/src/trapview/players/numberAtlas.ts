@@ -21,7 +21,7 @@ export interface NumberAtlas {
 export const JERSEY_NAME_FONT = '800 30px "Barlow Condensed"';
 
 /** Breitester Rückenname (Anteil der Kachelbreite, nach dem Entzerren) – längere Namen werden schmaler gesetzt. */
-const NAME_MAX_W = 0.34;
+const NAME_MAX_W = 0.27;
 
 type Ink = 'mask' | 'height';
 

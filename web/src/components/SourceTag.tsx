@@ -1,19 +1,21 @@
-const KINDS = {
-  original: { label: "Original", hint: "Summe der Werte aus den Spielbögen von statsnscore.online" },
-  derived: { label: "Berechnet", hint: "Aus Originalwerten berechnet; Formel auf der Methodik-Seite" },
-  rank: { label: "Ranking", hint: "Sortierung der Werte; gleiche Werte teilen sich den Rang" },
-  model: { label: "Modell", hint: "Eigene Bewertung; Kriterien und Gewichte auf der Methodik-Seite" },
-} as const;
+"use client";
 
-/** Kennzeichnet, woher eine Zahl stammt (Original, Berechnet, Ranking, Modell). */
-export default function SourceTag({ kind, detail }: { kind: keyof typeof KINDS; detail?: string }) {
-  const k = KINDS[kind];
+import { useI18n } from "@/i18n/react";
+import type { MessagePath } from "@/i18n/messages";
+
+type Kind = "original" | "derived" | "rank" | "model";
+
+/** Kennzeichnet, woher eine Zahl stammt (Original, Berechnet, Ranking, Modell). detail = Text-Pfad in src/i18n (noch nicht übersetzte Stellen: Text, wird unverändert gezeigt). */
+export default function SourceTag({ kind, detail }: { kind: Kind; detail?: MessagePath | (string & {}) }) {
+  const { m, t } = useI18n();
+  const label = m.source[kind];
+  const hint = m.source[`${kind}Hint`];
   return (
     <span
-      title={detail ? `${k.hint}. ${detail}` : k.hint}
+      title={detail ? `${hint}. ${t(detail as MessagePath)}` : hint}
       className="inline-flex cursor-help items-center rounded-full border border-line px-2 py-[1px] text-[11px] font-medium text-ink-3"
     >
-      {k.label}
+      {label}
     </span>
   );
 }

@@ -99,7 +99,8 @@ export interface Lineup {
   offense: LineupPlayer[];
   defense: LineupPlayer[];
   /** Elfter Offense-Platz: zweiter Running Back oder dritter Receiver, nach Statistik entschieden */
-  flex: { winner: string; loser: string | null; reason: string };
+  /** reason: deutscher Text; code/rb/rec: dieselbe Begründung strukturiert, für die Übersetzung (src/i18n team.flex) */
+  flex: { winner: string; loser: string | null; reason: string; code?: "noRb" | "none" | "noRec" | "oneMin" | "scrimmage"; rb?: number; rec?: number; rbSlot?: string; recSlot?: string };
   /** je Gruppe der naechste nicht beruecksichtigte Spieler, zur Kontrolle der Auswahl */
   next: Record<string, { player: string; games: number; score: number; reason: string } | null>;
 }
@@ -167,19 +168,25 @@ function applyFlex(out: Lineup, rbSlot: string, recSlot: string) {
   const rec = out.offense.find((x) => x.slot === recSlot)!;
   let keepRb = false;
   let reason: string;
-  if (!rb.player) reason = rec.player ? "kein zweiter Running Back erfüllt die Kriterien" : "weder ein zweiter Running Back noch ein weiterer Receiver erfüllt die Kriterien";
-  else if (!rec.player) {
+  let code: NonNullable<Lineup["flex"]["code"]>;
+  if (!rb.player) {
+    code = rec.player ? "noRb" : "none";
+    reason = rec.player ? "kein zweiter Running Back erfüllt die Kriterien" : "weder ein zweiter Running Back noch ein weiterer Receiver erfüllt die Kriterien";
+  } else if (!rec.player) {
     keepRb = true;
+    code = "noRec";
     reason = "kein weiterer Receiver erfüllt die Kriterien";
   } else if (!!rb.volume !== !!rec.volume) {
     keepRb = !!rb.volume;
+    code = "oneMin";
     reason = "nur einer der beiden erreicht das Mindestvolumen seiner Gruppe";
   } else {
+    code = "scrimmage";
     keepRb = scrimmage(rb.stats) > scrimmage(rec.stats);
     reason = `Yards from Scrimmage: ${Math.round(scrimmage(rb.stats))} (${rbSlot}) gegen ${Math.round(scrimmage(rec.stats))} (${recSlot})`;
   }
   const drop = keepRb ? rec : rb;
-  out.flex = { winner: keepRb ? rbSlot : recSlot, loser: drop.player, reason };
+  out.flex = { winner: keepRb ? rbSlot : recSlot, loser: drop.player, reason, code, rb: Math.round(scrimmage(rb.stats)), rec: Math.round(scrimmage(rec.stats)), rbSlot, recSlot };
   out.offense = out.offense.filter((x) => x !== drop);
   if (drop.player) out.next[drop.position] = { player: drop.player, games: drop.games, score: drop.score, reason: `elfter Platz ging an ${out.flex.winner} (${reason})` };
 }

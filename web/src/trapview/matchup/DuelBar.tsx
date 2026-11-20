@@ -2,7 +2,9 @@ import type { CSSProperties } from 'react';
 import EliteBadge from '../../components/EliteBadge';
 import { eliteOf, type SceneMatchup, type SceneModel, type ScenePlayer } from '../data/sceneModel';
 import type { DataIndex, SeasonData } from '../data/types';
-import { GROUP_NAME, lastName } from '../data/names';
+import { lastName } from '../data/names';
+import { useI18n } from '../../i18n/react';
+import { lineText, lineValue, rankText } from '../i18n';
 import { screenSides } from '../camera/matchupView';
 import { familyOf, rankOf, statLines } from './compare';
 
@@ -18,12 +20,14 @@ function Profile({ p, align, index, season }: { p: ScenePlayer; align: 'left' | 
   const rank = fam ? rankOf(player, fam, index) : null;
   const last = lastName(player.name);
   const first = player.name.slice(0, Math.max(0, player.name.length - last.length)).trim();
+  const f = useI18n();
+  const tv = f.m.trapview;
 
   return (
     <section
       className={`tv-duel__side tv-duel__side--${align}${elite ? ' is-elite' : ''}`}
       style={{ '--accent': accentOf(p), '--team': p.team.colors.primary } as CSSProperties}
-      aria-label={`${player.name}, ${GROUP_NAME[p.dataGroup] ?? p.posLabel}, ${p.team.name}${elite ? ', Elite' : ''}`}
+      aria-label={`${player.name}, ${f.m.stats.positions[p.dataGroup] ?? p.posLabel}, ${p.team.name}${elite ? ', Elite' : ''}`}
     >
       <div className="tv-duel__head">
         {player.number != null && <span className="tv-duel__num" aria-hidden="true">{player.number}</span>}
@@ -44,25 +48,25 @@ function Profile({ p, align, index, season }: { p: ScenePlayer; align: 'left' | 
       {lines.length > 0 ? (
         <dl className="tv-duel__stats">
           {lines.map((l) => (
-            <div key={l.key} title={l.label}>
-              <dd>{l.value}</dd>
-              <dt>{l.abbr}</dt>
+            <div key={l.key} title={lineText(l, f).label}>
+              <dd>{lineValue(l, f)}</dd>
+              <dt>{lineText(l, f).abbr}</dt>
             </div>
           ))}
         </dl>
       ) : (
-        <p className="tv-duel__none">Für diese Position enthalten die Statistikbögen keine Leistungswerte.</p>
+        <p className="tv-duel__none">{tv.noStats}</p>
       )}
       <div className="tv-duel__rank">
         {rank ? (
           <>
             <i style={{ width: `${rank.rank.pct}%` }} aria-hidden="true" />
             <span>
-              <b>Rang {rank.rank.rank}</b> von {rank.rank.of} · {rank.label}
+              <b>{tv.rank(rank.rank.rank)}</b>{tv.ofLabel(rank.rank.of, rankText(rank, f).label)}
             </span>
           </>
         ) : (
-          <span>{player.games} {player.games === 1 ? 'Spiel' : 'Spiele'} · keine Liga-Einordnung</span>
+          <span>{tv.noRank(f.m.common.gamesN(player.games))}</span>
         )}
       </div>
     </section>
@@ -76,14 +80,15 @@ function Profile({ p, align, index, season }: { p: ScenePlayer; align: 'left' | 
  */
 export function DuelBar({ model, matchup, index }: { model: SceneModel; matchup: SceneMatchup; index: DataIndex }) {
   const [l, r] = screenSides(model, matchup);
+  const { m } = useI18n();
   return (
-    <div className="tv-duel" role="group" aria-label={`Matchup: ${l.player!.name} gegen ${r.player!.name}`}>
+    <div className="tv-duel" role="group" aria-label={m.trapview.matchupAria(l.player!.name, r.player!.name)}>
       <Profile p={l} align="left" index={index} season={model.season} />
       <div className="tv-duel__vs" aria-hidden="true">
         <span>{l.posLabel}</span>
         <b>VS</b>
         <span>{r.posLabel}</span>
-        <small>Saison {model.season.season}</small>
+        <small>{m.trapview.seasonTag(model.season.season)}</small>
       </div>
       <Profile p={r} align="right" index={index} season={model.season} />
     </div>

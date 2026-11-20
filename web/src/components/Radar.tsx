@@ -12,8 +12,14 @@
  */
 import dynamic from "next/dynamic";
 import { useEffect, useId, useState } from "react";
+import { useI18n } from "@/i18n/react";
 
-const Radar3D = dynamic(() => import("./Radar3D"), { ssr: false, loading: () => <div className="radar3d grid place-items-center text-[13px] text-ink-3">3D-Ansicht wird geladen …</div> });
+const Radar3D = dynamic(() => import("./Radar3D"), { ssr: false, loading: () => <div className="radar3d grid place-items-center text-[13px] text-ink-3"><RadarLoading /></div> });
+
+function RadarLoading() {
+  const { m } = useI18n();
+  return <>{m.player.radarLoading}</>;
+}
 const VIEW_KEY = "gfl-radar-view";
 
 function webglAvailable(): boolean {
@@ -57,6 +63,7 @@ export default function Radar(props: RadarProps) {
   const [mode, setMode] = useState<"2d" | "3d">("2d");
   const [can3d, setCan3d] = useState(false);
   const [failed, setFailed] = useState(false);
+  const { m } = useI18n();
   useEffect(() => {
     if (!webglAvailable()) return;
     setCan3d(true);
@@ -79,21 +86,21 @@ export default function Radar(props: RadarProps) {
     <div>
       {can3d && !failed && (
         <div className="mb-2 flex items-center justify-between gap-3">
-          <div role="radiogroup" aria-label="Ansicht des Radars" className="inline-flex rounded-lg border border-line bg-surface p-0.5">
+          <div role="radiogroup" aria-label={m.player.radarView} className="inline-flex rounded-lg border border-line bg-surface p-0.5">
             {(["2d", "3d"] as const).map((m) => (
               <button key={m} type="button" role="radio" aria-checked={mode === m} onClick={() => choose(m)} className={`rounded-md px-3 py-1 text-[13px] font-medium ${mode === m ? "bg-surface-2 text-ink shadow-[inset_0_-2px_0_var(--accent)]" : "text-ink-2 hover:text-ink"}`}>
                 {m === "2d" ? "2D" : "3D"}
               </button>
             ))}
           </div>
-          {show3d && <p className="text-right text-[12px] text-ink-3">Ziehen dreht die Ansicht. Höhe und Abstand zeigen denselben Wert.</p>}
+          {show3d && <p className="text-right text-[12px] text-ink-3">{m.player.radarDrag}</p>}
         </div>
       )}
-      {failed && <p className="mb-2 text-[12.5px] text-ink-3">Die 3D-Ansicht kann in diesem Browser nicht dargestellt werden, es wird die 2D-Ansicht gezeigt.</p>}
+      {failed && <p className="mb-2 text-[12.5px] text-ink-3">{m.player.radarNo3d}</p>}
       {show3d ? (
         <>
           <Radar3D axes={props.axes} series={props.series} median={props.median} onFail={() => setFailed(true)} />
-          <MedianKey label={props.medianLabel ?? "Median der Vergleichsgruppe"} />
+          <MedianKey label={props.medianLabel ?? m.player.medianGroup} />
         </>
       ) : (
         <Radar2D {...props} />
@@ -116,10 +123,11 @@ function MedianKey({ label }: { label: string }) {
 function Radar2D({
   axes,
   series,
-  medianLabel = "Median der Vergleichsgruppe",
+  medianLabel,
   size = 460,
   median,
 }: RadarProps) {
+  const { m } = useI18n();
   const [hover, setHover] = useState<{ s: number; a: number } | null>(null);
   const uid = useId().replace(/:/g, "");
   const n = axes.length;
@@ -137,7 +145,7 @@ function Radar2D({
 
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={`Radar-Vergleich: ${series.map((s) => s.name).join(", ")}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={m.player.radarAria(series.map((s) => s.name).join(", "))}>
         <defs>
           <radialGradient id={`${uid}-floor`} cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="var(--radar-floor-in)" />
@@ -214,10 +222,10 @@ function Radar2D({
           <p className="text-ink-2">
             {axes[hover.a]}: <span className="num font-semibold text-ink">{tip.raw[hover.a]}</span>
           </p>
-          <p className="text-ink-3">{tip.pct[hover.a] === null ? "nicht erfasst" : `${Math.round(tip.pct[hover.a]!)}. Perzentil`}</p>
+          <p className="text-ink-3">{tip.pct[hover.a] === null ? m.common.notRecordedLong : m.player.nthPercentile(Math.round(tip.pct[hover.a]!))}</p>
         </div>
       )}
-      <MedianKey label={medianLabel} />
+      <MedianKey label={medianLabel ?? m.player.medianGroup} />
     </div>
   );
 }

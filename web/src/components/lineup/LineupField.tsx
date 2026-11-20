@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { contrast } from "@/lib/teamColors";
+import { stat } from "@/lib/stats";
+import { useI18n } from "@/i18n/react";
 import type { FieldPlayer, Unit, LineupColors } from "./types";
 
 const LineupScene = dynamic(() => import("./LineupScene"), { ssr: false });
@@ -33,6 +35,8 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
   const [mode, setMode] = useState<"flat" | "3d">("flat");
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
+  const f = useI18n();
+  const t = f.m.team;
 
   // 3D erst laden, wenn der Bereich in die Naehe des Bildschirms kommt
   useEffect(() => {
@@ -59,7 +63,7 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
   return (
     <div style={{ "--lineup-jersey": jersey, "--lineup-ink": isLight(jersey) ? "#141c28" : "#ffffff" } as React.CSSProperties}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div role="radiogroup" aria-label="Einheit" className="inline-flex rounded-lg border border-line bg-surface p-0.5">
+        <div role="radiogroup" aria-label={t.unit} className="inline-flex rounded-lg border border-line bg-surface p-0.5">
           {(["offense", "defense"] as Unit[]).map((u) => (
             <button
               key={u}
@@ -72,11 +76,11 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
               }}
               className={`rounded-md px-3.5 py-1.5 text-[13.5px] font-medium ${unit === u ? "bg-surface-2 text-ink shadow-[inset_0_-2px_0_var(--accent)]" : "text-ink-2 hover:text-ink"}`}
             >
-              {u === "offense" ? "Starting Offense" : "Starting Defense"}
+              {u === "offense" ? t.startingOffense : t.startingDefense}
             </button>
           ))}
         </div>
-        <p className="text-[12.5px] text-ink-3">Anordnung schematisch. Spieler antippen oder überfahren, Klick öffnet das Profil.</p>
+        <p className="text-[12.5px] text-ink-3">{t.fieldHint}</p>
       </div>
 
       <div ref={box} className="lineup-stage relative overflow-hidden rounded-xl border border-line">
@@ -99,15 +103,15 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
               )}
               <span className="min-w-0 px-3.5 py-2">
                 <span className="block text-[11.5px] font-medium text-white/65">
-                  {shown.number !== null ? `${shown.slot}, ` : ""}{shown.positionLabel}{provisional && shown.position === "DEF" ? ", Platz nach Statistikprofil" : ""}
+                  {shown.number !== null ? `${shown.slot}, ` : ""}{f.m.stats.positions[shown.position] ?? shown.positionLabel}{provisional && shown.position === "DEF" ? t.defByProfile : ""}
                 </span>
                 <span className="display block truncate text-[22px] font-semibold leading-tight">{shown.name}</span>
                 <span className="num mt-0.5 block text-[12.5px] text-white/80">
-                  {shown.stats.map((s) => `${s.value} ${s.label}`).join(", ")}, {shown.games} von {teamGames} Spielen
+                  {shown.stats.map((s) => `${f.fmtStat(stat(s.key), s.value)} ${f.statAbbr(s.key)}`).join(", ")}, {t.gamesOf(shown.games, teamGames)}
                 </span>
               </span>
               <Link href={`/spieler/${shown.id}/`} className="grid place-items-center border-l border-white/15 px-3.5 text-[13px] font-medium text-[#f5c63c] hover:bg-white/5">
-                Profil
+                {t.profile}
               </Link>
             </div>
           )}
@@ -115,7 +119,7 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
       </div>
 
       {/* Dieselbe Aufstellung als Liste: Tastatur, Screenreader und Geraete ohne 3D */}
-      <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={unit === "offense" ? "Starting Offense als Liste" : "Starting Defense als Liste"}>
+      <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={t.asList(unit === "offense" ? t.startingOffense : t.startingDefense)}>
         {list.map(({ p, i }) => (
           <li key={i}>
             {p.id ? (
@@ -132,8 +136,8 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
                 <span>{p.name}</span>
               </Link>
             ) : (
-              <span className="flex items-center gap-2 rounded-md border border-dashed border-line px-2.5 py-1 text-[13px] text-ink-3" title="Niemand erfüllt die Kriterien für diesen Platz">
-                <span className="text-[11.5px] font-semibold">{p.slot}</span> nicht belegt
+              <span className="flex items-center gap-2 rounded-md border border-dashed border-line px-2.5 py-1 text-[13px] text-ink-3" title={t.emptyHint}>
+                <span className="text-[11.5px] font-semibold">{p.slot}</span> {t.empty}
               </span>
             )}
           </li>
@@ -152,6 +156,7 @@ function isLight(hex: string): boolean {
 
 /** Flache Aufstellung von oben: Platzhalter vor dem Laden und Ersatz ohne WebGL. */
 function FlatField({ list, unit, active, onActive }: { list: { p: FieldPlayer; i: number }[]; unit: Unit; active: number | null; onActive: (i: number | null) => void }) {
+  const { m } = useI18n();
   // Blick von hinter der Einheit: Offense spielt nach oben, Defense steht oben und blickt nach unten
   const sign = unit === "offense" ? 1 : -1;
   return (
@@ -169,7 +174,7 @@ function FlatField({ list, unit, active, onActive }: { list: { p: FieldPlayer; i
             <span className={p.number !== null ? "num" : "text-[10.5px]"}>{p.number ?? p.slot}</span>
           </Link>
         ) : (
-          <span key={i} className={cls} style={style} title={`${p.slot}: nicht belegt`}>
+          <span key={i} className={cls} style={style} title={m.team.emptySlot(p.slot)}>
             <span className="text-[10.5px]">{p.slot}</span>
           </span>
         );

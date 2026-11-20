@@ -82,7 +82,18 @@ const LINES: Record<MetricKey, LineDef[]> = {
   ],
 };
 
-export interface StatLine { key: string; label: string; /** Kurzform wie auf der Website ("Rec Yds", "INT") */ abbr: string; value: string; sub: string | null }
+export interface StatLine {
+  key: string;
+  label: string;
+  /** Kurzform wie auf der Website ("Rec Yds", "INT") */
+  abbr: string;
+  value: string;
+  sub: string | null;
+  /** Rohwert, Nachkommastellen und pro-Spiel-Wert – für die Anzeige in der gewählten Sprache (trapview/i18n.ts) */
+  raw?: number | null;
+  digits?: number;
+  perGame?: number | null;
+}
 
 const nf = (x: number, digits = 0) =>
   x.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -96,7 +107,7 @@ export function statLines(p: Player, family: MetricKey, index: DataIndex, season
     if (d.derive) {
       if (!(d.needs ?? []).every(has)) continue;
       const x = d.derive(stats);
-      out.push({ key: d.key, label: d.label!, abbr: d.abbr ?? d.label!, value: x == null ? '–' : `${nf(x, d.digits ?? 1)}${d.key === 'cmp' ? ' %' : ''}`, sub: null });
+      out.push({ key: d.key, label: d.label!, abbr: d.abbr ?? d.label!, value: x == null ? '–' : `${nf(x, d.digits ?? 1)}${d.key === 'cmp' ? ' %' : ''}`, sub: null, raw: x, digits: d.digits ?? 1, perGame: null });
       continue;
     }
     if (!has(d.key)) continue; // in dieser Saison nicht erfasst → nicht zeigen (nie als 0)
@@ -107,6 +118,9 @@ export function statLines(p: Player, family: MetricKey, index: DataIndex, season
       abbr: index.fields[d.key]?.abbr ?? d.key,
       value: count(x),
       sub: d.perGame && games > 0 ? `${nf(x / games, 1)} / Spiel` : null,
+      raw: x,
+      digits: Number.isInteger(x) ? 0 : 1,
+      perGame: d.perGame && games > 0 ? x / games : null,
     });
   }
   return out;
@@ -127,6 +141,6 @@ export interface HeadToHead { games: number; lines: StatLine[] }
 export function headToHead(p: ScenePlayer, opponentId: string, family: MetricKey, index: DataIndex, season: SeasonData): HeadToHead | null {
   const vs = p.player?.vs[opponentId];
   if (!p.player || !vs) return null;
-  const lines = statLines(p.player, family, index, season, vs.stats, vs.games).slice(0, 3).map((l) => ({ ...l, sub: null }));
+  const lines = statLines(p.player, family, index, season, vs.stats, vs.games).slice(0, 3).map((l) => ({ ...l, sub: null, perGame: null }));
   return { games: vs.games, lines };
 }

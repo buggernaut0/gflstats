@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Team } from '../data/types';
+import { useI18n } from '../../i18n/react';
 
 interface Props {
   teams: Team[];
@@ -27,6 +28,8 @@ function Side(props: {
     '--team-accent': selected.colors.accent,
   } as CSSProperties;
   const lu = selected.lineup;
+  const { m } = useI18n();
+  const tv = m.trapview;
   return (
     <section className={`tv-side tv-side--${role.toLowerCase()}`} style={style}>
       <div className="tv-side__glow" />
@@ -35,16 +38,16 @@ function Side(props: {
         {selected.logo && <img className="tv-side__logo" src={selected.logo} alt="" key={`${selected.id}-l`} />}
         <div className="tv-side__city" key={selected.id}>{selected.city}</div>
         <div className="tv-side__nick" key={`${selected.id}-n`}>{selected.nickname}</div>
-        <div className="tv-side__swatches" title={selected.colorsVerified ? `Teamfarben: ${selected.colorSource}` : 'Keine belegten Teamfarben – neutrale Platzhalter'}>
+        <div className="tv-side__swatches" title={selected.colorsVerified ? tv.colorsFrom(selected.colorSource ?? '') : tv.colorsNone}>
           <i style={{ background: selected.colors.primary }} />
           <i style={{ background: selected.colors.secondary }} />
-          {!selected.colorsVerified && <span>Farben nicht belegt</span>}
+          {!selected.colorsVerified && <span>{tv.colorsNoneShort}</span>}
         </div>
         <div className="tv-side__basis">
           {lu.basis === 'roster'
-            ? <>Offizieller Kader · Nummern &amp; Positionen</>
-            : <>Vorläufig · aus Statistik, ohne Nummern</>}
-          <span> · {lu.teamGames} Spiele</span>
+            ? tv.basisRoster
+            : tv.basisProvisional}
+          <span>{tv.games(lu.teamGames)}</span>
         </div>
         <div className="tv-side__teams">
           {teams.map((t) => (
@@ -69,11 +72,12 @@ function Side(props: {
 export function SelectScreen({ teams, seasons, season, offenseId, defenseId, leaving, loading, onSeason, onChange, onEnter }: Props) {
   const offense = teams.find((t) => t.id === offenseId) ?? teams[0];
   const defense = teams.find((t) => t.id === defenseId && t.id !== offense.id) ?? teams.find((t) => t.id !== offense.id) ?? teams[0];
+  const { m } = useI18n();
   return (
     <div className={`tv-select${leaving ? ' is-leaving' : ''}${loading ? ' is-loading' : ''}`}>
       <header className="tv-select__head">
         <span className="tv-wordmark">TRAP VIEW</span>
-        <div className="tv-seasons" role="group" aria-label="Saison">
+        <div className="tv-seasons" role="group" aria-label={m.trapview.season}>
           {seasons.map((s) => (
             <button key={s} className={`tv-season${s === season ? ' is-active' : ''}`} onClick={() => onSeason(s)} aria-pressed={s === season}>
               {s}

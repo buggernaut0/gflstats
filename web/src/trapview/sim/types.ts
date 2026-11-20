@@ -85,6 +85,8 @@ export interface Chance {
   p: number;
   /** woraus der Wert entstanden ist, z. B. "QB 61 % · Receiver 70 % · Defense 58 %" */
   basis?: string;
+  /** gut / schlecht / ärgerlich für die Offense – Farbe in der Ansicht (unabhängig vom Text) */
+  tone?: 'good' | 'bad' | 'warn' | 'neutral';
 }
 
 export interface PlayEvent {

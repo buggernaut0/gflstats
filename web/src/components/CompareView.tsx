@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { readQuery, useData, writeQuery } from "@/lib/clientData";
 import { comparisonGroup, entries, qualified, type Entry } from "@/lib/profile";
-import { ROLE_AXES, ROLE_LABELS, ROLE_MIN, formatStat, median, percentile, stat, statAvailable, value } from "@/lib/stats";
+import { ROLE_AXES, ROLE_MIN, median, percentile, stat, statAvailable, value } from "@/lib/stats";
+import { useI18n } from "@/i18n/react";
 import type { Meta, Player, PlayerSeason, Team } from "@/lib/types";
 import { Loading } from "./Loading";
 import { Field, selectCls } from "./QueryBuilder";
@@ -15,11 +16,8 @@ import { teamsAttr } from "@/lib/favorite";
 type Mode = "season" | "all" | "max";
 interface Slot { player: string; season: number }
 
-const MODES: { value: Mode; label: string; hint: string }[] = [
-  { value: "season", label: "Perzentil in der Saison", hint: "Vergleichsgruppe: gleiche Rolle in derselben Saison wie der jeweilige Spieler" },
-  { value: "all", label: "Perzentil über alle Saisons", hint: "Vergleichsgruppe: gleiche Rolle in allen Saisons seit 2023 (macht verschiedene Jahre direkt vergleichbar)" },
-  { value: "max", label: "Anteil am Bestwert", hint: "Wert geteilt durch den besten Wert der Gruppe aller Saisons × 100 (bei „weniger ist besser“: Bestwert / Wert × 100)" },
-];
+/** Normalisierungen; Bezeichnung und Erklärung in src/i18n (analytics.modes). */
+const MODES: Mode[] = ["season", "all", "max"];
 
 /** Spielervergleich: bis zu drei Spieler-Saisons im Radar-Chart, normalisiert und nachvollziehbar. */
 export default function CompareView() {
@@ -28,6 +26,8 @@ export default function CompareView() {
   const [role, setRole] = useState("");
   const [mode, setMode] = useState<Mode>("season");
   const [hidden, setHidden] = useState<number[]>([]);
+  const f = useI18n();
+  const a = f.m.analytics;
 
   const data = useMemo(() => {
     if (st.status !== "ready") return null;
@@ -97,7 +97,8 @@ export default function CompareView() {
     return def.lowerIsBetter ? (med > 0 ? (best / med) * 100 : 100) : best > 0 ? (med / best) * 100 : 0;
   });
 
-  const groupSize = mode === "season" ? [...new Set(slots.map((s) => s.season))].map((s) => `${comparisonGroup(all, activeRole, s).length} in ${s}`).join(", ") : `${groupAll.length} Spieler-Saisons ${meta.seasons[0]}–${meta.currentSeason}`;
+  const groupSize = mode === "season" ? [...new Set(slots.map((s) => s.season))].map((s) => a.groupInSeason(comparisonGroup(all, activeRole, s).length, s)).join(", ") : a.groupAll(groupAll.length, meta.seasons[0], meta.currentSeason);
+  const [modeLabel, modeHint] = a.modes[mode];
 
   return (
     <div>
@@ -118,38 +119,38 @@ export default function CompareView() {
         ))}
       </div>
       <div className="mb-6 flex flex-wrap items-end gap-4">
-        <Field label="Achsen (Rolle)">
+        <Field label={a.axes}>
           <select value={role} onChange={(e) => setRole(e.target.value)} className={selectCls}>
-            <option value="">Automatisch ({ROLE_LABELS[firstRole ?? "WR/TE"] ?? "Receiver"})</option>
-            {Object.keys(ROLE_AXES).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+            <option value="">{a.auto(f.m.stats.roles[firstRole ?? "WR/TE"] ?? "Receiver")}</option>
+            {Object.keys(ROLE_AXES).map((r) => <option key={r} value={r}>{f.m.stats.roles[r] ?? r}</option>)}
           </select>
         </Field>
-        <Field label="Normalisierung">
+        <Field label={a.normalization}>
           <select value={mode} onChange={(e) => setMode(e.target.value as Mode)} className={selectCls}>
-            {MODES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            {MODES.map((md) => <option key={md} value={md}>{a.modes[md][0]}</option>)}
           </select>
         </Field>
         <span className="flex gap-1.5 pb-1.5">
-          <SourceTag kind="derived" detail={MODES.find((m) => m.value === mode)!.hint} />
+          <SourceTag kind="derived" detail={modeHint} />
         </span>
       </div>
       <p className="mb-4 max-w-[80ch] text-[13.5px] text-ink-2">
-        {MODES.find((m) => m.value === mode)!.hint}. Vergleichsgruppe {ROLE_LABELS[activeRole]}: {ROLE_MIN[activeRole].label}, mindestens 4 Spiele ({groupSize}).
-        {mode !== "max" ? " Ein Wert von 90 heißt: besser als 90 % der Gruppe." : " 100 = bester Wert der Gruppe."}
+        {a.groupLine(modeHint, f.m.stats.roles[activeRole] ?? activeRole, f.m.stats.qualifier(ROLE_MIN[activeRole]), groupSize)}
+        {mode !== "max" ? a.pctMeaning : a.maxMeaning}
       </p>
 
       {slots.length === 0 ? (
-        <p className="text-ink-3">Mindestens einen Spieler auswählen.</p>
+        <p className="text-ink-3">{a.pickOne}</p>
       ) : (
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,620px)_1fr]">
           <Radar
-            axes={axes.map((k) => stat(k).label)}
+            axes={axes.map((k) => f.statLabel(k))}
             median={medianRing}
-            medianLabel={mode === "max" ? "Median der Gruppe (Anteil am Bestwert)" : "Median der Vergleichsgruppe (50. Perzentil)"}
+            medianLabel={mode === "max" ? a.medianMax : f.m.player.medianGroupPct}
             series={series.map((s) => ({
               name: `${pm.get(s.slot.player)?.name} ${s.slot.season}`,
               pct: s.vals.map((v) => v.score),
-              raw: s.vals.map((v, k) => (v.raw === null ? "nicht erfasst" : formatStat(stat(axes[k]), v.raw))),
+              raw: s.vals.map((v, k) => (v.raw === null ? f.m.common.notRecordedLong : f.fmtStat(stat(axes[k]), v.raw))),
               hidden: hidden.includes(s.index),
             }))}
           />
@@ -157,7 +158,7 @@ export default function CompareView() {
             <table className="w-full border-collapse text-[14px]">
               <thead>
                 <tr className="border-b border-line text-[12px] text-ink-3">
-                  <th scope="col" className="py-2 text-left font-medium">Kennzahl</th>
+                  <th scope="col" className="py-2 text-left font-medium">{f.m.player.colStat}</th>
                   {series.map((s) => (
                     <th key={s.index} scope="col" className="px-2 py-2 text-right font-medium">
                       <span className="inline-flex items-center gap-1.5 text-ink">
@@ -171,15 +172,15 @@ export default function CompareView() {
               <tbody>
                 {axes.map((k, ai) => (
                   <tr key={k} className="border-b border-line last:border-0">
-                    <td className="py-2 text-ink-2" title={stat(k).formula}>
-                      {stat(k).label}
-                      {stat(k).lowerIsBetter && <span className="ml-1 text-[11.5px] text-ink-3">(weniger ist besser)</span>}
+                    <td className="py-2 text-ink-2" title={f.m.stats.formula(stat(k))}>
+                      {f.statLabel(k)}
+                      {stat(k).lowerIsBetter && <span className="ml-1 text-[11.5px] text-ink-3">{f.m.player.lowerBetter}</span>}
                     </td>
                     {series.map((s) => {
                       const v = s.vals[ai];
                       return (
                         <td key={s.index} className="num px-2 py-2 text-right">
-                          <span className="text-ink">{v.raw === null ? "n. e." : formatStat(stat(k), v.raw)}</span>
+                          <span className="text-ink">{v.raw === null ? f.m.common.notRecorded : f.fmtStat(stat(k), v.raw)}</span>
                           <span className="ml-1.5 text-[12px] text-ink-3">{v.score === null ? "" : Math.round(v.score)}</span>
                         </td>
                       );
@@ -187,17 +188,17 @@ export default function CompareView() {
                   </tr>
                 ))}
                 <tr>
-                  <td className="py-2 text-[12.5px] text-ink-3">Spiele, Rolle</td>
+                  <td className="py-2 text-[12.5px] text-ink-3">{a.gamesRole}</td>
                   {series.map((s) => (
                     <td key={s.index} className="px-2 py-2 text-right text-[12.5px] text-ink-3">
-                      {s.entry?.games ?? 0} Sp, {s.entry?.role ?? "–"}
-                      {!s.inGroup && <span className="block text-[11.5px]">nicht in der Vergleichsgruppe</span>}
+                      {a.gamesShort(s.entry?.games ?? 0)}, {s.entry?.role ?? "–"}
+                      {!s.inGroup && <span className="block text-[11.5px]">{a.notInGroup}</span>}
                     </td>
                   ))}
                 </tr>
               </tbody>
             </table>
-            <p className="mt-2 text-[12.5px] text-ink-3">Rohwert, daneben klein der normalisierte Wert (0–100). Maus über einen Punkt im Radar zeigt beides.</p>
+            <p className="mt-2 text-[12.5px] text-ink-3">{a.rawNote}</p>
           </div>
         </div>
       )}
@@ -210,6 +211,9 @@ function SlotPicker({ index, slot, players, all, teams, onChange, disabled, hidd
 }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const f = useI18n();
+  const a = f.m.analytics;
+  const lineName = [f.m.player.lineSolid, f.m.player.lineDashed, f.m.player.lineDotted][index];
   const p = slot ? players.find((x) => x.id === slot.player) : undefined;
   const norm = (s: string) => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const hits = q.length >= 2 ? players.filter((x) => !x.shared && norm(x.name).includes(norm(q))).slice(0, 8) : [];
@@ -218,19 +222,19 @@ function SlotPicker({ index, slot, players, all, teams, onChange, disabled, hidd
     <div {...teamsAttr(slot ? all.find((e) => e.player === slot.player && e.season === slot.season)?.teams : undefined)} className={`rounded-xl border bg-surface p-3 ${disabled ? "border-dashed border-line opacity-60" : "border-line"}`}>
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 text-[12.5px] text-ink-3">
-          <SeriesKey index={index} /> Spieler {index + 1} ({SERIES_STYLE[index].label})
+          <SeriesKey index={index} /> {a.slot(index + 1, lineName ?? SERIES_STYLE[index].label)}
         </span>
         {p && (
           <span className="flex gap-1">
-            <button type="button" onClick={onToggle} className="rounded px-1.5 text-[12px] text-ink-3 hover:text-ink" aria-pressed={!hidden}>{hidden ? "einblenden" : "ausblenden"}</button>
-            <button type="button" onClick={() => onChange(null)} className="rounded px-1.5 text-[12px] text-ink-3 hover:text-ink" aria-label={`Spieler ${index + 1} entfernen`}>×</button>
+            <button type="button" onClick={onToggle} className="rounded px-1.5 text-[12px] text-ink-3 hover:text-ink" aria-pressed={!hidden}>{hidden ? a.show : a.hide}</button>
+            <button type="button" onClick={() => onChange(null)} className="rounded px-1.5 text-[12px] text-ink-3 hover:text-ink" aria-label={a.removeSlot(index + 1)}>×</button>
           </span>
         )}
       </div>
       {p && slot ? (
         <div className="flex items-center justify-between gap-2">
           <Link href={`/spieler/${p.id}/`} className="truncate text-[15px] font-medium text-ink hover:underline hover:underline-offset-4">{p.name}</Link>
-          <select aria-label="Saison" value={slot.season} onChange={(e) => onChange({ player: p.id, season: Number(e.target.value) })} className={selectCls}>
+          <select aria-label={f.m.common.season} value={slot.season} onChange={(e) => onChange({ player: p.id, season: Number(e.target.value) })} className={selectCls}>
             {seasons.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
@@ -242,8 +246,8 @@ function SlotPicker({ index, slot, players, all, teams, onChange, disabled, hidd
             value={q}
             onChange={(e) => { setQ(e.target.value); setOpen(true); }}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
-            placeholder={disabled ? "Erst Spieler davor wählen" : "Spieler suchen"}
-            aria-label={`Spieler ${index + 1} suchen`}
+            placeholder={disabled ? a.pickBefore : a.searchPlayer}
+            aria-label={a.searchSlot(index + 1)}
             className="h-9 w-full rounded-md border border-line bg-bg px-2.5 text-[14px] text-ink placeholder:text-ink-3"
           />
           {open && hits.length > 0 && (

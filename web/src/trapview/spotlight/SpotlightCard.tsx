@@ -1,20 +1,16 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { eliteOf, matchupOf, type SceneModel, type ScenePlayer, type SceneSpotlight } from '../data/sceneModel';
 import { familyOf, statLines } from '../matchup/compare';
+import { useI18n } from '../../i18n/react';
+import { lineText, lineValue } from '../i18n';
 import type { DataIndex } from '../data/types';
 import EliteBadge from '../../components/EliteBadge';
 import type { SpotlightReason } from './scoring';
-import { GROUP_LABEL, GROUP_NAME, lastName } from '../data/names';
+import { GROUP_LABEL, lastName } from '../data/names';
 import { ASSET_BASE } from '../paths';
 import { PlayerPortrait } from './PlayerPortrait';
 import './spotlight.css';
 
-const nf = (digits: number) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
-const fmt = (x: number, digits = 0) => nf(digits).format(x);
-/** Ganze Zahlen ohne, halbe Tackles/Sacks mit einer Nachkommastelle. */
-const fmtTotal = (x: number) => fmt(x, Number.isInteger(x) ? 0 : 1);
-
-const TIER: Record<string, string> = { elite: 'Elite', star: 'Star', key: 'Schlüsselspieler' };
 
 /** Akzentfarbe, die auf dem dunklen Kartenhintergrund lesbar bleibt (sehr dunkle Teamfarben werden aufgehellt). */
 function readable(hex: string): string {
@@ -50,6 +46,12 @@ function useCountUp(target: number, delay: number, duration = 700) {
 }
 
 function StatRow({ r, i, peers }: { r: SpotlightReason; i: number; peers: string }) {
+  const f = useI18n();
+  const tv = f.m.trapview;
+  const fmt = (x: number, digits = 0) => f.fmtDec(x, digits);
+  /** Ganze Zahlen ohne, halbe Tackles/Sacks mit einer Nachkommastelle. */
+  const fmtTotal = (x: number) => fmt(x, Number.isInteger(x) ? 0 : 1);
+  const text = tv.reasons[r.metric];
   const delay = 250 + i * 60;
   const target = r.display === 'percent' ? r.value * 100 : r.value;
   const shown = useCountUp(target, delay);
@@ -58,17 +60,17 @@ function StatRow({ r, i, peers }: { r: SpotlightReason; i: number; peers: string
   const main =
     r.display === 'total' ? fmtTotal(Math.round(shown * step) / step)
       : r.display === 'rate' ? fmt(shown, 1)
-        : `${fmt(shown, 1)} %`;
+        : f.lang === 'en' ? `${fmt(shown, 1)}%` : `${fmt(shown, 1)} %`;
   const sub = r.display === 'total'
-    ? `${fmt(r.perGame ?? 0, 1)} pro Spiel`
-    : `bei ${fmt(r.den ?? 0)} ${r.denLabel ?? ''}${r.better === 'low' ? ' · niedrig ist gut' : ''}`;
+    ? tv.perGame(fmt(r.perGame ?? 0, 1))
+    : `${tv.onDen(fmt(r.den ?? 0), text?.den ?? r.denLabel ?? '')}${r.better === 'low' ? tv.lowGood : ''}`;
   const top = Math.max(1, 100 - r.pct);
   return (
     <li className="tv-spot__stat" style={{ ['--i' as string]: i, ['--pct' as string]: `${r.pct}%` } as CSSProperties}>
       <b className="tv-spot__val">{main}</b>
-      <span className="tv-spot__label">{r.label}</span>
+      <span className="tv-spot__label">{text?.label ?? r.label}</span>
       <span className="tv-spot__sub">{sub}</span>
-      <span className="tv-spot__pct" title={`Perzentil ${r.pct} unter ${peers} der Liga`}>Top {top} %</span>
+      <span className="tv-spot__pct" title={tv.pctTitle(r.pct, peers)}>{tv.top(top)}</span>
       <i className="tv-spot__bar" aria-hidden="true" />
     </li>
   );
@@ -79,14 +81,15 @@ function Opponent({ p, index, model }: { p: ScenePlayer; index: DataIndex; model
   const elite = eliteOf(p);
   const fam = familyOf(p);
   const lines = fam && p.player ? statLines(p.player, fam, index, model.season).slice(0, 2) : [];
+  const f = useI18n();
   return (
     <div className={`tv-spot__opp${elite ? ' is-elite' : ''}`}>
-      <span className="tv-spot__opp-k">Gegenüber</span>
+      <span className="tv-spot__opp-k">{f.m.trapview.opponent}</span>
       <span className="tv-spot__opp-who">
         <b>{p.posLabel}{p.player?.number != null ? ` #${p.player.number}` : ''}</b> {p.player?.name} · {p.team.abbreviation}
       </span>
       {elite && <EliteBadge entry={elite} size="md" season={model.season.season} className="tv-spot__opp-elite" />}
-      {lines.length > 0 && <span className="tv-spot__opp-stats">{lines.map((l) => `${l.value} ${l.abbr}`).join(' · ')}</span>}
+      {lines.length > 0 && <span className="tv-spot__opp-stats">{lines.map((l) => `${lineValue(l, f)} ${lineText(l, f).abbr}`).join(' · ')}</span>}
     </div>
   );
 }
@@ -113,12 +116,15 @@ export function SpotlightCard({ model, spot, duration, index }: {
   const group = pick.group as keyof typeof GROUP_LABEL;
   const offense = spot.side === 'offense';
   // Offense: Position genügt (QB · Quarterback). Defense: Statistikprofil, weil DL/LB/DB ohne Kader nicht belegt sind
-  const role = offense ? GROUP_NAME[group] ?? pick.profileLabel : pick.profileLabel;
+  const f = useI18n();
+  const tv = f.m.trapview;
+  const prof = tv.profiles[pick.profile] ?? { label: pick.profileLabel, peers: pick.peers };
+  const role = offense ? f.m.stats.positions[group] ?? prof.label : prof.label;
   const rankText = offense
-    ? `#${pick.rank} von ${pick.of} ${pick.peers}`
-    : `#${pick.rank} von ${pick.of} ${pick.peers} · ${pick.profileLabel}-Profil`;
+    ? tv.rankText(pick.rank, pick.of, prof.peers)
+    : `${tv.rankText(pick.rank, pick.of, prof.peers)}${tv.profileSuffix(prof.label)}`;
   const built = index.source?.builtAt ? new Date(index.source.builtAt) : null;
-  const stand = built && !Number.isNaN(built.getTime()) ? built.toLocaleDateString('de-DE') : null;
+  const stand = built && !Number.isNaN(built.getTime()) ? built.toLocaleDateString(f.locale) : null;
   const duel = matchupOf(model, player);
   const opponent = duel ? (duel.offense.id === player.id ? duel.defense : duel.offense) : null;
 
@@ -133,12 +139,12 @@ export function SpotlightCard({ model, spot, duration, index }: {
     <aside
       className={`tv-spot tv-spot--${offense ? 'right' : 'left'} tv-spot--${pick.tier}${pick.elite ? ' is-elite' : ''}`}
       style={style}
-      aria-label={`Player Spotlight: ${name}, ${role}, ${team.name}`}
+      aria-label={tv.spotlightAria(name, role, team.name)}
     >
       <div className="tv-spot__kicker">
         <span className="tv-spot__kick-main">Player Spotlight</span>
         <span className="tv-spot__kick-side">{offense ? 'Offense' : 'Defense'} {spot.rank}/{spot.ofSide}</span>
-        {!pick.elite && <span className="tv-spot__tier">{TIER[pick.tier]}</span>}
+        {!pick.elite && <span className="tv-spot__tier">{tv.tiers[pick.tier]}</span>}
       </div>
 
       <div className="tv-spot__card">
@@ -165,17 +171,16 @@ export function SpotlightCard({ model, spot, duration, index }: {
           </h2>
           <div className="tv-spot__rank">
             <span>{rankText}</span>
-            <span className="tv-spot__score" title="Profilwert: gewichteter Mittelwert der Liga-Perzentile (0–100)">
-              Profilwert <b>{Math.round(pick.score)}</b>
+            <span className="tv-spot__score" title={tv.profileScoreHint}>
+              {tv.profileScore} <b>{Math.round(pick.score)}</b>
             </span>
           </div>
           <ul className="tv-spot__stats">
-            {pick.reasons.map((r, i) => <StatRow key={r.metric} r={r} i={i} peers={pick.peers} />)}
+            {pick.reasons.map((r, i) => <StatRow key={r.metric} r={r} i={i} peers={prof.peers} />)}
           </ul>
           {opponent && <Opponent p={opponent} index={index} model={model} />}
           <div className="tv-spot__foot">
-            Saison {model.season.season} · {pick.games} Spiele für {team.abbreviation}
-            {stand ? ` · Datenstand ${stand}` : ''} · Auswahl nach Liga-Perzentilen
+            {tv.cardFoot(model.season.season, pick.games, team.abbreviation, stand)}
           </div>
         </div>
       </div>

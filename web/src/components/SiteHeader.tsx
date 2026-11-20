@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { getTeamSeasons, getTeams, teamNameIn } from "@/lib/data";
 import FavoriteTeamPicker, { FavoriteWelcome, type PickerTeam } from "./FavoriteTeam";
 import NavLinks from "./NavLinks";
 import SearchBox from "./SearchBox";
 import ThemeToggle from "./ThemeToggle";
+import HomeLink from "./HomeLink";
+import { LanguageSwitcher } from "@/i18n/react";
 
 /** Teams fuer die Lieblingsteam-Auswahl: offizieller Name der letzten eigenen Saison, aktuelle Saison zuerst. */
 function pickerTeams(): PickerTeam[] {
@@ -25,12 +26,12 @@ export default function SiteHeader() {
     <>
     <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur supports-[backdrop-filter]:bg-bg/75">
       <div className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-x-5 gap-y-2 xl:gap-x-6 px-4 py-2.5 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="GFL Analytics, Startseite">
+        <HomeLink>
           <Mark />
           <span className="display text-[21px] font-bold leading-none tracking-tight text-ink">
             GFL<span className="ml-1 font-semibold text-ink-2">Analytics</span>
           </span>
-        </Link>
+        </HomeLink>
         <div className="order-3 w-full sm:order-none sm:w-auto sm:flex-1">
           <NavLinks />
         </div>
@@ -39,6 +40,7 @@ export default function SiteHeader() {
             <SearchBox />
           </div>
           <FavoriteTeamPicker teams={teams} />
+          <LanguageSwitcher className="mx-0.5" />
           <ThemeToggle />
         </div>
         <div className="order-4 w-full md:hidden">

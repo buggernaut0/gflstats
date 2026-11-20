@@ -5,7 +5,8 @@ import { useTrapView } from '../state/store';
 
 /**
  * Flutlicht-Setup: ein schattenwerfendes Hauptlicht, drei Rim-Lights für die Silhouetten
- * und ein schwaches Himmelslicht. Im Matchup-Modus wird die Grundbeleuchtung abgesenkt.
+ * und ein schwaches Himmelslicht. Die Rim-Lights treffen vor allem die Trikotrücken: nur leicht kühl bzw.
+ * warm getönt, sonst färben sie weiße Trikots blau oder orange ein. Im Matchup-Modus wird die Grundbeleuchtung abgesenkt.
  */
 export function Lighting({ losX, shadowMap = 2048 }: { losX: number; shadowMap?: number }) {
   const key = useRef<THREE.DirectionalLight>(null);
@@ -31,13 +32,13 @@ export function Lighting({ losX, shadowMap = 2048 }: { losX: number; shadowMap?:
     const d = dim.current;
     if (key.current) key.current.intensity = 3.8 * d;
     if (hemi.current) hemi.current.intensity = 0.75 * (0.5 + 0.5 * d);
-    const base = [2.6, 2.0, 1.6];
+    const base = [2.1, 1.6, 1.3];
     rims.current.forEach((r, i) => r && (r.intensity = base[i] * (0.45 + 0.55 * d)));
   });
 
   return (
     <>
-      <hemisphereLight ref={hemi} args={['#6b80a8', '#141c16', 0.75]} />
+      <hemisphereLight ref={hemi} args={['#7f8aa0', '#141c16', 0.75]} />
       <directionalLight
         ref={key}
         position={[losX + 3, 48, 38]}
@@ -51,9 +52,9 @@ export function Lighting({ losX, shadowMap = 2048 }: { losX: number; shadowMap?:
       >
         <orthographicCamera attach="shadow-camera" args={[-36, 36, 30, -30, 1, 140]} />
       </directionalLight>
-      <directionalLight ref={(l) => { rims.current[0] = l; }} position={[losX + 40, 16, -40]} color="#9dbdff" intensity={2.2} />
-      <directionalLight ref={(l) => { rims.current[1] = l; }} position={[losX - 44, 15, -36]} color="#ffd6ad" intensity={1.5} />
-      <directionalLight ref={(l) => { rims.current[2] = l; }} position={[losX - 40, 14, 30]} color="#c9d8ff" intensity={1.2} />
+      <directionalLight ref={(l) => { rims.current[0] = l; }} position={[losX + 40, 16, -40]} color="#dfe8ff" intensity={2.2} />
+      <directionalLight ref={(l) => { rims.current[1] = l; }} position={[losX - 44, 15, -36]} color="#fff1e2" intensity={1.5} />
+      <directionalLight ref={(l) => { rims.current[2] = l; }} position={[losX - 40, 14, 30]} color="#e6edff" intensity={1.2} />
     </>
   );
 }

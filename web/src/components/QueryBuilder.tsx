@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { OPS, type Condition, type Logic, type Op } from "@/lib/query";
+import { baseKey, isCareerKey } from "@/lib/explore";
+import { STAT } from "@/lib/stats";
+import { useI18n, type I18n } from "@/i18n/react";
 
 export interface StatOption {
   key: string;
@@ -9,8 +12,30 @@ export interface StatOption {
   group: string;
 }
 
+/**
+ * Kennzahl-Option in der gewählten Sprache: Spieler- und Spielkennzahlen (auch "k.<kennzahl>" = Karriere)
+ * werden aus dem Katalog benannt, andere Optionen (Team-Kennzahlen) bringen ihren Text schon übersetzt mit.
+ */
+export function localizeOption(o: StatOption, f: I18n): StatOption {
+  const def = STAT.get(baseKey(o.key));
+  if (!def) return o;
+  const label = `${f.statLabel(def)} (${f.statAbbr(def)})${def.kind === "derived" ? " *" : ""}`;
+  const group = f.m.stats.groups[def.group] ?? f.m.query.more;
+  return isCareerKey(o.key)
+    ? { key: o.key, label: f.m.query.careerLabel(label), group: f.m.query.careerGroup(group) }
+    : { key: o.key, label, group };
+}
+
+/** Bedingung als Satz in der gewählten Sprache ("Rushing Yards mindestens 500"). */
+export function describeCondition(c: Condition, label: string, f: I18n): string {
+  return f.m.query.describe(label, f.m.query.ops[c.op] ?? c.op, c.a, c.b);
+}
+
 /** Auswahlliste fuer Kennzahlen, nach Bereich gruppiert. */
-export function StatSelect({ value, onChange, options, label = "Kennzahl", className = "", placeholder }: { value: string; onChange: (v: string) => void; options: StatOption[]; label?: string; className?: string; placeholder?: string }) {
+export function StatSelect({ value, onChange, options: raw, label, className = "", placeholder }: { value: string; onChange: (v: string) => void; options: StatOption[]; label?: string; className?: string; placeholder?: string }) {
+  const f = useI18n();
+  const options = raw.map((o) => localizeOption(o, f));
+  label ??= f.m.query.stat;
   const groups = [...new Set(options.map((o) => o.group))];
   return (
     <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} className={`h-9 rounded-md border border-line bg-surface px-2 text-[14px] ${value ? "text-ink" : "text-ink-3"} ${className}`}>
@@ -71,13 +96,15 @@ export default function QueryBuilder({
     focusValue.current = null;
   });
   const num = (v: string) => (v === "" ? NaN : Number(v));
-  const joiner = allowOr ? (logic === "and" ? "UND" : "ODER") : "UND";
+  const { m } = useI18n();
+  const q = m.query;
+  const joiner = allowOr ? (logic === "and" ? q.joinAnd : q.joinOr) : q.joinAnd;
   return (
     <fieldset className={framed ? "rounded-xl border border-line bg-surface p-4" : "min-w-0"}>
-      <legend className={framed ? "px-1 text-[13px] font-medium text-ink-2" : "sr-only"}>Bedingungen</legend>
+      <legend className={framed ? "px-1 text-[13px] font-medium text-ink-2" : "sr-only"}>{q.conditions}</legend>
       {allowOr && conditions.length > 1 && (
-        <div role="radiogroup" aria-label="Verknüpfung" className="mb-3 flex items-center gap-2 text-[13.5px] text-ink-2">
-          Treffer erfüllen
+        <div role="radiogroup" aria-label={q.logic} className="mb-3 flex items-center gap-2 text-[13.5px] text-ink-2">
+          {q.hitsMeet}
           {(["and", "or"] as Logic[]).map((l) => (
             <button
               key={l}
@@ -87,7 +114,7 @@ export default function QueryBuilder({
               onClick={() => onChange(conditions, l)}
               className={`rounded-md border px-2.5 py-1 ${logic === l ? "border-accent bg-accent-soft text-ink" : "border-line text-ink-2 hover:text-ink"}`}
             >
-              {l === "and" ? "alle (UND)" : "mindestens eine (ODER)"}
+              {l === "and" ? q.logicAnd : q.logicOr}
             </button>
           ))}
         </div>
@@ -103,13 +130,13 @@ export default function QueryBuilder({
                 setRow(i, { stat: v });
               }}
               options={options}
-              placeholder={draft ? "Statistik wählen …" : undefined}
+              placeholder={draft ? q.chooseStat : undefined}
               className="w-full min-w-0 sm:w-auto sm:min-w-[260px]"
             />
-            <select aria-label="Vergleich" value={c.op} onChange={(e) => setRow(i, { op: e.target.value as Op })} className="h-9 rounded-md border border-line bg-surface px-2 text-[14px] text-ink">
+            <select aria-label={q.compare} value={c.op} onChange={(e) => setRow(i, { op: e.target.value as Op })} className="h-9 rounded-md border border-line bg-surface px-2 text-[14px] text-ink">
               {OPS.map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {q.ops[o.value] ?? o.label}
                 </option>
               ))}
             </select>
@@ -117,23 +144,23 @@ export default function QueryBuilder({
               ref={(el) => {
                 valueRefs.current[i] = el;
               }}
-              aria-label="Wert"
+              aria-label={q.value}
               type="number"
               step="any"
               inputMode="decimal"
-              placeholder="Wert"
+              placeholder={q.value}
               value={Number.isFinite(c.a) ? c.a : ""}
               onChange={(e) => setRow(i, { a: num(e.target.value) })}
               className="num h-9 w-24 rounded-md border border-line bg-surface px-2 text-[14px] text-ink placeholder:text-ink-3"
             />
             {c.op === "between" && (
               <>
-                <span className="text-[13px] text-ink-3">und</span>
-                <input aria-label="Obergrenze" type="number" step="any" inputMode="decimal" placeholder="Wert" value={c.b !== undefined && Number.isFinite(c.b) ? c.b : ""} onChange={(e) => setRow(i, { b: num(e.target.value) })} className="num h-9 w-24 rounded-md border border-line bg-surface px-2 text-[14px] text-ink placeholder:text-ink-3" />
+                <span className="text-[13px] text-ink-3">{q.and}</span>
+                <input aria-label={q.upper} type="number" step="any" inputMode="decimal" placeholder={q.value} value={c.b !== undefined && Number.isFinite(c.b) ? c.b : ""} onChange={(e) => setRow(i, { b: num(e.target.value) })} className="num h-9 w-24 rounded-md border border-line bg-surface px-2 text-[14px] text-ink placeholder:text-ink-3" />
               </>
             )}
             {i < conditions.length && (
-              <button type="button" onClick={() => onChange(conditions.filter((_, k) => k !== i), logic)} aria-label="Bedingung entfernen" title="Bedingung entfernen" className="grid h-9 w-9 place-items-center rounded-md text-[18px] text-ink-3 hover:bg-surface-2 hover:text-ink">
+              <button type="button" onClick={() => onChange(conditions.filter((_, k) => k !== i), logic)} aria-label={q.remove} title={q.remove} className="grid h-9 w-9 place-items-center rounded-md text-[18px] text-ink-3 hover:bg-surface-2 hover:text-ink">
                 ×
               </button>
             )}
@@ -142,7 +169,7 @@ export default function QueryBuilder({
       </ul>
       {(!draft || conditions.length > 0) && (
         <button type="button" onClick={() => onChange([...conditions, draft ? { stat: "", op: "gte", a: NaN } : { stat: defaultStat, op: "gte", a: 0 }], logic)} className="mt-3 rounded-md border border-dashed border-line-strong px-3 py-1.5 text-[13.5px] text-ink-2 hover:text-ink">
-          + Bedingung hinzufügen
+          {q.add}
         </button>
       )}
     </fieldset>

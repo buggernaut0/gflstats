@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { MultiSim, randomSeed, type MultiResult, type PlayerAvg, type Profiles } from '../sim/index.ts';
 import type { TeamLook } from './FieldCanvas';
+import { useI18n, type I18n } from '../../i18n/react';
 
 const RUNS = 1000;
 const CHUNK = 50;
 
-const pct = (x: number) => `${Math.round(x * 100)} %`;
-const nf = (x: number) => x.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const pctOf = (f: I18n) => (x: number) => (f.lang === 'en' ? `${Math.round(x * 100)}%` : `${Math.round(x * 100)} %`);
 
 /**
  * Siegchance über 1.000 Simulationen. Läuft in Häppchen (je 50 Spiele per setTimeout – läuft auch
@@ -26,6 +26,8 @@ export function MultiPanel({ profiles, teams, names, autoRun = false }: {
   const [result, setResult] = useState<MultiResult | null>(null);
   const [running, setRunning] = useState(false);
   const timer = useRef(0);
+  const f = useI18n();
+  const su = f.m.simui;
 
   const start = () => {
     window.clearTimeout(timer.current);
@@ -54,17 +56,14 @@ export function MultiPanel({ profiles, teams, names, autoRun = false }: {
   return (
     <section className="sim-multi">
       <header className="sim-multi__head">
-        <h3>Siegchance über {RUNS.toLocaleString('de-DE')} Simulationen</h3>
+        <h3>{su.multiTitle(f.fmt(RUNS))}</h3>
         <button className="tv-chip" onClick={start} disabled={running}>
-          {running ? `Simuliere … ${done.toLocaleString('de-DE')}` : result ? 'Neu berechnen' : `${RUNS.toLocaleString('de-DE')} Spiele simulieren`}
+          {running ? su.simulating(f.fmt(done)) : result ? su.recalc : su.simulateN(f.fmt(RUNS))}
         </button>
       </header>
       {running && <div className="sim-multi__progress"><i style={{ width: `${(done / RUNS) * 100}%` }} /></div>}
       {!result && !running && (
-        <p className="sim-muted">
-          Dasselbe Duell {RUNS.toLocaleString('de-DE')}-mal mit neuem Zufall. Zeigt, wie viel eines einzelnen Spiels Zufall ist
-          und wie viel Stärke. Dauert etwa eine Sekunde.
-        </p>
+        <p className="sim-muted">{su.multiIntro(f.fmt(RUNS))}</p>
       )}
       {result && <Result r={result} a={a} b={b} label={label} />}
     </section>
@@ -72,33 +71,37 @@ export function MultiPanel({ profiles, teams, names, autoRun = false }: {
 }
 
 function Result({ r, a, b, label }: { r: MultiResult; a: TeamLook; b: TeamLook; label: (id: string) => string }) {
+  const f = useI18n();
+  const su = f.m.simui;
+  const pct = pctOf(f);
+  const nf = (x: number) => f.fmtDec(x, 1);
   const n = r.runs;
   const wa = r.wins[a.id] / n, wb = r.wins[b.id] / n, t = r.ties / n;
   const maxMargin = Math.max(...r.margins.map((m) => m.count), 1);
   const marginLabel = (m: MultiResult['margins'][number]) => {
     if (m.from === -Infinity) return `${b.abbr} +22`;
     if (m.to === Infinity) return `${a.abbr} +22`;
-    if (m.from === 0 && m.to === 0) return 'Remis';
+    if (m.from === 0 && m.to === 0) return su.tie;
     return m.to < 0 ? `${b.abbr} +${-m.to}–${-m.from}` : `${a.abbr} +${m.from}–${m.to}`;
   };
   return (
     <div className="sim-multi__body">
       <div className="sim-multi__odds">
-        <div className="sim-multi__bar" role="img" aria-label={`${label(a.id)} ${pct(wa)}, Remis ${pct(t)}, ${label(b.id)} ${pct(wb)}`}>
+        <div className="sim-multi__bar" role="img" aria-label={su.oddsAria(label(a.id), pct(wa), pct(t), label(b.id), pct(wb))}>
           <i style={{ width: `${wa * 100}%`, background: a.fill }} />
           <i style={{ width: `${t * 100}%`, background: '#8a94a3' }} />
           <i style={{ width: `${wb * 100}%`, background: b.fill }} />
         </div>
         <div className="sim-multi__legend">
-          <span><b>{pct(wa)}</b> {label(a.id)} gewinnt · Ø {nf(r.avgPoints[a.id])} Punkte</span>
-          {r.ties > 0 && <span><b>{pct(t)}</b> Remis</span>}
-          <span><b>{pct(wb)}</b> {label(b.id)} gewinnt · Ø {nf(r.avgPoints[b.id])} Punkte</span>
+          <span><b>{pct(wa)}</b>{su.wins(label(a.id), nf(r.avgPoints[a.id]))}</span>
+          {r.ties > 0 && <span><b>{pct(t)}</b> {su.tie}</span>}
+          <span><b>{pct(wb)}</b>{su.wins(label(b.id), nf(r.avgPoints[b.id]))}</span>
         </div>
       </div>
 
       <div className="sim-multi__grid">
         <div>
-          <h4>Punktdifferenz</h4>
+          <h4>{su.margin}</h4>
           <div className="sim-hist">
             {r.margins.map((m, i) => (
               <div key={i} className="sim-hist__row">
@@ -108,40 +111,40 @@ function Result({ r, a, b, label }: { r: MultiResult; a: TeamLook; b: TeamLook; 
               </div>
             ))}
           </div>
-          <p className="sim-muted">{pct(r.close)} der Spiele mit höchstens 7 Punkten Unterschied entschieden.</p>
+          <p className="sim-muted">{su.close(pct(r.close))}</p>
         </div>
         <div>
-          <h4>Häufigste Spielstände</h4>
+          <h4>{su.topScores}</h4>
           <ol className="sim-scores">
             {r.topScores.map((s) => <li key={s.score}><b>{s.score.replace(':', ' : ')}</b> <span>{pct(s.count / n)}</span></li>)}
           </ol>
-          <p className="sim-muted">{a.abbr} : {b.abbr}. Einzelne exakte Spielstände sind selten – entscheidend ist die Verteilung.</p>
+          <p className="sim-muted">{su.scoresNote(a.abbr, b.abbr)}</p>
         </div>
       </div>
 
       <div className="sim-multi__grid">
         {[a, b].map((t) => <Leaders key={t.id} players={r.players.filter((p) => p.team === t.id)} team={t} label={label(t.id)} />)}
       </div>
-      <p className="sim-muted">
-        Gleiche Daten (Saison 2026) in jedem Durchlauf, nur der Zufall unterscheidet sich. Das Modell kennt die echten Spiele 2026,
-        gegen die es eingestellt wurde – die Werte sind eine Einordnung, keine Vorhersage oder Wettquote.
-      </p>
+      <p className="sim-muted">{su.multiFoot}</p>
     </div>
   );
 }
 
 function Leaders({ players, team, label }: { players: PlayerAvg[]; team: TeamLook; label: string }) {
+  const f = useI18n();
+  const su = f.m.simui;
+  const nf = (x: number) => f.fmtDec(x, 1);
   const top = (k: keyof PlayerAvg, count: number) =>
     [...players].sort((x, y) => (y[k] as number) - (x[k] as number)).filter((p) => (p[k] as number) > 0).slice(0, count);
   const rows: [string, string][] = [
-    ...top('passYds', 1).map((p): [string, string] => [p.name, `${nf(p.passYds)} Pass-Yds · ${nf(p.passTd)} TD · ${nf(p.int)} INT`]),
-    ...top('rushYds', 2).map((p): [string, string] => [p.name, `${nf(p.rushYds)} Lauf-Yds · ${nf(p.rushTd)} TD`]),
-    ...top('recYds', 3).map((p): [string, string] => [p.name, `${nf(p.rec)} Rec · ${nf(p.recYds)} Yds · ${nf(p.recTd)} TD`]),
-    ...top('tackles', 2).map((p): [string, string] => [p.name, `${nf(p.tackles)} Tackles${p.sacks >= 0.1 ? ` · ${nf(p.sacks)} Sacks` : ''}`]),
+    ...top('passYds', 1).map((p): [string, string] => [p.name, su.avgPass(nf(p.passYds), nf(p.passTd), nf(p.int))]),
+    ...top('rushYds', 2).map((p): [string, string] => [p.name, su.avgRun(nf(p.rushYds), nf(p.rushTd))]),
+    ...top('recYds', 3).map((p): [string, string] => [p.name, su.avgRec(nf(p.rec), nf(p.recYds), nf(p.recTd))]),
+    ...top('tackles', 2).map((p): [string, string] => [p.name, su.avgDef(nf(p.tackles), p.sacks >= 0.1 ? nf(p.sacks) : null)]),
   ];
   return (
     <div>
-      <h4 style={{ borderColor: team.fill }} className="sim-multi__team">{label} · Ø pro Spiel</h4>
+      <h4 style={{ borderColor: team.fill }} className="sim-multi__team">{su.perGameAvg(label)}</h4>
       <table className="sim-leaders">
         <tbody>{rows.map(([n, v], i) => <tr key={i}><th>{n}</th><td>{v}</td></tr>)}</tbody>
       </table>

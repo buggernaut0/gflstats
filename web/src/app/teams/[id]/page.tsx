@@ -7,6 +7,7 @@ import { teamsAttr } from "@/lib/favorite";
 import TeamView, { type RosterRow, type TeamSeasonView } from "@/components/TeamView";
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import SeasonNotice from "@/components/SeasonNotice";
+import { T, Titled } from "@/i18n/react";
 import { getGames, getMeta, getPlayerGames, getTeamSeasons, getTeams, playerMap, teamMap, teamNameIn } from "@/lib/data";
 import { TEAM_METRICS, teamRank, teamSeasonMetrics, type TeamSeasonMetrics } from "@/lib/team";
 import { addStats } from "@/lib/stats";
@@ -88,14 +89,14 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
               <FavBadge className="mt-2.5" />
             </span>
             <p className="mt-2 text-[14px] text-ink-2">
-              GFL-Saisons in den Daten: {[...seasonsOf].reverse().join(", ")}.
-              {formerNames.length > 0 && <> Bis {formerNames[formerNames.length - 1][0]} als „{formerNames[0][1]}“ geführt.</>}
+              <T k="team.seasonsInData" a={[[...seasonsOf].reverse().join(", ")]} />
+              {formerNames.length > 0 && <T k="team.formerName" a={[formerNames[formerNames.length - 1][0], formerNames[0][1]]} />}
             </p>
             {team.logoPage && (
               <p className="mt-1 text-[12.5px] text-ink-3">
-                Logo:{" "}
+                <T k="team.logoLine" />{" "}
                 <a href={team.logoPage} className="underline-offset-4 hover:text-ink hover:underline" rel="noopener">
-                  offizielles Teamlogo, gfl.info
+                  <T k="team.logoOfficial" />
                 </a>
               </p>
             )}
@@ -106,7 +107,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
             const r = record(s);
             return (
               <div key={s}>
-                <dt className="num text-[12px] text-ink-3" title="Bilanz Regular Season">{s}</dt>
+                <dt className="num text-[12px] text-ink-3"><Titled k="team.recordRegular">{s}</Titled></dt>
                 <dd className="num display text-[20px] font-semibold text-ink">{r ? `${r.wins}–${r.losses}${r.ties ? `–${r.ties}` : ""}` : "–"}</dd>
               </div>
             );

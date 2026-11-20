@@ -2,6 +2,7 @@ import Link from "next/link";
 import TeamLogo from "@/components/TeamLogo";
 import { getMeta, getTeamSeasons, getTeams } from "@/lib/data";
 import { teamsAttr } from "@/lib/favorite";
+import { T } from "@/i18n/react";
 
 export const metadata = { title: "Teams" };
 
@@ -11,14 +12,14 @@ export default function TeamsPage() {
   const teams = [...getTeams()].sort((a, b) => a.name.localeCompare(b.name, "de"));
   return (
     <main className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6">
-      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink">Teams</h1>
-      <p className="mt-3 max-w-[62ch] text-[14px] text-ink-2">Bilanz in der Regular Season je Saison (Siege–Niederlagen). Leere Felder: Team war in dieser Saison nicht in der GFL vertreten.</p>
+      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink"><T k="team.listTitle" /></h1>
+      <p className="mt-3 max-w-[62ch] text-[14px] text-ink-2"><T k="team.listIntro" /></p>
       <div className="mt-8 overflow-x-auto rounded-xl border border-line bg-surface">
         <table className="w-full min-w-[640px] border-collapse text-[14px]">
-          <caption className="sr-only">Alle Teams mit Bilanz je Saison</caption>
+          <caption className="sr-only"><T k="team.listCaption" /></caption>
           <thead>
             <tr className="border-b border-line text-[12px] text-ink-3">
-              <th scope="col" className="py-2.5 pl-4 text-left font-medium">Team</th>
+              <th scope="col" className="py-2.5 pl-4 text-left font-medium"><T k="common.team" /></th>
               {seasons.map((s) => (
                 <th key={s} scope="col" className="num px-4 py-2.5 text-right font-medium">{s}</th>
               ))}

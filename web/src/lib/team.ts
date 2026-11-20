@@ -118,7 +118,7 @@ export function teamRank(all: TeamSeasonMetrics[], row: TeamSeasonMetrics, key: 
   return { rank: better + 1, of: peers.length };
 }
 
-export function fmtMetric(def: TeamMetricDef, x: number | null | undefined): string {
+export function fmtMetric(def: TeamMetricDef, x: number | null | undefined, lang: "de" | "en" = "de"): string {
   if (x === null || x === undefined || !Number.isFinite(x)) return "–";
-  return new Intl.NumberFormat("de-DE", { minimumFractionDigits: def.decimals, maximumFractionDigits: def.decimals }).format(x) + (def.unit === "%" ? " %" : "");
+  return new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: def.decimals, maximumFractionDigits: def.decimals }).format(x) + (def.unit === "%" ? (lang === "en" ? "%" : " %") : "");
 }

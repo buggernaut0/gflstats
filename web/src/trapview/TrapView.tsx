@@ -11,6 +11,7 @@ import { LabelLayer, type LabelRegistry } from './labels/PlayerLabels';
 import { useTrapView } from './state/store';
 import { ASSET_BASE } from './paths';
 import { JERSEY_NAME_FONT } from './players/numberAtlas';
+import { useI18n } from '../i18n/react';
 import './ui/styles.css';
 
 export interface TrapViewProps {
@@ -68,6 +69,7 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
   const [stage, setStage] = useState<Stage>(() => (webglAvailable() ? 'ok' : 'unsupported'));
   /** Erhöht sich, wenn die 3D-Szene nach einem Ausfall neu aufgebaut werden soll. */
   const [sceneKey, setSceneKey] = useState(0);
+  const { m } = useI18n();
 
   // Trikotnummern und Feldzahlen werden auf Canvas gezeichnet – Schriften müssen vorher geladen sein
   useEffect(() => {
@@ -155,7 +157,7 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
   if (!model) {
     return (
       <div className="tv-root">
-        <div className="tv-boot"><b>Für diese Saison liegen keine zwei Teams vor.</b></div>
+        <div className="tv-boot"><b>{m.trapview.noTeams}</b></div>
       </div>
     );
   }
@@ -178,11 +180,11 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
               model={model}
               notice={
                 stage === 'unsupported' ? (
-                  <>Die 3D-Ansicht braucht WebGL 2, das dieser Browser oder dieses Gerät nicht bereitstellt. Aufstellung und Duelle stehen hier als Übersicht.</>
+                  <>{m.trapview.noWebgl}</>
                 ) : (
                   <>
-                    {stage === 'lost' ? 'Der Browser hat die 3D-Ansicht beendet (Grafikspeicher).' : 'Die 3D-Ansicht konnte nicht aufgebaut werden.'}{' '}
-                    <button className="tv-btn" onClick={retry3d}>3D neu laden</button>
+                    {stage === 'lost' ? m.trapview.lost : m.trapview.failed}{' '}
+                    <button className="tv-btn" onClick={retry3d}>{m.trapview.reload3d}</button>
                   </>
                 )
               }

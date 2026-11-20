@@ -2,6 +2,7 @@ import Link from "next/link";
 import GameList from "@/components/GameList";
 import { playoffRound, toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { getGames, getMeta, getTeams, teamMap, teamNameIn } from "@/lib/data";
+import { T } from "@/i18n/react";
 
 export const metadata = { title: "Spiele" };
 
@@ -17,10 +18,10 @@ export default function GamesPage() {
   const videos = games.filter((g) => g.video).length;
   return (
     <main className="mx-auto max-w-[1000px] px-4 pb-24 pt-10 sm:px-6">
-      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink">Spiele</h1>
+      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink"><T k="games.title" /></h1>
       <p className="mb-8 mt-3 max-w-[68ch] text-[14px] text-ink-2">
-        Alle {games.length} Spiele mit Statistikbogen, Gastteam links, Heimteam rechts. Zu {videos} Spielen gibt es ein Highlight-Video (Symbol rechts). Einzelleistungen über alle Spiele hinweg findet die{" "}
-        <Link href="/analytics/spiele/" className="text-accent-text underline-offset-4 hover:underline">Game Search</Link>.
+        <T k="games.intro" a={[games.length, videos]} />{" "}
+        <Link href="/analytics/spiele/" className="text-accent-text underline-offset-4 hover:underline"><T k="games.gameSearch" /></Link>.
       </p>
       <GameList games={games} seasons={meta.seasons} teams={teams} />
     </main>

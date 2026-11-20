@@ -92,6 +92,9 @@ export function buildMainSequence(model: SceneModel): Shot[] {
       subtitle: olFilled || dlFilled
         ? `Offensive Line ${lineCount(olFilled, ol.length)} · Defensive Line ${lineCount(dlFilled, dl.length)}`
         : 'Offensive & Defensive Line · ohne Kader nicht belegbar',
+      sub: olFilled || dlFilled
+        ? { k: 'trapview.trenchesCount', a: [olFilled, ol.length, dlFilled, dl.length] }
+        : { k: 'trapview.trenchesNone' },
       duration: 9.5,
       path: [lineStart, orbit(65, 15, 7.6), orbit(90, 15, 8.4), orbit(115, 15, 7.6), orbit(140, 15, 6.4)],
       lookAt: [linesLook(-0.4), linesLook(0.4)],

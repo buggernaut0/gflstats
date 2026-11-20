@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { readQuery, writeQuery } from "@/lib/clientData";
 import type { TeamLite } from "@/lib/dashboard";
-import { fmtShortDate } from "@/lib/format";
 import { teamsAttr } from "@/lib/favorite";
 import TeamLogo from "./TeamLogo";
 import { VideoMark } from "./VideoPlayer";
+import { useI18n } from "@/i18n/react";
 
 export interface ListGame {
   id: string;
@@ -32,6 +32,8 @@ export default function GameList({ games, seasons, teams }: { games: ListGame[];
   const [team, setTeam] = useState("");
   const [onlyVideo, setOnlyVideo] = useState(false);
   const [ready, setReady] = useState(false);
+  const f = useI18n();
+  const g9 = f.m.games;
 
   // Filter stehen in der Adresse (teilbar), wie bei den Suchen
   useEffect(() => {
@@ -50,22 +52,22 @@ export default function GameList({ games, seasons, teams }: { games: ListGame[];
   const inSeason = games.filter((g) => g.season === season);
   const shown = inSeason.filter((g) => (!team || g.home === team || g.away === team) && (!onlyVideo || g.video)).sort((a, b) => a.date.localeCompare(b.date));
   const videoCount = inSeason.filter((g) => g.video).length;
-  const teamIds = [...new Set(inSeason.flatMap((g) => [g.home, g.away]))].sort((a, b) => (teams[a]?.name ?? a).localeCompare(teams[b]?.name ?? b, "de"));
+  const teamIds = [...new Set(inSeason.flatMap((g) => [g.home, g.away]))].sort((a, b) => (teams[a]?.name ?? a).localeCompare(teams[b]?.name ?? b, f.locale));
   const byDate = new Map<string, ListGame[]>();
   for (const g of shown) byDate.set(g.date, [...(byDate.get(g.date) ?? []), g]);
 
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div role="tablist" aria-label="Saison" className="flex gap-1">
+        <div role="tablist" aria-label={f.m.common.season} className="flex gap-1">
           {[...seasons].reverse().map((s) => (
             <button key={s} role="tab" type="button" aria-selected={s === season} onClick={() => { setSeason(s); setTeam(""); }} className={`num rounded-md px-2.5 py-1 text-[14px] font-medium ${s === season ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"}`}>
               {s}
             </button>
           ))}
         </div>
-        <select value={team} onChange={(e) => setTeam(e.target.value)} aria-label="Team filtern" className="h-9 rounded-md border border-line bg-surface px-2 text-[14px] text-ink">
-          <option value="">Alle Teams</option>
+        <select value={team} onChange={(e) => setTeam(e.target.value)} aria-label={g9.teamFilter} className="h-9 rounded-md border border-line bg-surface px-2 text-[14px] text-ink">
+          <option value="">{f.m.common.allTeams}</option>
           {teamIds.map((t) => (
             <option key={t} value={t}>
               {teams[t]?.name ?? t}
@@ -74,18 +76,18 @@ export default function GameList({ games, seasons, teams }: { games: ListGame[];
         </select>
         {videoCount > 0 && (
           <label className="flex items-center gap-2 text-[13.5px] text-ink-2">
-            <input type="checkbox" checked={onlyVideo} onChange={(e) => setOnlyVideo(e.target.checked)} className="accent-[var(--accent)]" /> nur mit Highlights ({videoCount})
+            <input type="checkbox" checked={onlyVideo} onChange={(e) => setOnlyVideo(e.target.checked)} className="accent-[var(--accent)]" /> {g9.onlyHighlights(videoCount)}
           </label>
         )}
-        <span className="text-[13px] text-ink-3">{shown.length} Spiele</span>
+        <span className="text-[13px] text-ink-3">{g9.count(shown.length)}</span>
       </div>
-      {shown.length === 0 && <p className="text-[14px] text-ink-3">Keine Spiele in dieser Auswahl.</p>}
+      {shown.length === 0 && <p className="text-[14px] text-ink-3">{g9.none}</p>}
       <div className="flex flex-col gap-5">
         {[...byDate.entries()].map(([date, list]) => (
           <section key={date}>
             <h2 className="num mb-1.5 text-[13px] font-medium text-ink-3">
-              {fmtShortDate(date)}{date.slice(0, 4)}
-              {list.some((g) => g.playoff) && <span className="ml-2 rounded border border-line px-1 text-[10.5px]">{list.find((g) => g.round)?.round ?? "Playoffs"}</span>}
+              {f.fmtShortDate(date)}{f.lang === "en" ? "/" : ""}{date.slice(0, 4)}
+              {list.some((g) => g.playoff) && <span className="ml-2 rounded border border-line px-1 text-[10.5px]">{(() => { const r = list.find((g) => g.round)?.round; return r ? g9.rounds[r] ?? r : f.m.common.playoffs; })()}</span>}
             </h2>
             <ul className="overflow-hidden rounded-xl border border-line bg-surface">
               {list.map((g) => {
@@ -108,7 +110,7 @@ export default function GameList({ games, seasons, teams }: { games: ListGame[];
                         <TeamLogo team={teams[g.home]} size={24} />
                         <span className="truncate sm:hidden">{teams[g.home]?.short ?? g.homeName}</span>
                         <span className="hidden truncate sm:inline">{g.homeName}</span>
-                        {g.video && <span className="ml-auto shrink-0 pl-1"><VideoMark label="" /><span className="sr-only">Highlights vorhanden</span></span>}
+                        {g.video && <span className="ml-auto shrink-0 pl-1"><VideoMark label="" /><span className="sr-only">{g9.hasHighlights}</span></span>}
                       </span>
                     </Link>
                   </li>

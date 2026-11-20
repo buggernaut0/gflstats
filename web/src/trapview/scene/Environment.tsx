@@ -158,8 +158,8 @@ export function Environment() {
       {/* Lokale Reflexionsumgebung für Helme – keine externen Dateien */}
       <DreiEnvironment resolution={256} frames={1} environmentIntensity={0.4}>
         <color attach="background" args={['#020305']} />
-        <Lightformer form="rect" intensity={5} color="#dfe8ff" position={[-6, 9, 6]} scale={[10, 3, 1]} target={[0, 0, 0]} />
-        <Lightformer form="rect" intensity={3} color="#a9c4ff" position={[8, 6, -8]} scale={[8, 2, 1]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={5} color="#eef2fb" position={[-6, 9, 6]} scale={[10, 3, 1]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={3} color="#d6e0f7" position={[8, 6, -8]} scale={[8, 2, 1]} target={[0, 0, 0]} />
         <Lightformer form="rect" intensity={1.5} color="#ffd8b0" position={[-9, 4, -7]} scale={[6, 2, 1]} target={[0, 0, 0]} />
         <Lightformer form="ring" intensity={2} color="#ffffff" position={[0, 12, 0]} scale={4} target={[0, 0, 0]} />
       </DreiEnvironment>

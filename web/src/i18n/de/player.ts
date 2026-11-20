@@ -1,0 +1,118 @@
+/** Spielerprofil, Saisontabellen, Spielprotokoll, Radar, Videos, Herkunft der Zahlen, Elite. */
+export const player = {
+  derivedRole: "(aus Statistik abgeleitet)",
+  roleUnclear: "Rolle nicht eindeutig",
+  eliteLine: (season: number) => `Top 10 der Liga ${season} in der Positionsgruppe`,
+  eliteRank: (rank: number, of: number, group: string) => ` (Platz ${rank} von ${of} ${group})`,
+  shared: "Gemeinsamer Eintrag zweier Spieler in der Quelle; wird in Ranglisten nicht gewertet.",
+  seasons: "Saisons",
+  games: "Spiele",
+  gamesHint: "mit Eintrag im Statistikbogen",
+  currentTeam: "Aktuelles Team",
+  lastTeam: "Letztes Team",
+  asOfSeason: (s: number) => `Stand Saison ${s}`,
+  formerTeams: "Frühere Teams",
+  jersey: "Rückennummer",
+  sizeWeight: "Größe, Gewicht",
+  noInfo: "keine Angabe",
+  careerTitle: (first: number) => `Karriere seit ${first}`,
+  careerNote: (season: number) => `Summe aller Spiele (Regular Season und Playoffs). Rang = Platz in der Liga ${season}.`,
+  seasonRank: (season: number, rank: number, of: number) => `${season}: Rang ${rank} von ${of}`,
+  profileTitle: (season: number) => `Profil ${season}`,
+  profileNote: (group: string, season: number, min: string, n: number) =>
+    `Perzentil je Kennzahl innerhalb der Vergleichsgruppe ${group} ${season} (${min}, mind. 4 Spiele; ${n} Spieler). 90 heißt: besser als 90 % der Gruppe.`,
+  midrank: "Perzentil nach Mittelrang-Methode",
+  notInGroup: (name: string, season: number) => `${name} erreicht ${season} das Mindestvolumen nicht. Die Werte sind gegen die Gruppe eingeordnet, er selbst gehört nicht dazu.`,
+  colStat: "Kennzahl",
+  colValue: "Wert",
+  colMedian: "Median Gruppe",
+  colPct: "Perzentil",
+  lowerBetter: "(weniger ist besser)",
+  compareLink: "Mit anderen Spielern vergleichen",
+  statsTitle: "Statistiken nach Saison",
+  statsNote: "Je Saison und Team. Filter nach Spielphase und Team.",
+  ratesDetail: "Quoten und pro-Spiel-Werte",
+  logTitle: "Spielprotokoll",
+  logNote: "Jedes Spiel mit Eintrag im Statistikbogen.",
+  videosTitle: "Highlights",
+  videosNote: "Videos, die diesem Spieler zugeordnet sind.",
+  sourceNames: (n: number, names: string) => `In der Quelle unter ${n} Schreibweisen geführt: ${names}.`,
+  whyMerged: "Warum zusammengeführt?",
+  devTitle: "Entwicklung",
+  devNote: (label: string, formula: string) => `${label} je Saison (${formula}).`,
+  devAria: (label: string, values: string) => `${label} je Saison: ${values}`,
+  gamesShort: (n: number) => `${n} Sp`,
+  noPhoto: "Kein Spielerfoto vorhanden",
+  // Saisontabellen
+  noGamesSel: "Keine Spiele in dieser Auswahl.",
+  gamesCol: "Sp",
+  gamesColHint: "Spiele mit Eintrag im Statistikbogen",
+  careerRow: "Karriere",
+  careerRowFiltered: "Summe Auswahl",
+  tables: { passing: "Passing", rushing: "Rushing", receiving: "Receiving", defense: "Defense", kicking: "Kicking und Punting", returns: "Returns" } as Record<string, string>,
+  statsFootnote: "„n. e.“ = in dieser Saison nicht erfasst. Spalten mit Formel: Maus über die Überschrift. Die Gesamtzeile summiert die gezeigten Zeilen; Quoten werden aus den Summen neu berechnet.",
+  // Spielprotokoll
+  playoffShort: "PO",
+  logLegend: "S = Sieg, N = Niederlage, PO = Playoff-Spiel. „vs“ Heimspiel, „@“ Auswärtsspiel.",
+  // Radar
+  radarView: "Ansicht des Radars",
+  radarDrag: "Ziehen dreht die Ansicht. Höhe und Abstand zeigen denselben Wert.",
+  radarNo3d: "Die 3D-Ansicht kann in diesem Browser nicht dargestellt werden, es wird die 2D-Ansicht gezeigt.",
+  medianGroup: "Median der Vergleichsgruppe",
+  medianGroupPct: "Median der Vergleichsgruppe (50. Perzentil)",
+  radarAria: (names: string) => `Radar-Vergleich: ${names}`,
+  radar3dAria: (names: string) => `3D-Ansicht des Radar-Vergleichs: ${names}. Mit den Pfeiltasten drehen und kippen. Die Werte stehen in der Tabelle.`,
+  lineSolid: "durchgezogen",
+  lineDashed: "gestrichelt",
+  lineDotted: "gepunktet",
+  radarLoading: "3D-Ansicht wird geladen …",
+  nthPercentile: (n: number) => `${n}. Perzentil`,
+  logoMissing: (name: string) => `${name} (kein Logo hinterlegt)`,
+  portraitAlt: (alt: string) => `${alt} – stilisierte Darstellung, kein Foto vorhanden`,
+  // Videos
+  noVideos: "Noch keine Highlight-Videos hinterlegt.",
+  noVideosHow: "Videos werden in curation/videos.json mit der Spieler-ID eingetragen. YouTube erscheint direkt hier, Instagram als Link.",
+  videoTitle: "Highlight-Video",
+  onInstagram: "Auf Instagram ansehen",
+  playVideo: (t: string) => `Video abspielen: ${t}`,
+  loadsOnClick: "YouTube, lädt erst beim Klick",
+  channel: (c: string) => `, Kanal ${c}`,
+  videoMarkTitle: "Zu diesem Spiel gibt es ein Highlight-Video",
+  openYoutube: "Auf YouTube öffnen",
+};
+
+export const source = {
+  original: "Original",
+  originalHint: "Summe der Werte aus den Spielbögen von statsnscore.online",
+  derived: "Berechnet",
+  derivedHint: "Aus Originalwerten berechnet; Formel auf der Methodik-Seite",
+  rank: "Ranking",
+  rankHint: "Sortierung der Werte; gleiche Werte teilen sich den Rang",
+  model: "Modell",
+  modelHint: "Eigene Bewertung; Kriterien und Gewichte auf der Methodik-Seite",
+};
+
+/** Elite: beste zehn je Positionsgruppe (Profil-ID aus trapview/spotlight/elite.ts). */
+export const elite = {
+  word: "Elite",
+  top10: (title: string) => `Top 10 ${title}`,
+  srRank: (rank: number, group: string) => `, Platz ${rank} der ${group}`,
+  tooltip: (season: number | undefined, rank: number, group: string, of: number, score: number) =>
+    `Elite${season ? ` ${season}` : ""}: Platz ${rank} der ${group} (Top 10 von ${of}, Profilwert ${score})`,
+  groups: {
+    qb: { group: "Quarterbacks", title: "Quarterbacks", short: "QB" },
+    rb: { group: "Running Backs", title: "Running Backs", short: "RB" },
+    rec: { group: "Receiver (WR/TE)", title: "Receiver", short: "WR/TE" },
+    rusher: { group: "Pass Rusher (Defense)", title: "Pass Rusher", short: "Pass Rush" },
+    tackler: { group: "Tackler (Defense)", title: "Tackler", short: "Tackling" },
+    coverage: { group: "Coverage-Verteidiger (Defense)", title: "Coverage", short: "Coverage" },
+  } as Record<string, { group: string; title: string; short: string }>,
+};
+
+export const seasonNotice = {
+  title: (s: number) => `Keine Daten für ${s}.`,
+  player: (current: number, latest: number) =>
+    `In der Saison ${current} ist kein Einsatz erfasst. Alle Werte stammen aus früheren Saisons – zuletzt ${latest} – und sind mit ihrer Saison gekennzeichnet.`,
+  team: (current: number, latest: number) =>
+    `Das Team ist in der Saison ${current} nicht in den GFL-Daten. Gezeigt wird zuerst ${latest}; alle Werte sind mit ihrer Saison gekennzeichnet.`,
+};

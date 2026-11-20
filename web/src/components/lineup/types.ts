@@ -14,7 +14,8 @@ export interface FieldPlayer {
   /** Rueckennummer laut offiziellem Kader */
   number: number | null;
   games: number;
-  stats: { label: string; value: string }[];
+  /** Kennzahl-Schlüssel und Saisonwert (Name und Format je Sprache in der Anzeige) */
+  stats: { key: string; value: number }[];
   /** Formationsgruppe (QB, RB, WR, TE, OL, DL, LB, DB) – bestimmt Haltung und Koerperbau der Figur */
   spot: string;
   /** Lineman-Platz der Formation (tiefe Haltung) */

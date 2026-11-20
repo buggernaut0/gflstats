@@ -5,12 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { readQuery, useData, writeQuery } from "@/lib/clientData";
 import { GAME_STAT_OPTIONS, ROLES } from "@/lib/explore";
 import { fmtShortDate } from "@/lib/format";
-import { decodeConditions, describe, encodeConditions, matches, type Condition, type Logic } from "@/lib/query";
+import { decodeConditions, encodeConditions, matches, type Condition, type Logic } from "@/lib/query";
 import { ROLE_LABELS, STAT, formatStat, stat, statAvailable, value } from "@/lib/stats";
 import { GAMELOG_COLS } from "@/lib/tables";
 import type { Game, Meta, Player, PlayerGame, Team } from "@/lib/types";
 import { Loading } from "./Loading";
-import QueryBuilder, { Field, inputCls, selectCls } from "./QueryBuilder";
+import QueryBuilder, { Field, describeCondition, inputCls, selectCls } from "./QueryBuilder";
+import { useI18n } from "@/i18n/react";
 import ResultTable, { type Column } from "./ResultTable";
 import TeamTag from "./TeamTag";
 import SeasonOptions from "@/components/SeasonOptions";
@@ -51,6 +52,8 @@ export default function GameSearch() {
   const [name, setName] = useState("");
   const [conds, setConds] = useState<Condition[]>(PRESETS[2].conds);
   const [logic, setLogic] = useState<Logic>("and");
+  const f = useI18n();
+  const a = f.m.analytics;
 
   useEffect(() => {
     const q = readQuery();
@@ -100,21 +103,21 @@ export default function GameSearch() {
 
   const show = [...new Set([...conds.map((c) => c.stat), ...(GAMELOG_COLS[role] ?? [])])].slice(0, 8);
   const columns: Column<GRow>[] = [
-    { key: "name", label: "Spieler", align: "left", render: (r) => <Link href={`/spieler/${r.player}/`} className="hover:underline hover:underline-offset-4">{r.name}</Link>, sort: (r) => r.name, descFirst: false },
-    { key: "team", label: "Team", align: "left", render: (r) => <TeamTag team={teams[r.team]} /> },
-    { key: "opp", label: "Gegner", align: "left", render: (r) => <span className="flex items-center gap-1 text-ink-3">{r.home ? "vs" : "@"} <TeamTag team={teams[r.opponent]} /></span> },
-    { key: "date", label: "Datum", align: "left", render: (r) => <span className="num text-ink-2">{fmtShortDate(r.game.date)}{r.game.season}{r.game.type === "playoff" && <span className="ml-1 text-[11px] text-ink-3">PO</span>}</span>, sort: (r) => r.game.date },
+    { key: "name", label: f.m.common.player, align: "left", render: (r) => <Link href={`/spieler/${r.player}/`} className="hover:underline hover:underline-offset-4">{r.name}</Link>, sort: (r) => r.name, descFirst: false },
+    { key: "team", label: f.m.common.team, align: "left", render: (r) => <TeamTag team={teams[r.team]} /> },
+    { key: "opp", label: f.m.common.opponent, align: "left", render: (r) => <span className="flex items-center gap-1 text-ink-3">{r.home ? f.m.common.vs : f.m.common.at} <TeamTag team={teams[r.opponent]} /></span> },
+    { key: "date", label: f.m.common.date, align: "left", render: (r) => <span className="num text-ink-2">{f.fmtShortDate(r.game.date)}{f.lang === "en" ? "/" : ""}{r.game.season}{r.game.type === "playoff" && <span className="ml-1 text-[11px] text-ink-3">{f.m.player.playoffShort}</span>}</span>, sort: (r) => r.game.date },
     {
-      key: "result", label: "Spiel", align: "left",
+      key: "result", label: a.gameCol, align: "left",
       render: (r) => {
         const ts = r.home ? r.game.homeScore : r.game.awayScore;
         const os = r.home ? r.game.awayScore : r.game.homeScore;
-        return <Link href={`/spiele/${r.game.id}/`} className="num hover:underline hover:underline-offset-4"><span className={ts > os ? "text-win" : ts < os ? "text-loss" : "text-ink-2"}>{ts > os ? "S" : ts < os ? "N" : "U"}</span> {ts}:{os}</Link>;
+        return <Link href={`/spiele/${r.game.id}/`} className="num hover:underline hover:underline-offset-4"><span className={ts > os ? "text-win" : ts < os ? "text-loss" : "text-ink-2"}>{ts > os ? f.m.common.win : ts < os ? f.m.common.loss : f.m.common.tie}</span> {ts}:{os}</Link>;
       },
     },
     ...show.map((k) => ({
-      key: k, label: stat(k).abbr, title: stat(k).formula ? `${stat(k).label}: ${stat(k).formula}` : stat(k).label,
-      render: (r: GRow) => (statAvailable(stat(k), r.game.season, meta.availability) ? formatStat(stat(k), value(stat(k), r.s, 1)) : <span className="text-[12px] text-ink-3">n. e.</span>),
+      key: k, label: f.statAbbr(k), title: f.m.stats.formula(stat(k)) ? `${f.statLabel(k)}: ${f.m.stats.formula(stat(k))}` : f.statLabel(k),
+      render: (r: GRow) => (statAvailable(stat(k), r.game.season, meta.availability) ? f.fmtStat(stat(k), value(stat(k), r.s, 1)) : <span className="text-[12px] text-ink-3">{f.m.common.notRecorded}</span>),
       sort: (r: GRow) => (statAvailable(stat(k), r.game.season, meta.availability) ? value(stat(k), r.s, 1) : null), descFirst: !stat(k).lowerIsBetter,
     })),
   ];
@@ -124,55 +127,55 @@ export default function GameSearch() {
       <div className="mb-4 flex flex-wrap gap-2">
         {PRESETS.map((p) => (
           <button key={p.label} type="button" onClick={() => { setConds(p.conds); setLogic(p.logic ?? "and"); setRole(p.role ?? ""); }} className="rounded-full border border-line px-3 py-1 text-[13px] text-ink-2 hover:border-line-strong hover:text-ink">
-            {p.label}
+            {a.gamePresets[PRESETS.indexOf(p)] ?? p.label}
           </button>
         ))}
       </div>
       <div className="mb-4 flex flex-wrap items-end gap-4">
-        <Field label="Saison">
+        <Field label={f.m.common.season}>
           <select value={seasonSelectValue(season, meta.currentSeason)} onChange={(e) => setSeason(e.target.value)} className={selectCls}>
             <SeasonOptions seasons={meta.seasons} current={meta.currentSeason} />
           </select>
         </Field>
-        <Field label="Spielphase">
+        <Field label={a.phase}>
           <select value={phase} onChange={(e) => setPhase(e.target.value)} className={selectCls}>
-            <option value="">Alle Spiele</option>
-            <option value="regular">Regular Season</option>
-            <option value="playoff">Playoffs</option>
+            <option value="">{a.allGames}</option>
+            <option value="regular">{f.m.common.regularSeason}</option>
+            <option value="playoff">{f.m.common.playoffs}</option>
           </select>
         </Field>
-        {[["Team", team, setTeam], ["Gegner", opp, setOpp]].map(([l, v, f]) => (
+        {[[f.m.common.team, team, setTeam], [a.opponent, opp, setOpp]].map(([l, v, set]) => (
           <Field key={l as string} label={l as string}>
-            <select value={v as string} onChange={(e) => (f as (x: string) => void)(e.target.value)} className={selectCls}>
-              <option value="">Alle</option>
-              {[...teamList].sort((a, b) => a.name.localeCompare(b.name, "de")).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            <select value={v as string} onChange={(e) => (set as (x: string) => void)(e.target.value)} className={selectCls}>
+              <option value="">{f.m.common.all}</option>
+              {[...teamList].sort((x, y) => x.name.localeCompare(y.name, f.locale)).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </Field>
         ))}
-        <Field label="Rolle (abgeleitet)">
+        <Field label={f.m.common.roleDerived}>
           <select value={role} onChange={(e) => setRole(e.target.value)} className={selectCls}>
-            <option value="">Alle</option>
-            {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+            <option value="">{f.m.common.allRoles}</option>
+            {ROLES.map((r) => <option key={r} value={r}>{f.m.stats.roles[r] ?? r}</option>)}
           </select>
         </Field>
-        <Field label="Spielername">
+        <Field label={a.playerName}>
           <input type="search" value={name} onChange={(e) => setName(e.target.value)} className={`${inputCls} w-44`} />
         </Field>
       </div>
       <QueryBuilder conditions={conds} logic={logic} options={GAME_STAT_OPTIONS} defaultStat="receivingyards" onChange={(c, l) => { setConds(c); setLogic(l); }} />
       <div className="mb-3 mt-6 flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-[14px] text-ink">
-          <span className="num font-semibold">{hits.length}</span> Spielleistungen von <span className="num font-semibold">{players.size}</span> Spielern
-          {conds.length > 0 && <span className="text-ink-3"> mit {conds.map((c) => describe(c, stat(c.stat).label)).join(logic === "and" ? " und " : " oder ")} in einem Spiel</span>}
+          <span className="font-semibold">{a.gameHits(hits.length, players.size)}</span>
+          {conds.length > 0 && <span className="text-ink-3">{a.inAGame(conds.map((c) => describeCondition(c, f.statLabel(c.stat), f)).join(` ${logic === "and" ? f.m.common.and : f.m.common.or} `))}</span>}
         </p>
         {top.length > 1 && (
           <p className="text-[13px] text-ink-3">
-            Am häufigsten: {top.map(([id, p], i) => <span key={id}>{i > 0 && ", "}<Link href={`/spieler/${id}/`} className="text-ink-2 hover:underline">{p.name}</Link> ({p.n}×)</span>)}
+            {a.mostOften} {top.map(([id, p], i) => <span key={id}>{i > 0 && ", "}<Link href={`/spieler/${id}/`} className="text-ink-2 hover:underline">{p.name}</Link> ({p.n}×)</span>)}
           </p>
         )}
       </div>
-      <ResultTable rows={hits} columns={columns} initialSort={{ key: show[0] ?? "date", desc: true }} rowKey={(r) => r.key} rowTeams={(r) => r.team} caption="Ergebnisse der Spielsuche" key={show.join()} />
-      <p className="mt-3 text-[12.5px] text-ink-3">Jede Zeile ist ein Spieler in einem Spiel. „n. e.“ = in dieser Saison nicht erfasst; solche Werte erfüllen keine Bedingung.</p>
+      <ResultTable rows={hits} columns={columns} initialSort={{ key: show[0] ?? "date", desc: true }} rowKey={(r) => r.key} rowTeams={(r) => r.team} caption={a.gameCaption} key={show.join()} />
+      <p className="mt-3 text-[12.5px] text-ink-3">{a.gameFoot}</p>
     </div>
   );
 }

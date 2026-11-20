@@ -14,6 +14,7 @@ import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import type { RadarSeries } from "./Radar";
+import { useI18n } from "@/i18n/react";
 
 const R = 10; // Radius des Bodens (= 100)
 const H = 4.6; // Hoehe bei 100
@@ -34,6 +35,7 @@ export default function Radar3D({ axes, series, median, onFail }: Props) {
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
   const [theme, setTheme] = useState(0);
+  const { m } = useI18n();
   const view = useRef({ rot: -0.5, elev: 0.62 }); // bleibt beim Neuaufbau (Theme, Daten) erhalten
   const played = useRef(false);
 
@@ -323,7 +325,7 @@ export default function Radar3D({ axes, series, median, onFail }: Props) {
       ref={mount}
       tabIndex={0}
       role="img"
-      aria-label={`3D-Ansicht des Radar-Vergleichs: ${series.filter((s) => !s.hidden).map((s) => s.name).join(", ")}. Mit den Pfeiltasten drehen und kippen. Die Werte stehen in der Tabelle.`}
+      aria-label={m.player.radar3dAria(series.filter((s) => !s.hidden).map((s) => s.name).join(", "))}
       className="radar3d relative overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
     >
       {axes.map((label, i) => (
@@ -355,7 +357,7 @@ export default function Radar3D({ axes, series, median, onFail }: Props) {
           <p className="text-ink-2">
             {axes[hover.a]}: <span className="num font-semibold text-ink">{tip.raw[hover.a]}</span>
           </p>
-          <p className="text-ink-3">{tip.pct[hover.a] === null ? "nicht erfasst" : `${Math.round(tip.pct[hover.a]!)}. Perzentil`}</p>
+          <p className="text-ink-3">{tip.pct[hover.a] === null ? m.common.notRecordedLong : m.player.nthPercentile(Math.round(tip.pct[hover.a]!))}</p>
         </div>
       )}
     </div>

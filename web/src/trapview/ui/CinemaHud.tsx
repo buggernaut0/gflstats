@@ -5,6 +5,7 @@ import { MatchupPanel } from '../matchup/MatchupPanel';
 import { DuelBar } from '../matchup/DuelBar';
 import { EliteRoster } from './EliteRoster';
 import { EliteCrest } from '../../components/EliteBadge';
+import { useI18n } from '../../i18n/react';
 import { SpotlightCard } from '../spotlight/SpotlightCard';
 import { useTrapView } from '../state/store';
 import type { AudioStatus } from '../audio/AudioEngine';
@@ -27,6 +28,8 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: 
   const muted = useTrapView((s) => s.muted);
   const restartToken = useTrapView((s) => s.restartToken);
   const { setMatchup, setVolume, toggleMuted, restart } = useTrapView.getState();
+  const i18n = useI18n();
+  const tv = i18n.m.trapview;
 
   const [idle, setIdle] = useState(false);
   useEffect(() => {
@@ -78,10 +81,10 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: 
 
       <div className="tv-hud__top tv-fade">
         <span className="tv-wordmark tv-wordmark--sm">TRAP VIEW</span>
-        <span className="tv-tag">Saison {model.season.season}</span>
-        {provisional && <span className="tv-tag" title="Ohne offiziellen Kader: keine Rückennummern, Positionen nur grob aus der Statistik">Vorläufige Aufstellung</span>}
+        <span className="tv-tag">{tv.seasonTag(model.season.season)}</span>
+        {provisional && <span className="tv-tag" title={tv.provisionalHint}>{tv.provisional}</span>}
         {eliteCount > 0 && (
-          <span className="tv-tag tv-tag--elite" title={`Elite-Spieler auf dem Feld (Top 10 ihrer Positionsgruppe ${model.season.season}): ${model.offense.abbreviation} Offense ${model.elite.offense.length}, ${model.defense.abbreviation} Defense ${model.elite.defense.length}`}>
+          <span className="tv-tag tv-tag--elite" title={tv.eliteTag(model.season.season, model.offense.abbreviation, model.elite.offense.length, model.defense.abbreviation, model.elite.defense.length)}>
             <EliteCrest />
             Elite {model.elite.offense.length} · {model.elite.defense.length}
           </span>
@@ -94,7 +97,7 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: 
           <span className="tv-chapter__idx">{String(chapter.index + 1).padStart(2, '0')}</span>
           <span className="tv-chapter__text">
             <b>{chapter.title}</b>
-            <small>{chapter.subtitle}</small>
+            <small>{chapter.sub ? i18n.t(chapter.sub.k, ...(chapter.sub.a ?? [])) : chapter.subtitle}</small>
           </span>
         </div>
       )}
@@ -128,7 +131,7 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: 
       {active && <MatchupPanel model={model} matchup={active} index={index} season={model.season} onClose={() => setMatchup(null)} />}
 
       <div className="tv-controls tv-fade">
-        {audioStatus === 'missing' && <span className="tv-tag" title="Musikdatei fehlt oder ist nicht abspielbar">No audio</span>}
+        {audioStatus === 'missing' && <span className="tv-tag" title={tv.audioMissing}>No audio</span>}
         {audioStatus === 'blocked' && <button className="tv-btn tv-btn--call" onClick={onUnlockAudio}>Sound on</button>}
         <button className="tv-btn" onClick={restart}>{ended ? 'Replay' : 'Restart'}</button>
         <button className="tv-btn" onClick={toggleMuted} aria-pressed={muted}>{muted ? 'Unmute' : 'Mute'}</button>

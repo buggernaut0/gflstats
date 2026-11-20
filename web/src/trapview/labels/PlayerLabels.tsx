@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import type { SceneModel, ScenePlayer } from '../data/sceneModel';
 import { buildRig, labelAnchor } from '../players/rig';
 import { useTrapView } from '../state/store';
-import { EliteCrest } from '../../components/EliteBadge';
+import { EliteCrest, eliteText } from '../../components/EliteBadge';
+import { useI18n } from '../../i18n/react';
 
 /** Gemeinsame Ablage: Spieler-ID → DOM-Element des Labels. */
 export type LabelRegistry = Map<string, HTMLDivElement>;
@@ -30,6 +31,7 @@ const Label = memo(function Label({ p, state, registry }: { p: ScenePlayer; stat
   const number = p.player?.number;
   // Elite: beste zehn der Positionsgruppe (Datenexport, spotlight/elite.ts) – kleines Wappen auf der Plakette
   const elite = p.player?.elite?.[0] ?? null;
+  const { m } = useI18n();
   const cls = state === 'off' ? '' : state === 'on' ? ' is-on' : ` is-on is-${state}`;
   return (
     <div
@@ -53,7 +55,7 @@ const Label = memo(function Label({ p, state, registry }: { p: ScenePlayer; stat
             {elite && <EliteCrest className="tv-label__elite" />}
             <span className="tv-label__text">
               <span className="tv-label__pos">{p.posLabel}</span>
-              <span className="tv-label__name">{p.shortName ?? 'nicht belegt'}</span>
+              <span className="tv-label__name">{p.shortName ?? m.trapview.vacant}</span>
             </span>
           </div>
           <div className="tv-label__tick" />
@@ -63,8 +65,8 @@ const Label = memo(function Label({ p, state, registry }: { p: ScenePlayer; stat
           <div className="tv-elite-pin">
             <EliteCrest className="tv-elite-pin__crest" />
             <span className="tv-elite-pin__text">
-              <b>Elite</b>
-              <small>#{elite.rank} {elite.short}</small>
+              <b>{m.elite.word}</b>
+              <small>#{elite.rank} {eliteText(elite, m).short}</small>
             </span>
           </div>
         )}
