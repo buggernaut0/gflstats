@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { MessagePath } from '../../i18n/messages';
 
 export type Phase = 'select' | 'entering' | 'cinema';
 
@@ -11,7 +12,8 @@ interface TrapViewState {
   /** IDs der Spieler, deren Label gerade sichtbar ist (setzt der Kamera-Director). */
   visibleLabels: string[];
   /** Aktueller Abschnitt der Präsentation für die Bauchbinde. */
-  chapter: { index: number; shot: string; title: string; subtitle: string } | null;
+  /** sub: Untertitel als Text-Pfad in src/i18n (mit Werten), sonst subtitle */
+  chapter: { index: number; shot: string; title: string; subtitle: string; sub?: { k: MessagePath; a?: unknown[] } } | null;
   /**
    * Laufendes Player Spotlight (setzt der Kamera-Director): Index in model.spotlights, Dauer der
    * Einstellung und ein Schlüssel, der sich bei jeder Wiederholung ändert (startet die Karten-Animation neu).

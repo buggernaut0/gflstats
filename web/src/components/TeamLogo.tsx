@@ -28,7 +28,7 @@ export default function TeamLogo({ team, size = 32, className = "" }: { team: Lo
         // eslint-disable-next-line @next/next/no-img-element -- statischer Export, Bilder sind bereits klein
         <img src={`${BASE}/${team.logo}`} alt={`Logo ${team.name}`} width={size} height={size} loading="lazy" style={{ width: size * 0.82, height: size * 0.82, objectFit: "contain" }} />
       ) : (
-        <span className="display font-bold text-[#e9eef5]" style={{ fontSize: Math.max(9, size * 0.32) }} aria-label={`${team.name} (kein Logo hinterlegt)`}>
+        <span className="display font-bold text-[#e9eef5]" style={{ fontSize: Math.max(9, size * 0.32) }} aria-label={team.name}>
           {team.abbr}
         </span>
       )}

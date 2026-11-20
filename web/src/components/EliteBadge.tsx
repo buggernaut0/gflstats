@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Elite-Abzeichen: kennzeichnet die besten zehn Spieler einer Positionsgruppe (trapview/spotlight/elite.ts).
  * Wird nur gezeigt, wenn ein Elite-Eintrag vorliegt – die Komponente vergibt selbst nichts.
@@ -6,11 +8,19 @@
  *   md – Profilkopf und Duell-Ansicht: ELITE + „#3 QB“
  *   sm – Tabellen und Listen: nur Wappen + ELITE, Details im Tooltip
  * Gestaltung in globals.css (.elite-badge), damit Website und Trap View dasselbe Abzeichen zeigen.
+ * Gruppennamen in der gewählten Sprache (src/i18n, elite.groups – über die Profil-ID, nicht den gespeicherten Text).
  */
 import type { EliteEntry } from "@/trapview/spotlight/elite";
+import type { Messages } from "@/i18n/messages";
+import { useI18n } from "@/i18n/react";
 
-export function eliteTitle(e: EliteEntry, season?: number): string {
-  return `Elite${season ? ` ${season}` : ""}: Platz ${e.rank} der ${e.group} (Top 10 von ${e.of}, Profilwert ${Math.round(e.score)})`;
+/** Gruppe, Titel und Kurzform eines Elite-Eintrags in der gewählten Sprache. */
+export function eliteText(e: EliteEntry, m: Messages) {
+  return m.elite.groups[e.profile] ?? { group: e.group, title: e.title, short: e.short };
+}
+
+export function eliteTitle(e: EliteEntry, m: Messages, season?: number): string {
+  return m.elite.tooltip(season, e.rank, eliteText(e, m).group, e.of, Math.round(e.score));
 }
 
 export function EliteCrest({ className = "" }: { className?: string }) {
@@ -34,17 +44,19 @@ export default function EliteBadge({
   season?: number;
   className?: string;
 }) {
+  const { m } = useI18n();
+  const g = eliteText(entry, m);
   return (
-    <span className={`elite-badge elite-badge--${size} ${className}`} title={eliteTitle(entry, season)}>
+    <span className={`elite-badge elite-badge--${size} ${className}`} title={eliteTitle(entry, m, season)}>
       <EliteCrest />
-      <span className="elite-badge__word">Elite</span>
-      {size === "md" && <span className="elite-badge__meta">#{entry.rank} {entry.short}</span>}
+      <span className="elite-badge__word">{m.elite.word}</span>
+      {size === "md" && <span className="elite-badge__meta">#{entry.rank} {g.short}</span>}
       {size === "lg" && (
         <span className="elite-badge__meta">
-          <b>#{entry.rank}</b> Top 10 {entry.title ?? entry.group}
+          <b>#{entry.rank}</b> {m.elite.top10(g.title)}
         </span>
       )}
-      <span className="sr-only">{`, Platz ${entry.rank} der ${entry.group}`}</span>
+      <span className="sr-only">{m.elite.srRank(entry.rank, g.group)}</span>
     </span>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "@/i18n/react";
 
 type Entry = [kind: "p" | "t", id: string, name: string, extra: string];
 
@@ -12,6 +13,7 @@ const norm = (s: string) =>
 /** Globale Suche nach Spielern und Teams. Taste "/" springt ins Suchfeld. */
 export default function SearchBox() {
   const router = useRouter();
+  const { m } = useI18n();
   const [index, setIndex] = useState<Entry[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [q, setQ] = useState("");
@@ -64,7 +66,7 @@ export default function SearchBox() {
   return (
     <div className="relative w-full sm:w-64 md:w-48 xl:w-64">
       <label htmlFor="global-search" className="sr-only">
-        Spieler oder Team suchen
+        {m.shell.searchLabel}
       </label>
       <svg className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
         <circle cx="11" cy="11" r="6.5" />
@@ -75,7 +77,7 @@ export default function SearchBox() {
         id="global-search"
         type="search"
         autoComplete="off"
-        placeholder="Spieler oder Team"
+        placeholder={m.shell.searchPlaceholder}
         value={q}
         onFocus={() => {
           load();
@@ -113,9 +115,9 @@ export default function SearchBox() {
           role="listbox"
           className="absolute right-0 z-50 mt-1.5 w-full min-w-72 overflow-hidden rounded-lg border border-line bg-surface py-1 shadow-xl shadow-black/30"
         >
-          {failed && <li className="px-3 py-2 text-sm text-ink-2">Suchindex konnte nicht geladen werden.</li>}
-          {!failed && !index && <li className="px-3 py-2 text-sm text-ink-2">Lade Suchindex …</li>}
-          {index && results.length === 0 && <li className="px-3 py-2 text-sm text-ink-2">Keine Treffer für „{q.trim()}“.</li>}
+          {failed && <li className="px-3 py-2 text-sm text-ink-2">{m.shell.searchFailed}</li>}
+          {!failed && !index && <li className="px-3 py-2 text-sm text-ink-2">{m.shell.searchLoading}</li>}
+          {index && results.length === 0 && <li className="px-3 py-2 text-sm text-ink-2">{m.shell.searchNone(q.trim())}</li>}
           {results.map((e, i) => (
             <li
               key={e[0] + e[1]}

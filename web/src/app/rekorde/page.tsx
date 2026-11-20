@@ -2,7 +2,7 @@ import AnalyticsCrumb from "@/components/AnalyticsCrumb";
 import RecordsView, { type RecordItem } from "@/components/RecordsView";
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { gameMap, getMeta, getPlayerGames, getTeams, playerMap } from "@/lib/data";
-import { fmtShortDate } from "@/lib/format";
+import { T } from "@/i18n/react";
 import { RECORD_FIELDS, careerRecords, gameRecords, seasonRecords } from "@/lib/insights";
 import { allEntries } from "@/lib/serverCache";
 
@@ -23,22 +23,21 @@ export default function RecordsPage() {
   for (const f of RECORD_FIELDS) {
     data.game[f] = gameRecords(rows, games, players, f, 5).map((r) => ({
       player: r.player, name: name(r.player), teams: [r.team], value: r.value,
-      note: `${fmtShortDate(r.date)}${r.season} gegen ${teams[r.opponent]?.abbr ?? r.opponent}`, href: `/spiele/${r.game}/`,
+      note: { kind: "game", date: r.date, season: r.season, opp: teams[r.opponent]?.abbr ?? r.opponent }, href: `/spiele/${r.game}/`,
     }));
-    data.season[f] = seasonRecords(entries, f, 5).map((r) => ({ player: r.player, name: name(r.player), teams: r.teams, value: r.value, note: `Saison ${r.season}, ${r.games} Spiele` }));
+    data.season[f] = seasonRecords(entries, f, 5).map((r) => ({ player: r.player, name: name(r.player), teams: r.teams, value: r.value, note: { kind: "season", season: r.season, games: r.games } }));
     data.career[f] = careerRecords(entries, f, 5).map((r) => ({
       player: r.player, name: name(r.player), teams: [...new Set(players.get(r.player)?.seasons.flatMap((s) => s.teams))], value: r.value,
-      note: `${r.seasons.length} ${r.seasons.length === 1 ? "Saison" : "Saisons"}, ${r.games} Spiele`,
+      note: { kind: "career", seasons: r.seasons.length, games: r.games },
     }));
   }
 
   return (
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
-      <AnalyticsCrumb current="Rekorde" />
-      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink">Rekorde</h1>
+      <AnalyticsCrumb current="analytics.recordsPage" />
+      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink"><T k="analytics.recordsPage" /></h1>
       <p className="mb-8 mt-3 max-w-[72ch] text-[14px] text-ink-2">
-        Bestwerte seit {meta.seasons[0]}, dem Beginn der Daten: in einem Spiel, in einer Saison (Regular Season und Playoffs) und über die Karriere. Ältere Spielzeiten sind nicht
-        erfasst, „Karriere“ heißt daher „seit {meta.seasons[0]}“. Bei Gleichstand steht das frühere Ereignis vorn.
+        <T k="analytics.recordsIntro" a={[meta.seasons[0]]} />
       </p>
       <RecordsView data={data} teams={teams} />
     </main>

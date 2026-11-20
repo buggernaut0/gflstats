@@ -116,10 +116,11 @@ export function qualifies(def: StatDef, s: Stats): boolean {
   return !def.qualifier || (s[def.qualifier.field] ?? 0) >= def.qualifier.min;
 }
 
-export function formatStat(def: StatDef, x: number | null | undefined): string {
+export function formatStat(def: StatDef, x: number | null | undefined, lang: "de" | "en" = "de"): string {
   if (x === null || x === undefined || !Number.isFinite(x)) return "–";
   const decimals = def.kind === "original" && !Number.isInteger(x) ? 1 : def.decimals;
-  return new Intl.NumberFormat("de-DE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(x) + (def.unit === "%" ? " %" : "");
+  // Prozent: im Deutschen mit Leerzeichen ("12,5 %"), im Englischen ohne ("12.5%")
+  return new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(x) + (def.unit === "%" ? (lang === "en" ? "%" : " %") : "");
 }
 
 // ---------------------------------------------------------------- Rollen

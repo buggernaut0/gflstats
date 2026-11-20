@@ -18,16 +18,16 @@ import {
 } from './model.ts';
 import { createRng, type Rng } from './rng.ts';
 import type { BoxLine, Chance, GameResult, Outcome, PlayEvent, PlayType, SimPlayer } from './types.ts';
+import { simText as SIM_TEXT_DE, type SimText } from '../../i18n/de/sim.ts';
 
 export interface Profiles { league: League; teams: Map<string, TeamProfile> }
-export interface SimOptions { seed: number; home: string; away: string }
+/** text: Textpaket der Sprache (src/i18n/<lang>/sim.ts); ohne Angabe Deutsch. Derselbe Seed ergibt in jeder Sprache dasselbe Spiel. */
+export interface SimOptions { seed: number; home: string; away: string; text?: SimText }
 
-const pct = (p: number) => `${Math.round(p * 100)} %`;
-/** „1 Yard“, „-1 Yard“, sonst „Yards“ */
-const yd = (n: number) => `${n} ${Math.abs(n) === 1 ? 'Yard' : 'Yards'}`;
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
 
 export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
+  const tx = opts.text ?? SIM_TEXT_DE;
   const { league: L } = profiles;
   const T = (id: string) => {
     const t = profiles.teams.get(id);
@@ -105,20 +105,20 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     const ev: PlayEvent = { ...base(goForTwo ? 'twopoint' : 'pat', team), yardLine: goForTwo ? 97 : 85, down: 0, distance: 0, outcome: 'pat_good', yards: 0, endYardLine: 100, text: '', chances: [] };
     if (goForTwo) {
       const p = L.twoPtSuccess;
-      ev.chances.push({ label: '2-Point Conversion gelingt', p, basis: `Ligaschnitt 2026 (Teamquote für den Versuch: ${pct(P.twoPtRate)})` });
+      ev.chances.push({ label: tx.twoPt, p, basis: tx.twoPtBasis(P.twoPtRate), tone: 'good' });
       const ok = rng.chance(p);
       ev.outcome = ok ? 'two_good' : 'two_failed';
       if (ok) { score[team] += 2; ev.points = { team, points: 2 }; }
-      ev.text = ok ? '2-Point Conversion gelingt' : '2-Point Conversion scheitert';
+      ev.text = tx.twoPtText(ok);
     } else {
       const k = P.kicker;
       const p = k?.pat ?? L.patKick;
-      ev.chances.push({ label: 'Extra Point', p, basis: k ? `${k.player.name}: Quote 2026 (geglättet)` : 'Ligaschnitt 2026 (kein Kicker in den Bögen)' });
+      ev.chances.push({ label: tx.xp, p, basis: tx.xpBasis(k ? k.player.name : null), tone: 'good' });
       if (k) ev.actors.kicker = k.player.id;
       const ok = rng.chance(p);
       ev.outcome = ok ? 'pat_good' : 'pat_missed';
       if (ok) { score[team] += 1; ev.points = { team, points: 1 }; }
-      ev.text = ok ? `Extra Point${k ? ` ${k.player.name}` : ''} gut` : `Extra Point${k ? ` ${k.player.name}` : ''} verfehlt`;
+      ev.text = tx.xpText(k ? k.player.name : null, ok);
     }
     emit(ev);
     next = { kind: 'kickoff', team };
@@ -138,23 +138,23 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     off = kicking; down = 0; dist = 0; yl = free ? 20 : 35;
     const ev: PlayEvent = { ...base('kickoff', kicking), outcome: 'kickoff_return', yards: 0, endYardLine: 0, text: '', chances: [], elapsed: PARAMS.clock.special };
     const pTb = free ? 0 : K.koTouchback;
-    ev.chances.push({ label: 'Touchback', p: pTb, basis: `${K.team.abbr}: Kickoff-Touchbacks 2026 (geglättet)` });
+    ev.chances.push({ label: tx.touchback, p: pTb, basis: tx.koTbBasis(K.team.abbr), tone: 'neutral' });
     let start: number;
     ev.kickDistance = 100 - yl - PARAMS.rules.kickoffCatchSpot;
     if (rng.chance(pTb)) {
       ev.kickDistance = 100 - yl + 3;
       start = PARAMS.rules.kickoffTouchback;
       ev.outcome = 'kickoff_touchback';
-      ev.text = `Kickoff ${K.team.abbr} – Touchback`;
+      ev.text = tx.koTb(K.team.abbr);
     } else {
       const ret = R.kickReturners.length ? R.kickReturners[rng.weighted(R.kickReturners.map((x) => x.weight))].player : null;
       if (ret) ev.actors.returner = ret.id;
-      ev.chances.push({ label: 'Return-Touchdown', p: L.koReturnTd, basis: 'Ligaschnitt 2026' });
+      ev.chances.push({ label: tx.returnTd, p: L.koReturnTd, basis: tx.league, tone: 'bad' });
       if (rng.chance(L.koReturnTd)) {
         ev.outcome = 'kickoff_return_td';
         ev.yards = 100;
         ev.endYardLine = 0;
-        ev.text = `Kickoff-Return-Touchdown${ret ? ` ${ret.name}` : ''}!`;
+        ev.text = tx.koReturnTd(ret ? ret.name : null);
         off = R.team.id;
         touchdown(ev, R.team.id);
         return;
@@ -162,7 +162,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       const retYds = Math.round(rng.lognormal(R.koReturnAvg, PARAMS.sigma.kickReturn));
       start = clamp(PARAMS.rules.kickoffCatchSpot + (free ? PARAMS.rules.safetyKickBonus : 0) + retYds, 1, 95);
       ev.yards = retYds;
-      ev.text = `Kickoff ${K.team.abbr}${ret ? ` – Return ${ret.name}` : ''} ${yd(retYds)}`;
+      ev.text = tx.koReturn(K.team.abbr, ret ? ret.name : null, retYds);
     }
     ev.endYardLine = 100 - start;
     emit(ev);
@@ -202,7 +202,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       ev.key = true;
       score[other(off)] += 2;
       ev.points = { team: other(off), points: 2 };
-      ev.text += ' – Safety!';
+      ev.text += tx.safety;
       emit(ev);
       next = { kind: 'kickoff', team: off, free: true };
       return;
@@ -210,7 +210,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     if (gained >= dist) {
       ev.firstDown = true;
       ts.firstDowns++;
-      ev.text += ' – First Down';
+      ev.text += tx.firstDown;
       emit(ev);
       yl = end;
       setFirstDown(yl);
@@ -222,7 +222,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     down++;
     if (down > 4) {
       events[events.length - 1].turnover = true;
-      events[events.length - 1].text += ' – Ballverlust nach Downs';
+      events[events.length - 1].text += tx.downs;
       events[events.length - 1].key = true;
       teamStats[off].turnovers++;
       changePossession(100 - yl);
@@ -230,14 +230,14 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
   };
 
   const fumbleCheck = (ev: PlayEvent, carrier: SimPlayer, rate: number, spotGain: number): boolean => {
-    ev.chances.push({ label: 'Fumble', p: rate, basis: `${carrier.name}: Fumbles pro Ballkontakt 2026 (geglättet)` });
+    ev.chances.push({ label: tx.fumble, p: rate, basis: tx.fumbleBasis(carrier.name), tone: 'bad' });
     if (!rng.chance(rate)) return false;
     bx(off, carrier).fumbles++;
     const lost = rng.chance(L.fumbleLostShare);
     const D = T(other(off));
     const forcer = pickDefender(D, 'tackle');
     if (forcer) ev.actors.defender = forcer.id;
-    if (!lost) { ev.text += ' – Fumble, aber gesichert'; ev.key = true; return false; }
+    if (!lost) { ev.text += tx.fumbleKept; ev.key = true; return false; }
     ev.outcome = 'fumble_lost';
     ev.turnover = true;
     ev.key = true;
@@ -245,9 +245,9 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     const spot = clamp(yl + spotGain, 1, 99);
     ev.endYardLine = spot;
     teamStats[off].turnovers++;
-    ev.text += ` – Fumble! ${D.team.abbr} erobert den Ball${forcer ? ` (${forcer.name})` : ''}`;
+    ev.text += tx.fumbleLost(D.team.abbr, forcer ? forcer.name : null);
     if (rng.chance(L.fumbleReturnTd)) {
-      ev.text += ' und trägt ihn in die Endzone';
+      ev.text += tx.fumbleTd;
       off = other(off);
       touchdown(ev, off);
       return true;
@@ -266,7 +266,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
 
     // 1. Pass Rush
     const pSack = combine(L.sack, [{ rate: O.sackTaken, ref: L.sack, w: W.sackO }, { rate: D.sackRate, ref: L.sack, w: W.sackD }]);
-    ev.chances.push({ label: 'Sack', p: pSack, basis: `${O.team.abbr} erleidet ${pct(O.sackTaken)} · ${D.team.abbr} erzielt ${pct(D.sackRate)} der Dropbacks · Liga ${pct(L.sack)}` });
+    ev.chances.push({ label: tx.sack, p: pSack, basis: tx.sackBasis(O.team.abbr, O.sackTaken, D.team.abbr, D.sackRate, L.sack), tone: 'bad' });
     ts.plays++;
     if (rng.chance(pSack)) {
       ev.type = 'sack';
@@ -277,7 +277,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       if (sacker) { ev.actors.defender = sacker.id; bx(D.team.id, sacker).sacks++; }
       const loss = -Math.max(1, Math.round(rng.lognormal(-L.sackYards, PARAMS.sigma.sack)));
       ts.sacks++;
-      ev.text = `Sack${sacker ? ` durch ${sacker.name}` : ''}: ${yd(loss)}`;
+      ev.text = tx.sackText(sacker ? sacker.name : null, loss);
       if (qb && fumbleCheck(ev, qb.player, qb.fumble, loss)) return;
       advance(ev, loss);
       return;
@@ -291,8 +291,8 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     if (rng.chance(pNoTarget) || !O.receivers.length) {
       ev.outcome = 'throwaway';
       ev.elapsed = PARAMS.clock.stopped;
-      ev.chances.push({ label: 'Pass ohne Anspielstation', p: pNoTarget, basis: 'Ligaschnitt 2026: Passversuche ohne Target' });
-      ev.text = `${qb?.player.name ?? 'QB'}: Pass ins Leere (keine Anspielstation)`;
+      ev.chances.push({ label: tx.noTarget, p: pNoTarget, basis: tx.noTargetBasis, tone: 'warn' });
+      ev.text = tx.noTargetText(qb?.player.name ?? tx.qb);
       advance(ev, 0);
       return;
     }
@@ -303,7 +303,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     bx(off, rec.player).targets++;
     const rv = receiverVs(rec, D.team.id);
     const qv = qb ? qbVs(qb, D.team.id) : { cmp: L.cmpPerAtt, games: 0, w: 0 };
-    const h2hNote = (games: number, w: number) => (games ? ` · direkt gegen ${D.team.abbr}: ${games} Spiel${games > 1 ? 'e' : ''}, Gewicht ${pct(w)}` : '');
+    const h2hNote = (games: number, w: number) => tx.h2h(D.team.abbr, games, w);
 
     // 4. Ausgang
     const pInt = combine(L.intPerTarget, [
@@ -316,12 +316,13 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       { rate: D.cmpAllowed, ref: L.cmpPerAtt, w: W.defCmp },
     ]), 0.97 - pInt);
     ev.chances.push({
-      label: 'Reception',
+      label: tx.reception,
       p: pCatch,
-      basis: `${rec.player.name} fängt ${pct(rv.catch)} seiner Targets${h2hNote(rv.games, rv.w)} · ${qb ? `${qb.player.name} ${pct(qv.cmp)} Completions` : 'QB Ligaschnitt'} · ${D.team.abbr} lässt ${pct(D.cmpAllowed)} zu`,
+      basis: tx.receptionBasis(rec.player.name, rv.catch, h2hNote(rv.games, rv.w), qb ? qb.player.name : null, qv.cmp, D.team.abbr, D.cmpAllowed),
+      tone: 'good',
     });
-    ev.chances.push({ label: 'Interception', p: pInt, basis: `${qb ? `${qb.player.name} ${pct(qb.int)}` : 'QB Liga'} · ${D.team.abbr} ${pct(D.intRate)} pro Passversuch · Liga ${pct(L.intPerAtt)}` });
-    ev.chances.push({ label: 'Incomplete', p: Math.max(0, 1 - pCatch - pInt) });
+    ev.chances.push({ label: tx.interception, p: pInt, basis: tx.intBasis(qb ? qb.player.name : null, qb?.int ?? 0, D.team.abbr, D.intRate, L.intPerAtt), tone: 'bad' });
+    ev.chances.push({ label: tx.incomplete, p: Math.max(0, 1 - pCatch - pInt), tone: 'warn' });
 
     const r = rng.next();
     if (r < pCatch) {
@@ -348,13 +349,13 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
         rb.touchdowncatch++;
         if (qb) bx(off, qb.player).touchdownpass++;
         ev.outcome = 'touchdown';
-        ev.text = `${qb?.player.name ?? 'QB'} → ${rec.player.name}: ${yd(y)} – Touchdown!`;
+        ev.text = tx.passTd(qb?.player.name ?? tx.qb, rec.player.name, y);
         advance(ev, y);
         return;
       }
       const tackler = pickDefender(D, 'tackle');
       if (tackler) { ev.actors.tackler = tackler.id; bx(D.team.id, tackler).tackles++; }
-      ev.text = `${qb?.player.name ?? 'QB'} → ${rec.player.name}: ${yd(y)}`;
+      ev.text = tx.pass(qb?.player.name ?? tx.qb, rec.player.name, y);
       if (fumbleCheck(ev, rec.player, rec.fumble, y)) return;
       advance(ev, y);
       return;
@@ -373,17 +374,17 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       const depth = Math.round(rng.lognormal(L.airPerCatch * 1.4, PARAMS.sigma.airDepth));
       ev.airYards = depth;
       const spot = yl + depth;
-      ev.text = `${qb?.player.name ?? 'QB'} → ${rec.player.name}: Interception${picker ? ` durch ${picker.name}` : ''}`;
-      ev.chances.push({ label: 'Return-Touchdown nach Interception', p: L.intReturnTd, basis: 'Ligaschnitt 2026' });
+      ev.text = tx.passInt(qb?.player.name ?? tx.qb, rec.player.name, picker ? picker.name : null);
+      ev.chances.push({ label: tx.intReturnTd, p: L.intReturnTd, basis: tx.league, tone: 'bad' });
       if (spot >= 100) {
         ev.endYardLine = 100;
-        ev.text += ' in der Endzone – Touchback';
+        ev.text += tx.intTouchback;
         emit(ev);
         changePossession(PARAMS.rules.kickoffTouchback);
         return;
       }
       if (rng.chance(L.intReturnTd)) {
-        ev.text += ' – Pick Six!';
+        ev.text += tx.pickSix;
         off = other(off);
         touchdown(ev, off);
         return;
@@ -391,7 +392,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       const ret = Math.round(rng.lognormal(Math.max(L.intReturn, 1), PARAMS.sigma.intReturn));
       const newYl = clamp(100 - spot + ret, 1, 95);
       ev.endYardLine = spot;
-      if (ret > 0) ev.text += `, Return ${yd(ret)}`;
+      if (ret > 0) ev.text += tx.intReturn(ret);
       emit(ev);
       changePossession(newYl);
       return;
@@ -400,19 +401,19 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     // Nicht gefangen: Drop, abgewehrt oder unvollständig
     const pDrop = rec.drop;
     const pPbu = D.pbuRate;
-    ev.chances.push({ label: 'Drop (wenn nicht gefangen)', p: pDrop, basis: `${rec.player.name}: Drops pro nicht gefangenem Target 2026 (geglättet)` });
+    ev.chances.push({ label: tx.drop, p: pDrop, basis: tx.dropBasis(rec.player.name), tone: 'warn' });
     const r2 = rng.next();
     if (r2 < pDrop) {
       ev.outcome = 'drop';
-      ev.text = `${qb?.player.name ?? 'QB'} → ${rec.player.name}: fallen gelassen`;
+      ev.text = tx.dropped(qb?.player.name ?? tx.qb, rec.player.name);
     } else if (r2 < pDrop + pPbu) {
       const d = pickDefender(D, 'pbu');
       ev.outcome = 'breakup';
       if (d) { ev.actors.defender = d.id; bx(D.team.id, d).breakups++; }
-      ev.text = `${qb?.player.name ?? 'QB'} → ${rec.player.name}: abgewehrt${d ? ` von ${d.name}` : ''}`;
+      ev.text = tx.defended(qb?.player.name ?? tx.qb, rec.player.name, d ? d.name : null);
     } else {
       ev.outcome = 'incomplete';
-      ev.text = `${qb?.player.name ?? 'QB'} → ${rec.player.name}: unvollständig`;
+      ev.text = tx.incompleteText(qb?.player.name ?? tx.qb, rec.player.name);
     }
     ev.airYards = Math.round(rng.lognormal(L.airPerCatch * 1.3, PARAMS.sigma.airDepth));
     advance(ev, 0);
@@ -424,7 +425,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     ts.plays++;
     ts.rushAtt++;
     ev.elapsed = O.runningSeconds;
-    if (!O.rushers.length) { ev.text = 'Lauf'; advance(ev, 0); return; }
+    if (!O.rushers.length) { ev.text = tx.run; advance(ev, 0); return; }
     const rr = O.rushers[rng.weighted(O.rushers.map((x) => x.weight))];
     ev.actors.rusher = rr.player.id;
     const vs = rusherVs(rr, D.team.id);
@@ -434,11 +435,12 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       { value: D.ypcAllowed, ref: L.ypcRun, e: PARAMS.e.runDef },
     ]);
     ev.expectedYards = Math.round(mean * 10) / 10;
-    ev.chances.push({ label: 'Raumverlust (Tackle for Loss)', p: pLoss, basis: `${D.team.abbr} ${pct(D.tflRate)} · ${O.team.abbr} erleidet ${pct(O.tflAllowed)} · Liga ${pct(L.tfl)}` });
+    ev.chances.push({ label: tx.tfl, p: pLoss, basis: tx.tflBasis(D.team.abbr, D.tflRate, O.team.abbr, O.tflAllowed, L.tfl), tone: 'warn' });
     ev.chances.push({
-      label: `Ø ${mean.toFixed(1)} Yards erwartet`,
+      label: tx.expected(mean),
       p: 1 - pLoss,
-      basis: `${rr.player.name} ${vs.ypc.toFixed(1)} Y/Lauf${vs.games ? ` (direkt gegen ${D.team.abbr}: ${vs.games} Spiel${vs.games > 1 ? 'e' : ''}, Gewicht ${pct(vs.w)})` : ''} · ${D.team.abbr} lässt ${D.ypcAllowed.toFixed(1)} zu · Liga ${L.ypcRun.toFixed(1)}`,
+      basis: tx.expectedBasis(rr.player.name, vs.ypc, D.team.abbr, vs.games, vs.w, D.ypcAllowed, L.ypcRun),
+      tone: 'good',
     });
     let y: number;
     let tackler: SimPlayer | null;
@@ -459,12 +461,12 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     if (yl + y >= 100) {
       b.touchdownrun++;
       ev.outcome = 'touchdown';
-      ev.text = `${rr.player.name}: ${yd(y)} Lauf – Touchdown!`;
+      ev.text = tx.runTd(rr.player.name, y);
       advance(ev, y);
       return;
     }
     if (tackler) { ev.actors.tackler = tackler.id; bx(D.team.id, tackler).tackles++; }
-    ev.text = `${rr.player.name}: ${yd(y)} Lauf`;
+    ev.text = tx.runText(rr.player.name, y);
     if (fumbleCheck(ev, rr.player, rr.fumble, y)) return;
     advance(ev, y);
   };
@@ -475,7 +477,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     const ev: PlayEvent = { ...base('fieldgoal', off), outcome: 'fg_missed', yards: distance, endYardLine: yl, text: '', chances: [], elapsed: PARAMS.clock.special, key: true };
     const baseRate = k?.fg ?? L.fg;
     const p = sigmoid(logit(baseRate) - PARAMS.fg.slopePerYard * (distance - L.fgMadeDistance));
-    ev.chances.push({ label: `Field Goal aus ${distance} Yards`, p, basis: `${k ? `${k.player.name}: ${pct(k.fg)} Treffer 2026 (geglättet)` : 'Ligaschnitt'} · Distanzabzug (Simulationsparameter)` });
+    ev.chances.push({ label: tx.fg(distance), p, basis: tx.fgBasis(k ? k.player.name : null, k?.fg ?? 0), tone: 'good' });
     teamStats[off].fgTry++;
     if (k) { ev.actors.kicker = k.player.id; bx(off, k.player).fgTry++; }
     if (rng.chance(p)) {
@@ -483,12 +485,12 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
       score[off] += 3;
       ev.points = { team: off, points: 3 };
       if (k) bx(off, k.player).fgGood++;
-      ev.text = `Field Goal${k ? ` ${k.player.name}` : ''} aus ${distance} Yards – gut`;
+      ev.text = tx.fgText(k ? k.player.name : null, distance, true);
       emit(ev);
       next = { kind: 'kickoff', team: off };
       return;
     }
-    ev.text = `Field Goal${k ? ` ${k.player.name}` : ''} aus ${distance} Yards – verfehlt`;
+    ev.text = tx.fgText(k ? k.player.name : null, distance, false);
     ev.turnover = true;
     emit(ev);
     const spot = yl - 7;
@@ -503,35 +505,35 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     if (O.punter) ev.actors.kicker = O.punter.player.id;
     const landing = yl + gross;
     ev.kickDistance = Math.min(gross, 100 - yl + 3);
-    const who = O.punter ? `Punt ${O.punter.player.name}` : 'Punt';
+    const who = tx.punt(O.punter ? O.punter.player.name : null);
     if (landing >= 100) {
       ev.outcome = 'punt_touchback';
       ev.yards = 100 - yl;
       ev.endYardLine = 100;
-      ev.text = `${who} – Touchback`;
+      ev.text = tx.puntTb(who);
       emit(ev);
       changePossession(PARAMS.rules.puntTouchback);
       return;
     }
-    ev.chances.push({ label: 'Punt Return', p: R.puntReturnRate, basis: `${R.team.abbr}: Returns pro gegnerischem Punt 2026` });
+    ev.chances.push({ label: tx.puntReturn, p: R.puntReturnRate, basis: tx.puntReturnBasis(R.team.abbr), tone: 'neutral' });
     let ret = 0;
     if (rng.chance(R.puntReturnRate)) {
       const returner = R.puntReturners.length ? R.puntReturners[rng.weighted(R.puntReturners.map((x) => x.weight))].player : null;
       if (returner) ev.actors.returner = returner.id;
-      ev.chances.push({ label: 'Return-Touchdown', p: L.puntReturnTd, basis: 'Ligaschnitt 2026' });
+      ev.chances.push({ label: tx.returnTd, p: L.puntReturnTd, basis: tx.league, tone: 'bad' });
       if (rng.chance(L.puntReturnTd)) {
         ev.outcome = 'punt_return_td';
         ev.yards = gross;
-        ev.text = `${who} ${gross} Yards – Return-Touchdown${returner ? ` ${returner.name}` : ''}!`;
+        ev.text = tx.puntReturnTd(who, gross, returner ? returner.name : null);
         off = R.team.id;
         touchdown(ev, off);
         return;
       }
       ret = Math.round(rng.lognormal(R.puntReturnAvg, PARAMS.sigma.puntReturn));
       ret = Math.min(ret, 100 - (100 - landing) - 1);
-      ev.text = `${who} ${gross} Yards, Return${returner ? ` ${returner.name}` : ''} ${yd(ret)}`;
+      ev.text = tx.puntReturned(who, gross, returner ? returner.name : null, ret);
     } else {
-      ev.text = `${who} ${gross} Yards`;
+      ev.text = tx.puntText(who, gross);
     }
     ev.yards = gross - ret;
     ev.endYardLine = clamp(landing - ret, 1, 99);
@@ -547,20 +549,20 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     const P = offensive ? O : D;
     let yds = Math.max(5, Math.round(P.penaltyYds / 5) * 5);
     const ev: PlayEvent = { ...base('penalty', off), outcome: offensive ? 'penalty_offense' : 'penalty_defense', yards: 0, endYardLine: yl, text: '', chances: [] };
-    ev.chances.push({ label: `Strafe ${P.team.abbr}`, p: offensive ? pO : pD, basis: `${P.team.abbr}: Strafen pro Snap 2026 · Ø ${P.penaltyYds.toFixed(1)} Yards` });
+    ev.chances.push({ label: tx.penalty(P.team.abbr), p: offensive ? pO : pD, basis: tx.penaltyBasis(P.team.abbr, P.penaltyYds), tone: 'warn' });
     if (offensive) {
       if (yl - yds < 1) yds = Math.floor(yl / 2);
       ev.yards = -yds;
       yl -= yds;
       dist += yds;
-      ev.text = `Strafe gegen ${O.team.abbr}: ${yds} Yards zurück`;
+      ev.text = tx.penaltyOff(O.team.abbr, yds);
     } else {
       if (yl + yds > 99) yds = Math.floor((100 - yl) / 2);
       ev.yards = yds;
       yl += yds;
       dist -= yds;
-      ev.text = `Strafe gegen ${D.team.abbr}: ${yds} Yards`;
-      if (dist <= 0) { setFirstDown(yl); ev.firstDown = true; ev.text += ' – First Down'; }
+      ev.text = tx.penaltyDef(D.team.abbr, yds);
+      if (dist <= 0) { setFirstDown(yl); ev.firstDown = true; ev.text += tx.firstDown; }
     }
     ev.endYardLine = yl;
     emit(ev);
@@ -584,7 +586,7 @@ export function simulateGame(profiles: Profiles, opts: SimOptions): GameResult {
     if (yl < F.ownTerritoryLine) x -= F.ownTerritory;
     if (inFgRange && dist > 2) x -= F.fgRange;
     const pGo = sigmoid(x);
-    fourthChance = { label: '4th Down ausspielen', p: pGo, basis: `${O.team.abbr}: geht in ${pct(O.goRate4th)} der 4th Downs drauf (2026) · angepasst an Distanz/Feldposition (Simulationsregel)` };
+    fourthChance = { label: tx.goForIt, p: pGo, basis: tx.goForItBasis(O.team.abbr, O.goRate4th), tone: 'good' };
     if (rng.chance(pGo)) return 'play';
     return inFgRange ? 'fg' : 'punt';
   };

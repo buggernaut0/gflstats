@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { SceneModel } from '../data/sceneModel';
+import type { MessagePath } from '../../i18n/messages';
 import { resolveAnchor, resolveLabelIds, type AnchorSpec } from './anchors';
 
 export type Ease = 'linear' | 'soft' | 'out';
@@ -33,6 +34,8 @@ export interface Shot {
   labels: string[];
   /** Player Spotlight: Index in model.spotlights – die HUD zeigt währenddessen die Spielerkarte. */
   spotlight?: number;
+  /** Untertitel als Text-Pfad in src/i18n (Übersetzung in der HUD); subtitle bleibt der deutsche Ersatz */
+  sub?: { k: MessagePath; a?: unknown[] };
   /** Duell: ID in model.matchups – die HUD zeigt ab dem Schnitt beide Spielerprofile nebeneinander. */
   duel?: string;
 }

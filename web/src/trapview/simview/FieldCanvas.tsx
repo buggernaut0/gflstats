@@ -3,6 +3,7 @@ import type { PlayEvent } from '../sim/types';
 import { absOf } from './playback';
 import { sceneAt, type Scene } from './choreo';
 import type { TeamUnits } from './roster';
+import { useI18n } from '../../i18n/react';
 
 export interface TeamLook { id: string; abbr: string; fill: string; ink: string }
 export interface Pos { index: number; t: number }
@@ -28,6 +29,11 @@ const FIELD_H = 53.3;
 /** 2D-Vogelperspektive: Feld, Line of Scrimmage, First-Down-Linie, Drive, Ball und alle 22 Spieler. */
 export function FieldCanvas({ events, home, away, names, units, pos, driveStart, onFrame }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const { m } = useI18n();
+  const field = m.simui.field;
+  /** Banner der Szene (choreo.ts) in der gewählten Sprache – nur „verfehlt“ ist dort nicht englisch */
+  const missed = useRef(m.simui.bannerMissed);
+  missed.current = m.simui.bannerMissed;
   const props = useRef({ events, home, away, names, units, driveStart, onFrame });
   props.current = { events, home, away, names, units, driveStart, onFrame };
 
@@ -237,7 +243,7 @@ export function FieldCanvas({ events, home, away, names, units, pos, driveStart,
         ctx.font = `${Math.round(9 * s)}px Anton, Impact, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(frame.banner, w / 2, h / 2 + 0.4 * s);
+        ctx.fillText(frame.banner === 'FIELD GOAL VERFEHLT' ? missed.current : frame.banner, w / 2, h / 2 + 0.4 * s);
       }
     };
 
@@ -245,5 +251,5 @@ export function FieldCanvas({ events, home, away, names, units, pos, driveStart,
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, [pos]);
 
-  return <canvas ref={ref} className="sim-field" aria-label="Spielfeld in der Vogelperspektive" role="img" />;
+  return <canvas ref={ref} className="sim-field" aria-label={field} role="img" />;
 }

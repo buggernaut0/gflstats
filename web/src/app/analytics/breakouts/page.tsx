@@ -4,6 +4,7 @@ import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { getMeta, getPlayers, getTeams } from "@/lib/data";
 import { breakouts, roleIndexRows } from "@/lib/insights";
 import { allEntries } from "@/lib/serverCache";
+import { T } from "@/i18n/react";
 
 export const metadata = { title: "Breakouts und Rollen-Index" };
 
@@ -14,11 +15,10 @@ export default function BreakoutsPage() {
   const seasons = [...meta.seasons].reverse();
   return (
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
-      <AnalyticsCrumb current="Breakouts und Rollen-Index" />
-      <h1 className="display text-[48px] font-bold leading-none tracking-tight text-ink">Breakouts und Rollen-Index</h1>
+      <AnalyticsCrumb current="analytics.breakoutsPage" />
+      <h1 className="display text-[48px] font-bold leading-none tracking-tight text-ink"><T k="analytics.breakoutsPage" /></h1>
       <p className="mb-10 mt-3 max-w-[74ch] text-[14px] text-ink-2">
-        Zwei offen gelegte Modelle. Sie fassen die Statistik zusammen und ersetzen keine Bewertung durch Coaches oder Scouts. Spieler ohne Statistik (z. B. Offensive Line) kommen
-        darin nicht vor.
+        <T k="analytics.breakoutsPageIntro" />
       </p>
       <div className="flex flex-col gap-16">
         {seasons.map((s) => (

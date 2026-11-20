@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { GamePerformance, LeaderCategory, LeaderRow, TeamLite, TeamRow } from "@/lib/dashboard";
-import { fmt, fmtShortDate } from "@/lib/format";
+import { useI18n } from "@/i18n/react";
 import type { Scope } from "@/lib/types";
 import LeaderCard from "./LeaderCard";
 import ScopeToggle from "./ScopeToggle";
@@ -25,19 +25,21 @@ export interface DashboardData {
 
 export default function DashboardBody({ data }: { data: DashboardData }) {
   const [scope, setScope] = useState<Scope>("regular");
-  const scopeText = scope === "regular" ? "Regular Season" : scope === "playoff" ? "Playoffs" : "Regular Season und Playoffs";
+  const f = useI18n();
+  const h = f.m.home;
+  const scopeText = scope === "regular" ? f.m.common.regularSeason : scope === "playoff" ? f.m.common.playoffs : h.scopeBoth;
 
   return (
     <div className="flex flex-col gap-14">
       <div className="sticky top-[58px] z-30 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-bg/90 px-4 py-2.5 backdrop-blur sm:top-[57px] sm:-mx-6 sm:px-6">
         <p className="text-[13.5px] text-ink-2">
-          Alle Werte auf dieser Seite: <span className="text-ink">{scopeText} {data.season}</span>
+          {h.allValues} <span className="text-ink">{scopeText} {data.season}</span>
         </p>
         <ScopeToggle value={scope} onChange={setScope} hasPlayoffs={data.hasPlayoffs} />
       </div>
 
       <section aria-labelledby="leaders-h">
-        <SectionHead id="leaders-h" title="League Leaders" note="Top 5 je Kategorie, Summe aus allen Spielbögen. Gleiche Werte teilen sich den Rang (2=).">
+        <SectionHead id="leaders-h" title={h.leadersTitle} note={h.leadersNote}>
           <SourceTag kind="original" />
           <SourceTag kind="rank" />
         </SectionHead>
@@ -57,37 +59,37 @@ export default function DashboardBody({ data }: { data: DashboardData }) {
       <section aria-labelledby="teams-h">
         <SectionHead
           id="teams-h"
-          title="Teams"
-          note="Bilanz und Punkte aus den Endständen. Yards = Summe der Passing- und Rushing-Yards aller Spieler eines Teams, geteilt durch die Spiele. Spalten anklicken zum Sortieren."
+          title={h.teamsTitle}
+          note={h.teamsNote}
         >
-          <SourceTag kind="original" detail="Bilanz, Punkte" />
-          <SourceTag kind="derived" detail="Quote, pro Spiel, Differenz" />
+          <SourceTag kind="original" detail="home.teamsOrig" />
+          <SourceTag kind="derived" detail="home.teamsDerived" />
         </SectionHead>
         <TeamTable rows={data.teamRows[scope]} teams={data.teams} />
       </section>
 
       <section aria-labelledby="perf-h">
-        <SectionHead id="perf-h" title="Beste Einzelleistungen" note="Höchster Wert eines Spielers in einem einzelnen Spiel. Bei Gleichstand zählt das frühere Spiel.">
+        <SectionHead id="perf-h" title={h.perfTitle} note={h.perfNote}>
           <SourceTag kind="original" />
         </SectionHead>
         <div className="overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[640px] border-collapse text-[14px]">
-            <caption className="sr-only">Beste Einzelleistungen der Saison</caption>
+            <caption className="sr-only">{h.perfCaption}</caption>
             <thead>
               <tr className="border-b border-line text-left text-[12px] text-ink-3">
-                <th scope="col" className="py-2.5 pl-4 font-medium">Kategorie</th>
-                <th scope="col" className="py-2.5 text-right font-medium">Wert</th>
-                <th scope="col" className="py-2.5 pl-6 font-medium">Spieler</th>
-                <th scope="col" className="py-2.5 font-medium">Gegner</th>
-                <th scope="col" className="py-2.5 font-medium">Datum</th>
-                <th scope="col" className="py-2.5 pr-4 font-medium">Dazu</th>
+                <th scope="col" className="py-2.5 pl-4 font-medium">{h.colCategory}</th>
+                <th scope="col" className="py-2.5 text-right font-medium">{f.m.common.value}</th>
+                <th scope="col" className="py-2.5 pl-6 font-medium">{f.m.common.player}</th>
+                <th scope="col" className="py-2.5 font-medium">{f.m.common.opponent}</th>
+                <th scope="col" className="py-2.5 font-medium">{f.m.common.date}</th>
+                <th scope="col" className="py-2.5 pr-4 font-medium">{h.colExtra}</th>
               </tr>
             </thead>
             <tbody>
               {data.performances[scope].map((p) => (
                 <tr key={p.field} {...teamsAttr(p.team)} className="border-b border-line last:border-0">
-                  <td className="py-2.5 pl-4 text-ink-2">{p.title}</td>
-                  <td className="num display py-2.5 text-right text-[18px] font-semibold text-ink">{fmt(p.value)}</td>
+                  <td className="py-2.5 pl-4 text-ink-2">{h.categories[p.field] ?? p.title}</td>
+                  <td className="num display py-2.5 text-right text-[18px] font-semibold text-ink">{f.fmt(p.value)}</td>
                   <td className="py-2.5 pl-6">
                     <span className="flex items-center gap-2">
                       <Link href={`/spieler/${p.player}/`} className="text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4">
@@ -98,16 +100,16 @@ export default function DashboardBody({ data }: { data: DashboardData }) {
                   </td>
                   <td className="py-2.5">
                     <span className="flex items-center gap-1.5 text-ink-2">
-                      <span className="text-ink-3">gegen</span> <TeamTag team={data.teams[p.opponent]} />
+                      <span className="text-ink-3">{h.against}</span> <TeamTag team={data.teams[p.opponent]} />
                     </span>
                   </td>
-                  <td className="num py-2.5 text-ink-2">{fmtShortDate(p.date)}</td>
+                  <td className="num py-2.5 text-ink-2">{f.fmtShortDate(p.date)}</td>
                   <td className="py-2.5 pr-4 text-ink-3">{p.extra}</td>
                 </tr>
               ))}
               {data.performances[scope].length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-5 text-ink-3">Keine Spiele in dieser Auswahl.</td>
+                  <td colSpan={6} className="px-4 py-5 text-ink-3">{f.m.games.none}</td>
                 </tr>
               )}
             </tbody>

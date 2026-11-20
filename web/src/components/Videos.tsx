@@ -1,4 +1,7 @@
+"use client";
+
 import type { Player } from "@/lib/types";
+import { useI18n } from "@/i18n/react";
 import VideoPlayer from "./VideoPlayer";
 
 /** YouTube-Adresse -> Video-ID (watch?v=, youtu.be/, shorts/, embed/). */
@@ -13,13 +16,12 @@ export function youtubeId(url: string): string | null {
  * Instagram-Beitraege nicht frei einbettbar sind.
  */
 export default function Videos({ videos }: { videos: Player["videos"] }) {
+  const { m } = useI18n();
   if (!videos.length) {
     return (
       <div className="rounded-xl border border-dashed border-line px-5 py-6 text-[14px] text-ink-2">
-        <p className="text-ink">Noch keine Highlight-Videos hinterlegt.</p>
-        <p className="mt-1 text-[13px] text-ink-3">
-          Videos werden in <code className="rounded bg-surface-2 px-1">curation/videos.json</code> mit der Spieler-ID eingetragen. YouTube erscheint direkt hier, Instagram als Link.
-        </p>
+        <p className="text-ink">{m.player.noVideos}</p>
+        <p className="mt-1 text-[13px] text-ink-3">{m.player.noVideosHow}</p>
       </div>
     );
   }
@@ -28,12 +30,12 @@ export default function Videos({ videos }: { videos: Player["videos"] }) {
       {videos.map((v) => {
         const id = v.platform === "youtube" ? youtubeId(v.url) : null;
         return id ? (
-          <VideoPlayer key={v.url} youtubeId={id} title={v.title ?? "Highlight-Video"} />
+          <VideoPlayer key={v.url} youtubeId={id} title={v.title ?? m.player.videoTitle} />
         ) : (
           <a key={v.url} href={v.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-4 hover:border-line-strong">
             <span>
-              <span className="block text-[14px] text-ink">{v.title ?? "Highlight-Video"}</span>
-              <span className="text-[12.5px] text-ink-3">{v.platform === "instagram" ? "Auf Instagram ansehen" : new URL(v.url).hostname}</span>
+              <span className="block text-[14px] text-ink">{v.title ?? m.player.videoTitle}</span>
+              <span className="text-[12.5px] text-ink-3">{v.platform === "instagram" ? m.player.onInstagram : new URL(v.url).hostname}</span>
             </span>
             <span aria-hidden="true" className="text-ink-3">↗</span>
           </a>

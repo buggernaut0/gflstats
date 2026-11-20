@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { readQuery, useData, writeQuery } from "@/lib/clientData";
 import { CAREER_PREFIX, PLAYER_STAT_OPTIONS, ROLES, baseKey, careerRows, isCareerKey, rowRecorded, rowValue, seasonRows, type PRow } from "@/lib/explore";
-import { decodeConditions, describe, encodeConditions, isComplete, matches, type Condition } from "@/lib/query";
-import { ROLE_HEADLINE, ROLE_LABELS, STAT, formatStat, stat } from "@/lib/stats";
+import { decodeConditions, encodeConditions, isComplete, matches, type Condition } from "@/lib/query";
+import { ROLE_HEADLINE, STAT, stat } from "@/lib/stats";
 import type { Meta, Player, PlayerSeason, Scope, Team } from "@/lib/types";
 import { Loading } from "./Loading";
-import QueryBuilder, { Field, selectCls } from "./QueryBuilder";
+import QueryBuilder, { Field, describeCondition, selectCls } from "./QueryBuilder";
+import { useI18n } from "@/i18n/react";
 import ResultTable, { type Column } from "./ResultTable";
 import EliteBadge from "./EliteBadge";
 import type { EliteEntry } from "@/trapview/spotlight/elite";
@@ -36,6 +37,9 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
   const [role, setRole] = useState("");
   const [name, setName] = useState("");
   const [conds, setConds] = useState<Condition[]>([]);
+  const f = useI18n();
+  const { m } = f;
+  const ps = m.playerSearch;
 
   useEffect(() => {
     const q = readQuery();
@@ -97,14 +101,14 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
     setName(""); setSeason(""); setTeam(""); setRole(""); setScope("all"); setConds([]);
   }
 
-  const labelOf = (k: string) => (isCareerKey(k) ? `Karriere: ${stat(baseKey(k)).label}` : stat(k).label);
+  const labelOf = (k: string) => (isCareerKey(k) ? m.query.careerLabel(f.statLabel(baseKey(k))) : f.statLabel(k));
   const base = [...active.map((c) => c.stat), ...(role ? ROLE_HEADLINE[role] : [])];
   const show = [...new Set(base.length ? base : DEFAULT_COLUMNS)].slice(0, 8);
   const playerCount = new Set(rows.map((r) => r.player)).size;
   const columns: Column<R>[] = [
     {
       key: "name",
-      label: "Spieler",
+      label: m.common.player,
       align: "left",
       render: (r) => {
         const e = r.season ? elite?.[`${r.player}:${r.season}`] : undefined;
@@ -118,19 +122,19 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
       sort: (r) => r.name,
       descFirst: false,
     },
-    { key: "team", label: "Team", align: "left", render: (r) => <span className="flex gap-1">{r.teams.map((t) => <TeamTag key={t} team={teams[t]} />)}</span> },
-    { key: "season", label: "Saison", align: "left", render: (r) => <span className="num">{r.season}</span>, sort: (r) => r.season },
-    { key: "role", label: "Rolle", align: "left", render: (r) => <span className="text-ink-3">{r.role ?? "–"}</span>, sort: (r) => r.role ?? "", descFirst: false },
-    { key: "games", label: "Sp", title: "Spiele", render: (r) => r.games, sort: (r) => r.games },
+    { key: "team", label: m.common.team, align: "left", render: (r) => <span className="flex gap-1">{r.teams.map((t) => <TeamTag key={t} team={teams[t]} />)}</span> },
+    { key: "season", label: m.common.season, align: "left", render: (r) => <span className="num">{r.season}</span>, sort: (r) => r.season },
+    { key: "role", label: m.common.role, align: "left", render: (r) => <span className="text-ink-3">{r.role ?? "–"}</span>, sort: (r) => r.role ?? "", descFirst: false },
+    { key: "games", label: ps.gamesShort, title: m.common.games, render: (r) => r.games, sort: (r) => r.games },
     ...show.map((k) => {
       const def = stat(baseKey(k));
       const career = isCareerKey(k);
       return {
         key: k,
-        label: career ? `${def.abbr} Karr.` : def.abbr,
-        title: `${career ? "Karriere (alle Saisons): " : ""}${def.formula ? `${def.label}: ${def.formula}` : def.label}`,
+        label: career ? `${f.statAbbr(def)} ${m.query.careerShort}` : f.statAbbr(def),
+        title: `${career ? m.query.careerTitle : ""}${m.stats.formula(def) ? `${f.statLabel(def)}: ${m.stats.formula(def)}` : f.statLabel(def)}`,
         render: (r: R) =>
-          recordedOf(r, k) ? formatStat(def, valueOf(r, k)) : <span className="text-ink-3" title="In dieser Saison nicht erfasst">n. e.</span>,
+          recordedOf(r, k) ? f.fmtStat(def, valueOf(r, k)) : <span className="text-ink-3" title={m.table.notRecordedSeason}>{m.common.notRecorded}</span>,
         sort: (r: R) => valueOf(r, k), descFirst: !def.lowerIsBetter,
       };
     }),
@@ -140,7 +144,7 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
       {/* Einfache Suche: Name und Schnellfilter */}
       <div className="flex flex-col gap-4">
         <label className="relative block max-w-[640px]">
-          <span className="sr-only">Spielername</span>
+          <span className="sr-only">{ps.nameLabel}</span>
           <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <circle cx="11" cy="11" r="6.5" />
             <path d="m16 16 4.5 4.5" strokeLinecap="round" />
@@ -149,27 +153,27 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
             type="search"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Spieler suchen, z. B. Tim Müller"
+            placeholder={ps.namePlaceholder}
             autoComplete="off"
             className="h-12 w-full rounded-lg border border-line bg-surface pl-11 pr-4 text-[16px] text-ink placeholder:text-ink-3 focus:border-line-strong focus:outline-none"
           />
         </label>
         <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
-          <Field label="Saison">
+          <Field label={m.common.season}>
             <select value={seasonSelectValue(season, meta.currentSeason)} onChange={(e) => setSeason(e.target.value)} className={selectCls}>
               <SeasonOptions seasons={meta.seasons} current={meta.currentSeason} />
             </select>
           </Field>
-          <Field label="Team">
+          <Field label={m.common.team}>
             <select value={team} onChange={(e) => setTeam(e.target.value)} className={selectCls}>
-              <option value="">Alle Teams</option>
-              {[...teamList].sort((a, b) => a.name.localeCompare(b.name, "de")).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              <option value="">{m.common.allTeams}</option>
+              {[...teamList].sort((a, b) => a.name.localeCompare(b.name, f.locale)).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </Field>
-          <Field label="Rolle (abgeleitet)">
+          <Field label={m.common.roleDerived}>
             <select value={role} onChange={(e) => setRole(e.target.value)} className={selectCls}>
-              <option value="">Alle</option>
-              {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+              <option value="">{m.common.allRoles}</option>
+              {ROLES.map((r) => <option key={r} value={r}>{m.stats.roles[r] ?? r}</option>)}
             </select>
           </Field>
           <ScopeToggle value={scope} onChange={setScope} />
@@ -179,10 +183,10 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
       {/* Statistiksuche: direkt sichtbar, Bedingungen mit UND verknuepft */}
       <section className="mt-6 rounded-xl border border-line bg-surface px-4 pb-4 pt-3" aria-labelledby="statsuche-h">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 id="statsuche-h" className="display text-[19px] font-semibold text-ink">Statistiksuche</h2>
+          <h2 id="statsuche-h" className="display text-[19px] font-semibold text-ink">{ps.statSearch}</h2>
           {conds.length > 0 && (
             <button type="button" onClick={() => setConds([])} className="text-[13px] text-ink-2 underline-offset-4 hover:text-ink hover:underline">
-              Bedingungen löschen
+              {ps.clearConditions}
             </button>
           )}
         </div>
@@ -191,27 +195,27 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
 
       <div className="mb-3 mt-6 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="text-[14px] text-ink">
-          <span className="num font-semibold">{rows.length}</span> Spieler-Saisons {only !== null ? <>in <span className="num">{only}</span></> : "aus allen Saisons"}
-          {playerCount !== rows.length && <span className="text-ink-3"> ({playerCount} Spieler)</span>}
-          {active.length > 0 && <span className="text-ink-3"> mit {active.map((c) => describe(c, labelOf(c.stat))).join(" und ")}</span>}
+          <span className="font-semibold">{ps.rowsIn(rows.length, only)}</span>
+          {playerCount !== rows.length && <span className="text-ink-3">{ps.playersParen(playerCount)}</span>}
+          {active.length > 0 && <span className="text-ink-3">{ps.withConds(active.map((c) => describeCondition(c, labelOf(c.stat), f)).join(` ${m.common.and} `))}</span>}
         </p>
         {elsewhere > 0 && (name.trim() || active.length > 0 || team || role) && (
           <p className="w-full text-[13px] text-ink-2 sm:order-last">
-            {elsewhere} weitere{elsewhere === 1 ? "r" : ""} Spieler ohne passenden Eintrag {only}, aber in anderen Saisons.{" "}
+            {ps.elsewhere(elsewhere, only)}{" "}
             <button type="button" onClick={() => setSeason(ALL_SEASONS)} className="text-accent-text underline-offset-4 hover:underline">
-              Alle Saisons anzeigen
+              {ps.showAllSeasons}
             </button>
           </p>
         )}
         {anyFilter && (
           <button type="button" onClick={reset} className="text-[13px] text-ink-2 underline-offset-4 hover:text-ink hover:underline">
-            Alle Filter zurücksetzen
+            {m.common.resetFilters}
           </button>
         )}
       </div>
-      <ResultTable rows={rows} columns={columns} initialSort={{ key: show[0] ?? "games", desc: true }} rowKey={(r) => r.key} rowTeams={(r) => r.teams} caption="Ergebnisse der Spielersuche" key={show.join()} />
+      <ResultTable rows={rows} columns={columns} initialSort={{ key: show[0] ?? "games", desc: true }} rowKey={(r) => r.key} rowTeams={(r) => r.teams} caption={ps.caption} key={show.join()} />
       <p className="mt-3 text-[12.5px] text-ink-3">
-        * berechnete Kennzahl. „Karriere“ = Summe aller Saisons des Spielers. „n. e.“ = nicht erfasst; solche Werte gelten nicht als 0 und erfüllen keine Bedingung.
+        {ps.footnote}
       </p>
     </div>
   );

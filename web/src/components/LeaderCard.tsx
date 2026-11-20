@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import type { LeaderCategory, LeaderRow, TeamLite } from "@/lib/dashboard";
-import { fmt } from "@/lib/format";
 import TeamTag from "./TeamTag";
 import { teamsAttr } from "@/lib/favorite";
+import { useI18n } from "@/i18n/react";
 
 export default function LeaderCard({
   category,
@@ -16,22 +18,24 @@ export default function LeaderCard({
   unavailable?: boolean;
 }) {
   const max = rows[0]?.value ?? 0;
+  const f = useI18n();
+  const h = f.m.home;
   return (
     <section className="flex flex-col rounded-xl border border-line bg-surface" aria-labelledby={`lc-${category.key}`}>
       <header className="flex items-baseline justify-between gap-2 border-b border-line px-4 pb-2.5 pt-3">
         <h3 id={`lc-${category.key}`} className="display text-[18px] font-semibold leading-tight text-ink">
-          {category.title}
+          {h.categories[category.key] ?? category.title}
         </h3>
         <Link
           href={`/leaders/?kategorie=${category.key}`}
           className="shrink-0 text-[12.5px] text-ink-3 hover:text-accent-text"
-          aria-label={`Komplette Rangliste ${category.title}`}
+          aria-label={h.fullRanking(h.categories[category.key] ?? category.title)}
         >
-          Alle
+          {h.all}
         </Link>
       </header>
       {unavailable || rows.length === 0 ? (
-        <p className="px-4 py-5 text-[13.5px] text-ink-3">{unavailable ? "In dieser Saison nicht erfasst." : "Keine Werte in dieser Auswahl."}</p>
+        <p className="px-4 py-5 text-[13.5px] text-ink-3">{unavailable ? h.notRecordedSeason : h.noValues}</p>
       ) : (
         <ol className="flex flex-col py-1.5">
           {rows.map((r, i) => (
@@ -47,7 +51,7 @@ export default function LeaderCard({
                 <span className="xl:hidden">{r.name}</span>
                 <span className="hidden xl:inline">{shortName(r.name)}</span>
               </Link>
-              <span className="num display text-right text-[17px] font-semibold text-ink">{fmt(r.value)}</span>
+              <span className="num display text-right text-[17px] font-semibold text-ink">{f.fmt(r.value)}</span>
               <span className="col-start-2 col-end-4 mt-1 flex items-center gap-2">
                 {r.teams.map((t) => (
                   <TeamTag key={t} team={teams[t]} />

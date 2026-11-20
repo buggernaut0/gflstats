@@ -7,8 +7,10 @@ import VideoPlayer from "@/components/VideoPlayer";
 import TeamLogo from "@/components/TeamLogo";
 import { playoffRound, toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { gameMap, getGames, getMeta, getPlayerGames, playerMap, teamMap, teamNameIn } from "@/lib/data";
-import { fmtDate, fmtShortDate } from "@/lib/format";
-import { formatStat, stat } from "@/lib/stats";
+import { fmtShortDate } from "@/lib/format";
+import { stat } from "@/lib/stats";
+import { DateText, StatLabel, StatValue, T, Titled } from "@/i18n/react";
+import { PlayoffRound } from "@/components/I18nBits";
 import type { PlayerGame, TeamGameStats } from "@/lib/types";
 import { teamsAttr } from "@/lib/favorite";
 
@@ -36,12 +38,12 @@ const SECTIONS: { title: string; when: string[]; cols: string[] }[] = [
   { title: "Returns", when: ["kickoffreturn", "puntreturn"], cols: ["kickoffreturn", "kickoffreturnyards", "puntreturn", "puntreturnyards"] },
 ];
 
-const TEAM_ROWS: { label: string; get: (t: TeamGameStats) => string | null }[] = [
-  { label: "Lauf: Versuche / Yards", get: (t) => (t.rushAtt !== undefined ? `${t.rushAtt} / ${t.rushYds ?? 0}` : null) },
-  { label: "Pass: Completions / Versuche / Yards", get: (t) => (t.passAtt !== undefined ? `${t.passCmp ?? 0} / ${t.passAtt} / ${t.passYds ?? 0}` : null) },
-  { label: "3rd Downs: erfolgreich / Versuche", get: (t) => (t.thirdAtt !== undefined ? `${t.thirdConv ?? 0} / ${t.thirdAtt}` : null) },
-  { label: "4th Downs: erfolgreich / Versuche", get: (t) => (t.fourthAtt !== undefined ? `${t.fourthConv ?? 0} / ${t.fourthAtt}` : null) },
-  { label: "Red Zone: Touchdowns / Besuche", get: (t) => (t.redzone !== undefined ? `${t.redzoneTd ?? 0} / ${t.redzone}` : null) },
+const TEAM_ROWS: { label: string; key: string; get: (t: TeamGameStats) => string | null }[] = [
+  { label: "Lauf: Versuche / Yards", key: "rush", get: (t) => (t.rushAtt !== undefined ? `${t.rushAtt} / ${t.rushYds ?? 0}` : null) },
+  { label: "Pass: Completions / Versuche / Yards", key: "pass", get: (t) => (t.passAtt !== undefined ? `${t.passCmp ?? 0} / ${t.passAtt} / ${t.passYds ?? 0}` : null) },
+  { label: "3rd Downs: erfolgreich / Versuche", key: "third", get: (t) => (t.thirdAtt !== undefined ? `${t.thirdConv ?? 0} / ${t.thirdAtt}` : null) },
+  { label: "4th Downs: erfolgreich / Versuche", key: "fourth", get: (t) => (t.fourthAtt !== undefined ? `${t.fourthConv ?? 0} / ${t.fourthAtt}` : null) },
+  { label: "Red Zone: Touchdowns / Besuche", key: "redzone", get: (t) => (t.redzone !== undefined ? `${t.redzoneTd ?? 0} / ${t.redzone}` : null) },
 ];
 
 export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
@@ -63,28 +65,28 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   return (
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
       <p className="text-[14px] text-ink-3">
-        {fmtDate(g.date)}, {g.type === "playoff" ? "Playoffs" : "Regular Season"} {g.season}
-        {playoffRound(g) && <>, {playoffRound(g)}</>}
+        <DateText iso={g.date} />, <T k={g.type === "playoff" ? "common.playoffs" : "common.regularSeason"} /> {g.season}
+        {playoffRound(g) && <>, <PlayoffRound name={playoffRound(g)!} /></>}
       </p>
       <div className="mt-3 grid grid-cols-[minmax(0,1fr)] items-start gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div>
-          <section className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-line-strong bg-surface px-4 py-5 sm:gap-6 sm:px-6" aria-label="Endstand">
-            <TeamScore id={g.away} team={lite(g.away)} name={name(g.away)} score={g.awayScore} won={!homeWon && g.awayScore !== g.homeScore} label="Gast" />
+          <section className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-line-strong bg-surface px-4 py-5 sm:gap-6 sm:px-6" >
+            <TeamScore id={g.away} team={lite(g.away)} name={name(g.away)} score={g.awayScore} won={!homeWon && g.awayScore !== g.homeScore} label={<T k="games.awayTeam" />} />
             <span className="display text-[22px] text-ink-3">@</span>
-            <TeamScore id={g.home} team={lite(g.home)} name={name(g.home)} score={g.homeScore} won={homeWon} label="Heim" right />
+            <TeamScore id={g.home} team={lite(g.home)} name={name(g.home)} score={g.homeScore} won={homeWon} label={<T k="games.homeTeam" />} right />
           </section>
           <section className="mt-10" aria-labelledby="team-h">
             <div className="mb-3 flex items-end justify-between gap-3">
               <h2 id="team-h" className="display text-[26px] font-bold leading-none tracking-tight text-ink">
-                Teamstatistik
+                <T k="games.teamStats" />
               </h2>
-              <SourceTag kind="original" detail="Teamstatistik der Quelle je Spiel" />
+              <SourceTag kind="original" detail="games.teamStatsDetail" />
             </div>
             <div className="overflow-x-auto rounded-xl border border-line bg-surface">
               <table className="w-full border-collapse text-[14px]">
                 <thead>
                   <tr className="border-b border-line text-[12px] text-ink-3">
-                    <th scope="col" className="py-2 pl-4 text-left font-medium">Kennzahl</th>
+                    <th scope="col" className="py-2 pl-4 text-left font-medium"><T k="games.colStat" /></th>
                     <th scope="col" className="py-2 text-right font-medium">{teams.get(g.away)?.abbr}</th>
                     <th scope="col" className="py-2 pr-4 text-right font-medium">{teams.get(g.home)?.abbr}</th>
                   </tr>
@@ -96,7 +98,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                     if (a === null && h === null) return null;
                     return (
                       <tr key={r.label} className="border-b border-line last:border-0">
-                        <td className="py-2 pl-4 text-ink-2">{r.label}</td>
+                        <td className="py-2 pl-4 text-ink-2"><T k={`games.rows.${r.key}` as "games.title"} /></td>
                         <td className="num py-2 text-right text-ink">{a ?? "–"}</td>
                         <td className="num py-2 pr-4 text-right text-ink">{h ?? "–"}</td>
                       </tr>
@@ -109,21 +111,21 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         </div>
           <section className="max-w-[600px]" aria-labelledby="hl-h">
             <h2 id="hl-h" className="display mb-3 text-[26px] font-bold leading-none tracking-tight text-ink">
-              Game Highlights
+              <T k="games.highlights" />
             </h2>
             {g.video ? (
-              <VideoPlayer youtubeId={g.video.youtubeId} title={g.video.title} channel={g.video.channel} meta={g.video.published ? `veröffentlicht ${fmtShortDate(g.video.published)}${g.video.published.slice(0, 4)}` : undefined}>
+              <VideoPlayer youtubeId={g.video.youtubeId} title={g.video.title} channel={g.video.channel} meta={g.video.published ? g.video.published : undefined}>
                 <GamePoster away={lite(g.away)} home={lite(g.home)} label="Highlights" />
               </VideoPlayer>
             ) : (
-              <p className="rounded-xl border border-dashed border-line px-4 py-3 text-[13.5px] text-ink-3">Für dieses Spiel ist noch kein Highlight-Video hinterlegt.</p>
+              <p className="rounded-xl border border-dashed border-line px-4 py-3 text-[13.5px] text-ink-3"><T k="games.noVideo" /></p>
             )}
           </section>
       </div>
 
       <div className="mt-12 grid gap-10 xl:grid-cols-2">
         {[g.away, g.home].map((t) => (
-          <section key={t} aria-label={`Spielerstatistik ${name(t)}`}>
+          <section key={t}>
             <h2 className="display mb-4 text-[26px] font-bold leading-none tracking-tight">
               <Link href={`/teams/${t}/`} className="text-ink hover:underline hover:underline-offset-4">
                 {name(t)}
@@ -141,7 +143,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   );
 }
 
-function TeamScore({ id, team, name, score, won, label, right }: { id: string; team?: TeamLite; name: string; score: number; won: boolean; label: string; right?: boolean }) {
+function TeamScore({ id, team, name, score, won, label, right }: { id: string; team?: TeamLite; name: string; score: number; won: boolean; label: React.ReactNode; right?: boolean }) {
   return (
     <div className={right ? "text-right" : ""}>
       <p className="text-[12px] text-ink-3">{label}</p>
@@ -157,15 +159,15 @@ function TeamScore({ id, team, name, score, won, label, right }: { id: string; t
 function Box({ title, cols, rows, players, avail }: { title: string; cols: string[]; rows: PlayerGame[]; players: Map<string, { name: string }>; avail: (k: string) => boolean }) {
   return (
     <div className="mb-5">
-      <h3 className="mb-1.5 text-[14px] font-semibold text-ink-2">{title}</h3>
+      <h3 className="mb-1.5 text-[14px] font-semibold text-ink-2"><T k={`games.sections.${title}` as "games.title"} /></h3>
       <div className="overflow-x-auto rounded-xl border border-line bg-surface">
         <table className="w-full border-collapse text-[13.5px]">
           <thead>
             <tr className="border-b border-line text-[12px] text-ink-3">
-              <th scope="col" className="py-1.5 pl-4 text-left font-medium">Spieler</th>
+              <th scope="col" className="py-1.5 pl-4 text-left font-medium"><T k="common.player" /></th>
               {cols.map((c) => (
-                <th key={c} scope="col" title={stat(c).label} className="px-2 py-1.5 text-right font-medium last:pr-4">
-                  {stat(c).abbr}
+                <th key={c} scope="col" className="px-2 py-1.5 text-right font-medium last:pr-4">
+                  <Titled stat={c}><StatLabel k={c} abbr /></Titled>
                 </th>
               ))}
             </tr>
@@ -180,7 +182,7 @@ function Box({ title, cols, rows, players, avail }: { title: string; cols: strin
                 </td>
                 {cols.map((c) => (
                   <td key={c} className="num px-2 py-1.5 text-right text-ink last:pr-4">
-                    {avail(c) ? formatStat(stat(c), r.s[c] ?? 0) : <span className="text-[12px] text-ink-3">n. e.</span>}
+                    {avail(c) ? <StatValue k={c} v={r.s[c] ?? 0} /> : <span className="text-[12px] text-ink-3"><T k="common.notRecorded" /></span>}
                   </td>
                 ))}
               </tr>

@@ -107,7 +107,7 @@ export function Director({ model, fadeRef, steady = false }: {
     if (index !== shotIndex.current) {
       shotIndex.current = index;
       const shot = sequence.shots[index];
-      s.setChapter({ index, shot: shot.shot.id, title: shot.shot.title, subtitle: shot.shot.subtitle });
+      s.setChapter({ index, shot: shot.shot.id, title: shot.shot.title, subtitle: shot.shot.subtitle, sub: shot.shot.sub });
       // Player Spotlight und Duell: Runde im Schlüssel, damit die Karten bei jeder Wiederholung neu einfahren
       const round = loops && time.current >= sequence.firstDuration ? Math.floor((time.current - sequence.firstDuration) / sequence.loopDuration) + 1 : 0;
       const key = `${restartSeen.current}-${round}-${index}`;

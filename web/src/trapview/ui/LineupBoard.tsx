@@ -1,15 +1,17 @@
 import type { ReactNode } from 'react';
 import type { SceneModel, ScenePlayer } from '../data/sceneModel';
 import type { Side } from '../data/types';
+import { useI18n } from '../../i18n/react';
 
 function Column({ model, side }: { model: SceneModel; side: Side }) {
   const team = side === 'offense' ? model.offense : model.defense;
   const players = model.players.filter((p) => p.side === side);
+  const { m } = useI18n();
   const row = (p: ScenePlayer) => (
     <li key={p.id} className={p.player ? undefined : 'is-empty'}>
       <span className="tv-board__num">{p.player?.number ?? '–'}</span>
       <span className="tv-board__pos">{p.posLabel}</span>
-      <span className="tv-board__name">{p.player?.name ?? 'nicht belegt'}</span>
+      <span className="tv-board__name">{p.player?.name ?? m.trapview.vacant}</span>
     </li>
   );
   return (
@@ -29,8 +31,9 @@ function Column({ model, side }: { model: SceneModel; side: Side }) {
  * - Unsichtbar (`srOnly`) neben der laufenden 3D-Szene, damit Screenreader denselben Inhalt bekommen.
  */
 export function LineupBoard({ model, srOnly = false, notice }: { model: SceneModel; srOnly?: boolean; notice?: ReactNode }) {
+  const { m } = useI18n();
   return (
-    <div className={srOnly ? 'tv-sr' : 'tv-board'} role="region" aria-label={`Aufstellung ${model.offense.name} gegen ${model.defense.name}`}>
+    <div className={srOnly ? 'tv-sr' : 'tv-board'} role="region" aria-label={m.trapview.lineupOf(model.offense.name, model.defense.name)}>
       {notice && <div className="tv-board__note" role="status">{notice}</div>}
       <div className="tv-board__cols">
         <Column model={model} side="offense" />

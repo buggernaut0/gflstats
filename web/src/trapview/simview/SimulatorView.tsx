@@ -10,6 +10,10 @@ import { buildUnits } from './roster';
 import { FieldCanvas, type Pos, type TeamLook } from './FieldCanvas';
 import { absOf, clockLabel, eventDuration, highlightReason, motionEnd, ordinal, spotLabel, type Speed } from './playback';
 import '../ui/styles.css';
+import { useI18n } from '../../i18n/react';
+import { simText as SIM_DE } from '../../i18n/de/sim';
+import { simText as SIM_EN } from '../../i18n/en/sim';
+import type { Messages } from '../../i18n/messages';
 import './sim.css';
 
 /** Der Simulator bezieht sich ausschließlich auf diese Saison. */
@@ -85,13 +89,32 @@ function driveStarts(events: PlayEvent[], home: string): (number | null)[] {
   return out;
 }
 
-const pct = (p: number) => `${Math.round(p * 100)} %`;
-
 function chanceTone(label: string) {
   if (/Reception|gelingt|Extra Point|Field Goal|ausspielen|erwartet/.test(label)) return 'good';
   if (/Interception|Sack|Fumble|Return-Touchdown/.test(label)) return 'bad';
   if (/Incomplete|Drop|Raumverlust|Strafe|ohne Anspielstation/.test(label)) return 'warn';
   return 'neutral';
+}
+
+/** Grund einer Highlight-Szene in der gewählten Sprache (dieselbe Auswahl wie highlightReason). */
+function highlightText(e: PlayEvent, m: Messages): string {
+  const h = m.simui.highlight;
+  switch (e.outcome) {
+    case 'touchdown': return h.touchdown;
+    case 'kickoff_return_td': case 'punt_return_td': return h.returnTd;
+    case 'interception': return e.points ? h.pickSix : h.interception;
+    case 'fumble_lost': return h.fumbleLost;
+    case 'safety': return h.safety;
+    case 'fg_good': return h.fgGood;
+    case 'fg_missed': return h.fgMissed;
+  }
+  const scrimmage = e.type === 'pass' || e.type === 'run';
+  if (e.turnover && scrimmage) return h.downs;
+  if (scrimmage && e.yards >= 20) return h.bigPlay(e.yards);
+  if (scrimmage && e.firstDown && e.down === 4) return h.fourth;
+  if (scrimmage && e.firstDown && e.down === 3) return h.third;
+  if (e.type === 'sack') return h.sack(e.down === 3 ? '3rd' : '4th');
+  return highlightReason(e) ?? '';
 }
 
 // ─────────────────────────────────────────────────────────── Ansicht
@@ -111,7 +134,10 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack, startDe
   const [season, setSeason] = useState<SeasonData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pick, setPick] = useState<[string, string] | null>(initialTeams ?? null);
-  const [game, setGame] = useState<GameResult | null>(null);
+  /** Gestartetes Spiel als Seed + Teams: in jeder Sprache dasselbe Spiel, nur die Texte wechseln */
+  const [run, setRun] = useState<{ seed: number; home: string; away: string } | null>(null);
+  const i18n = useI18n();
+  const su = i18n.m.simui;
   const [method, setMethod] = useState(false);
   const closeMethod = useCallback(() => setMethod(false), []);
 
@@ -129,10 +155,14 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack, startDe
   }, []);
 
   const profiles = useMemo(() => (data ? buildProfiles(data) : null), [data]);
+  const game: GameResult | null = useMemo(
+    () => (profiles && run ? simulateGame(profiles, { ...run, text: i18n.lang === 'en' ? SIM_EN : SIM_DE }) : null),
+    [profiles, run, i18n.lang],
+  );
 
   const start = useCallback((seed = randomSeed()) => {
     if (!profiles || !pick) return;
-    setGame(simulateGame(profiles, { seed, home: pick[0], away: pick[1] }));
+    setRun({ seed, home: pick[0], away: pick[1] });
   }, [profiles, pick]);
 
   // Einstieg aus der Trap View: genau die dort gewählten Teams, sofort losspielen
@@ -151,11 +181,11 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack, startDe
   if (error) {
     return (
       <div className="tv-root sim"><div className="tv-boot">
-        <b>Simulator-Daten fehlen.</b><span>{error}</span><span>Im Ordner web <code>npm run data</code> ausführen.</span>
+        <b>{su.dataMissing}</b><span>{error}</span><span>{su.runData}</span>
       </div></div>
     );
   }
-  if (!data || !teams || !pick || !season) return <div className="tv-root sim"><div className="tv-boot"><span>Lade Saison {SIM_SEASON} …</span></div></div>;
+  if (!data || !teams || !pick || !season) return <div className="tv-root sim"><div className="tv-boot"><span>{su.loadingSeason(SIM_SEASON)}</span></div></div>;
 
   const teamA = teams.find((t) => t.id === pick[0])!;
   const teamB = teams.find((t) => t.id === pick[1])!;
@@ -166,13 +196,13 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack, startDe
         <header className="sim-head">
           {onBack && <button className="sim-link" onClick={onBack}>← Trap View</button>}
           <span className="tv-wordmark">GFL SIMULATOR</span>
-          <button className="sim-link sim-head__method" onClick={() => setMethod(true)}>So funktioniert's</button>
-          <span className="sim-head__sub">Saison {SIM_SEASON} · vollautomatisch</span>
+          <button className="sim-link sim-head__method" onClick={() => setMethod(true)}>{su.howItWorks}</button>
+          <span className="sim-head__sub">{su.subAuto(SIM_SEASON)}</span>
         </header>
         <div className="sim-pick">
           {[0, 1].map((side) => (
             <section key={side} className="sim-pick__side">
-              <h2>{side === 0 ? 'Team 1' : 'Team 2'}</h2>
+              <h2>{side === 0 ? su.team1 : su.team2}</h2>
               <div className="sim-pick__name">{(side === 0 ? teamA : teamB).name}</div>
               <div className="sim-pick__chips">
                 {teams.map((t) => (
@@ -189,12 +219,8 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack, startDe
           ))}
         </div>
         <footer className="sim-pick__foot">
-          <button className="tv-enter" onClick={() => start()}><span>SIMULATION STARTEN</span></button>
-          <p className="sim-note">
-            Beide Teams spielen ein komplettes Spiel (4 × 12 Minuten). Jeder Spielzug wird aus den echten Werten
-            der Saison {SIM_SEASON} berechnet und per Zufall entschieden – keine Eingriffe, kein Playcalling.
-            Kein Heimvorteil, keine Overtime.
-          </p>
+          <button className="tv-enter" onClick={() => start()}><span>{su.start}</span></button>
+          <p className="sim-note">{su.note(SIM_SEASON)}</p>
         </footer>
         {profiles && (
           <div className="sim-multi-wrap">
@@ -220,7 +246,7 @@ export function SimulatorView({ initialTeams, autoStart = false, onBack, startDe
       teamA={teamA}
       teamB={teamB}
       onNew={() => start()}
-      onTeams={() => setGame(null)}
+      onTeams={() => setRun(null)}
       onBack={onBack}
       profiles={profiles!}
       onMethod={() => setMethod(true)}
@@ -237,6 +263,8 @@ function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack, 
   onNew: () => void; onTeams: () => void; onBack?: () => void; profiles: Profiles; onMethod: () => void; startDelayMs: number;
 }) {
   const events = game.events;
+  const i18n = useI18n();
+  const su = i18n.m.simui;
   const [home, away] = useMemo(() => teamLooks(teamA, teamB), [teamA, teamB]);
   const look = (id: string) => (id === home.id ? home : away);
   const teamOf = (id: string) => (id === teamA.id ? teamA : teamB);
@@ -358,8 +386,8 @@ function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack, 
       <header className="sim-head">
         {onBack && <button className="sim-link" onClick={onBack}>← Trap View</button>}
         <span className="tv-wordmark tv-wordmark--sm">GFL SIMULATOR</span>
-        <button className="sim-link sim-head__method" onClick={onMethod}>So funktioniert's</button>
-        <span className="sim-head__sub">Saison {SIM_SEASON} · Seed {game.seed}</span>
+        <button className="sim-link sim-head__method" onClick={onMethod}>{su.howItWorks}</button>
+        <span className="sim-head__sub">{su.subSeed(SIM_SEASON, game.seed)}</span>
       </header>
 
       <div className="sim-board">
@@ -367,15 +395,15 @@ function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack, 
           <div key={t.id} className={`sim-board__team sim-board__team--${i ? 'away' : 'home'}`} style={{ '--fill': t.fill, '--ink': t.ink } as React.CSSProperties}>
             {teamOf(t.id).logo && <img src={teamOf(t.id).logo!} alt="" />}
             <span className="sim-board__name">{teamOf(t.id).city}<small>{teamOf(t.id).nickname}</small></span>
-            {e.offense === t.id && isScrimmage(e) && !finished && <span className="sim-board__ball" title="Ballbesitz" />}
+            {e.offense === t.id && isScrimmage(e) && !finished && <span className="sim-board__ball" title={su.possession} />}
             <span className="sim-board__score">{score[t.id] ?? 0}</span>
           </div>
         ))}
         <div className="sim-board__state">
           {finished && rewatching == null ? <b>FINAL</b> : <>
-            <b>{rewatching != null && <em className="sim-replay">Wiederholung</em>}Q{e.quarter} · {clockLabel(e.clock)}</b>
+            <b>{rewatching != null && <em className="sim-replay">{su.replayTag}</em>}Q{e.quarter} · {clockLabel(e.clock)}</b>
             <span>
-              {isScrimmage(e) ? `${ordinal(e.down)} & ${e.yardLine + e.distance >= 100 ? 'Goal' : e.distance} · ${spotLabel(e.yardLine, look(e.offense).abbr, look(e.defense).abbr)}` : e.type === 'kickoff' ? 'Kickoff' : e.type === 'pat' || e.type === 'twopoint' ? 'Extrapunkt' : ''}
+              {isScrimmage(e) ? `${ordinal(e.down)} & ${e.yardLine + e.distance >= 100 ? su.goal : e.distance} · ${spotLabel(e.yardLine, look(e.offense).abbr, look(e.defense).abbr)}` : e.type === 'kickoff' ? 'Kickoff' : e.type === 'pat' || e.type === 'twopoint' ? su.extraPoint : ''}
             </span>
           </>}
         </div>
@@ -387,47 +415,47 @@ function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack, 
           <div className="sim-field-wrap">
             {speed === 'highlights' && rewatching == null && !finished && reasons[cursor] && (
               <div className="sim-hl-tag" key={cursor}>
-                <span>Highlight {highlightIdx.indexOf(cursor) + 1} / {highlightIdx.length}</span>
-                <b>{reasons[cursor]}</b>
+                <span>{su.highlightOf(highlightIdx.indexOf(cursor) + 1, highlightIdx.length)}</span>
+                <b>{highlightText(events[cursor], i18n.m)}</b>
               </div>
             )}
             <FieldCanvas events={events} home={home} away={away} names={names} units={units} pos={pos} driveStart={drives} onFrame={onFrame} />
           </div>
           <div className="sim-controls">
-            <button className="tv-chip" onClick={() => (finished ? replay() : setPlaying((p) => !p))}>{finished ? '↺ Nochmal ansehen' : playing ? '❚❚ Pause' : '▶ Weiter'}</button>
-            <div className="sim-speeds" role="group" aria-label="Wiedergabe">
+            <button className="tv-chip" onClick={() => (finished ? replay() : setPlaying((p) => !p))}>{finished ? su.watchAgainAll : playing ? su.pause : su.resume}</button>
+            <div className="sim-speeds" role="group" aria-label={su.playback}>
               {([1, 2, 4, 'highlights'] as Speed[]).map((s) => (
                 <button
                   key={String(s)}
                   className={`tv-chip${speed === s ? ' is-active' : ''}`}
                   aria-pressed={speed === s}
                   onClick={() => setSpeed(s)}
-                  title={s === 1 ? 'Jeder Spielzug, gut zum Mitverfolgen' : s === 'highlights' ? `Nur die ${highlightIdx.length} wichtigsten Szenen in Normaltempo` : `Jeder Spielzug, ${s}× so schnell`}
+                  title={s === 1 ? su.speedNormalHint : s === 'highlights' ? su.speedHlHint(highlightIdx.length) : su.speedHint(s)}
                 >
-                  {s === 1 ? 'Normal' : s === 'highlights' ? `Highlights (${highlightIdx.length})` : `${s}×`}
+                  {s === 1 ? su.normal : s === 'highlights' ? su.highlights(highlightIdx.length) : `${s}×`}
                 </button>
               ))}
             </div>
-            <button className="tv-chip" onClick={jumpToEnd} disabled={finished} title="Endstand, Teamwerte und beste Spieler">Ergebnis ⏭</button>
+            <button className="tv-chip" onClick={jumpToEnd} disabled={finished} title={su.resultHint}>{su.result}</button>
             <span className="sim-controls__spacer" />
-            <button className="tv-chip" onClick={onNew}>Neues Spiel</button>
-            <button className="tv-chip" onClick={onTeams}>Teams wechseln</button>
+            <button className="tv-chip" onClick={onNew}>{su.newGame}</button>
+            <button className="tv-chip" onClick={onTeams}>{su.changeTeams}</button>
             <span className="sim-controls__hint">
-              Spieldauer: Normal ≈ {fmtDuration(totalMs)} min · 2× ≈ {fmtDuration(totalMs / 2)} · 4× ≈ {fmtDuration(totalMs / 4)} · Highlights ≈ {fmtDuration(highlightMs)} ({highlightIdx.length} Szenen: Punkte, Turnover, Big Plays ab 20 Yards, wichtige 3rd/4th Downs) · Leertaste = Pause
+              {su.durations(fmtDuration(totalMs), fmtDuration(totalMs / 2), fmtDuration(totalMs / 4), fmtDuration(highlightMs), highlightIdx.length)}
             </span>
           </div>
         </section>
 
         <aside className="sim-side">
           <section className="sim-why">
-            <h3>{why ? (selected != null ? 'Ausgewählter Spielzug' : 'Letzter Spielzug') : 'Warum passiert was?'}</h3>
+            <h3>{why ? (selected != null ? su.selectedPlay : su.lastPlay) : su.why}</h3>
             {why ? <Why e={why} offAbbr={look(why.offense).abbr} onWatch={() => watchAgain(why.index)} watching={rewatching === why.index} /> : (
-              <p className="sim-muted">Zu jedem Spielzug stehen hier die berechneten Wahrscheinlichkeiten und woraus sie entstehen. Entschieden wird danach per Zufall.</p>
+              <p className="sim-muted">{su.whyHint}</p>
             )}
-            {selected != null && <button className="sim-link" onClick={() => setSelected(null)}>Zurück zum aktuellen Spielzug</button>}
+            {selected != null && <button className="sim-link" onClick={() => setSelected(null)}>{su.backToCurrent}</button>}
           </section>
           <section className="sim-ticker">
-            <h3>Spielverlauf</h3>
+            <h3>{su.ticker}</h3>
             <ol>
               {ticker.map((x) => (
                 <li
@@ -450,29 +478,30 @@ function GamePlayer({ data, season, game, teamA, teamB, onNew, onTeams, onBack, 
         <MultiPanel profiles={profiles} teams={[{ ...home, name: teamA.name }, { ...away, name: teamB.name }]} />
       </div>
       <footer className="sim-foot">
-        Grundlage: GFL-Statistikbögen {SIM_SEASON} ({data.league.games} Spiele). Spielerwerte zum Ligaschnitt geglättet, direkte Duelle nur auf
-        Teamebene (die Bögen sagen nicht, wer wen gedeckt hat). Annahmen wie Yard-Verteilung, Uhr und 4th-Down-Situationen sind
-        Simulationsparameter, keine Spielerstatistiken. Quelle: {data.source}.
+        {su.foot(SIM_SEASON, data.league.games, data.source)}
       </footer>
     </div>
   );
 }
 
 function Why({ e, offAbbr, onWatch, watching }: { e: PlayEvent; offAbbr: string; onWatch: () => void; watching: boolean }) {
+  const i18n = useI18n();
+  const su = i18n.m.simui;
+  const pct = (p: number) => (i18n.lang === 'en' ? `${Math.round(p * 100)}%` : `${Math.round(p * 100)} %`);
   return (
     <div className="sim-why__body">
       <div className="sim-why__text">{e.text}</div>
-      <button className="tv-chip sim-watch" onClick={onWatch} disabled={watching}>{watching ? 'Wird gezeigt …' : '▶ Spielzug nochmal zeigen'}</button>
-      {e.passRate != null && <div className="sim-muted">Spielzugwahl {offAbbr}: Pass {pct(e.passRate)} · Lauf {pct(1 - e.passRate)} (Teamquote 2026, nach Situation angepasst)</div>}
-      {e.chances.length === 0 && <div className="sim-muted">Keine Zufallsentscheidung bei diesem Ereignis.</div>}
+      <button className="tv-chip sim-watch" onClick={onWatch} disabled={watching}>{watching ? su.showing : su.watchPlay}</button>
+      {e.passRate != null && <div className="sim-muted">{su.playCall(offAbbr, pct(e.passRate), pct(1 - e.passRate))}</div>}
+      {e.chances.length === 0 && <div className="sim-muted">{su.noRandom}</div>}
       {e.chances.map((c, i) => (
-        <div key={i} className={`sim-chance sim-chance--${chanceTone(c.label)}`}>
+        <div key={i} className={`sim-chance sim-chance--${c.tone ?? chanceTone(c.label)}`}>
           <div className="sim-chance__row"><span>{c.label}</span><b>{pct(c.p)}</b></div>
           <div className="sim-chance__bar"><i style={{ width: `${Math.max(1, c.p * 100)}%` }} /></div>
           {c.basis && <div className="sim-chance__basis">{c.basis}</div>}
         </div>
       ))}
-      {e.expectedYards != null && <div className="sim-muted">Erwarteter Raumgewinn vor dem Zufall: {e.expectedYards.toFixed(1)} Yards · tatsächlich: {e.yards} Yards</div>}
+      {e.expectedYards != null && <div className="sim-muted">{su.expected(i18n.fmtDec(e.expectedYards, 1), e.yards)}</div>}
     </div>
   );
 }
@@ -480,24 +509,22 @@ function Why({ e, offAbbr, onWatch, watching }: { e: PlayEvent; offAbbr: string;
 function Summary({ game, home, away, teamOf, onReplay, onNew }: {
   game: GameResult; home: TeamLook; away: TeamLook; teamOf: (id: string) => Team; onReplay: () => void; onNew: () => void;
 }) {
-  const rows: [string, (s: GameResult['team'][string]) => string][] = [
-    ['Spielzüge', (s) => String(s.plays)],
-    ['First Downs', (s) => String(s.firstDowns)],
-    ['Pass-Yards', (s) => String(s.passYds)],
-    ['Lauf-Yards', (s) => String(s.rushYds)],
-    ['Sacks erlitten', (s) => String(s.sacks)],
-    ['Turnovers', (s) => String(s.turnovers)],
-    ['Punts', (s) => String(s.punts)],
+  const i18n = useI18n();
+  const su = i18n.m.simui;
+  const getters: ((s: GameResult['team'][string]) => string)[] = [
+    (s) => String(s.plays), (s) => String(s.firstDowns), (s) => String(s.passYds), (s) => String(s.rushYds),
+    (s) => String(s.sacks), (s) => String(s.turnovers), (s) => String(s.punts),
   ];
+  const rows: [string, (s: GameResult['team'][string]) => string][] = getters.map((g, i) => [su.summaryRows[i], g]);
   const leaders = (team: string) => {
     const lines = Object.values(game.box).filter((b) => b.team === team);
     const top = <K extends keyof (typeof lines)[number]>(k: K) => [...lines].sort((a, b) => (b[k] as number) - (a[k] as number))[0];
     const p = top('passingyards'), r = top('runyards'), c = top('receivingyards'), d = top('tackles');
     return [
-      p && p.pass > 0 ? `${p.name}: ${p.complete}/${p.pass}, ${p.passingyards} Yds, ${p.touchdownpass} TD, ${p.interception} INT` : null,
-      r && r.run > 0 ? `${r.name}: ${r.run} Läufe, ${r.runyards} Yds, ${r.touchdownrun} TD` : null,
-      c && c.catched > 0 ? `${c.name}: ${c.catched} Rec, ${c.receivingyards} Yds, ${c.touchdowncatch} TD` : null,
-      d && d.tackles > 0 ? `${d.name}: ${d.tackles} Tackles${d.sacks ? `, ${d.sacks} Sacks` : ''}` : null,
+      p && p.pass > 0 ? su.leaderPass(p.name, p.complete, p.pass, p.passingyards, p.touchdownpass, p.interception) : null,
+      r && r.run > 0 ? su.leaderRun(r.name, r.run, r.runyards, r.touchdownrun) : null,
+      c && c.catched > 0 ? su.leaderRec(c.name, c.catched, c.receivingyards, c.touchdowncatch) : null,
+      d && d.tackles > 0 ? su.leaderDef(d.name, d.tackles, d.sacks) : null,
     ].filter(Boolean) as string[];
   };
   return (
@@ -517,8 +544,8 @@ function Summary({ game, home, away, teamOf, onReplay, onNew }: {
         ))}
       </div>
       <div className="sim-summary__actions">
-        <button className="tv-chip" onClick={onReplay}>↺ Nochmal ansehen</button>
-        <button className="tv-chip is-active" onClick={onNew}>Neues Spiel simulieren</button>
+        <button className="tv-chip" onClick={onReplay}>{su.watchAgainAll}</button>
+        <button className="tv-chip is-active" onClick={onNew}>{su.simulateNew}</button>
       </div>
     </div>
   );

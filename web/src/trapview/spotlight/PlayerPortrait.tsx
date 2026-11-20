@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import type { Kit } from '../data/kits';
+import { useI18n } from '../../i18n/react';
 
 /**
  * Porträtfläche der Spotlight-Karte.
@@ -18,6 +19,7 @@ export function PlayerPortrait({ kit, number, photo, alt }: {
   alt: string;
 }) {
   const [broken, setBroken] = useState(false);
+  const { m } = useI18n();
   if (photo && !broken) {
     return (
       <div className="tv-portrait tv-portrait--photo">
@@ -26,7 +28,7 @@ export function PlayerPortrait({ kit, number, photo, alt }: {
     );
   }
   return (
-    <div className="tv-portrait" role="img" aria-label={`${alt} – stilisierte Darstellung, kein Foto vorhanden`}>
+    <div className="tv-portrait" role="img" aria-label={m.player.portraitAlt(alt)}>
       <Bust kit={kit} number={number} />
     </div>
   );

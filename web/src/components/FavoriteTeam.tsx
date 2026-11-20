@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { FAVORITE_EVENT, FAVORITE_KEY, applyFavorite, favoriteAsked, markFavoriteAsked, readFavorite, writeFavorite } from "@/lib/favorite";
 import TeamLogo, { type LogoTeam } from "./TeamLogo";
+import { useI18n } from "@/i18n/react";
 
 function subscribe(cb: () => void) {
   const onStorage = (e: StorageEvent) => {
@@ -37,6 +38,8 @@ export interface PickerTeam extends LogoTeam {
 /** Auswahl des Lieblingsteams in der Kopfleiste. */
 export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
   const [fav, setFav] = useFavoriteTeam();
+  const { m } = useI18n();
+  const f = m.favorite;
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const selected = teams.find((t) => t.id === fav);
@@ -54,8 +57,8 @@ export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
   }, [open]);
 
   const groups = [
-    { label: "Aktuelle Saison", list: teams.filter((t) => t.current) },
-    { label: "Frühere GFL-Teams", list: teams.filter((t) => !t.current) },
+    { label: f.groupCurrent, list: teams.filter((t) => t.current) },
+    { label: f.groupFormer, list: teams.filter((t) => !t.current) },
   ];
 
   return (
@@ -65,7 +68,7 @@ export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        title={selected ? `Lieblingsteam: ${selected.name}` : "Lieblingsteam wählen"}
+        title={selected ? f.current(selected.name) : f.title}
         className="flex h-9 items-center gap-2 rounded-md px-2 text-[14px] text-ink-2 hover:bg-surface-2 hover:text-ink"
       >
         {selected ? (
@@ -78,26 +81,26 @@ export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
               <path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" strokeLinejoin="round" />
             </svg>
-            <span className="hidden xl:inline">Mein Team</span>
+            <span className="hidden xl:inline">{f.myTeam}</span>
           </>
         )}
       </button>
       {open && (
-        <div role="dialog" aria-label="Lieblingsteam wählen" className="absolute right-0 z-50 mt-1.5 w-[300px] overflow-hidden rounded-xl border border-line bg-surface shadow-xl shadow-black/30">
+        <div role="dialog" aria-label={f.title} className="absolute right-0 z-50 mt-1.5 w-[300px] overflow-hidden rounded-xl border border-line bg-surface shadow-xl shadow-black/30">
           <div className="border-b border-line px-4 py-3">
             {selected ? (
               <p className="flex items-center gap-2.5 text-[14px] text-ink">
                 <TeamLogo team={selected} size={28} />
                 <span className="min-w-0">
-                  <span className="block text-[12px] text-ink-3">Dein Lieblingsteam</span>
+                  <span className="block text-[12px] text-ink-3">{f.yours}</span>
                   <span className="block truncate font-medium">{selected.name}</span>
                 </span>
               </p>
             ) : (
-              <p className="text-[13.5px] font-medium text-ink">Lieblingsteam wählen</p>
+              <p className="text-[13.5px] font-medium text-ink">{f.title}</p>
             )}
             <p className="mt-2 text-[12.5px] text-ink-2">
-              Spieler deines Teams werden auf allen Seiten dezent in den Teamfarben markiert. Die Auswahl bleibt in diesem Browser gespeichert.
+              {f.explain}
             </p>
           </div>
           <div className="max-h-[60vh] overflow-y-auto py-1">
@@ -119,7 +122,7 @@ export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
                         >
                           <TeamLogo team={t} size={26} />
                           <span className="flex-1 truncate">{t.name}</span>
-                          {t.id === fav && <span className="text-[12px] text-[var(--fav)]">gewählt</span>}
+                          {t.id === fav && <span className="text-[12px] text-[var(--fav)]">{f.chosen}</span>}
                         </button>
                       </li>
                     ))}
@@ -137,7 +140,7 @@ export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
               }}
               className="w-full border-t border-line px-4 py-2.5 text-left text-[13.5px] text-ink-2 hover:bg-surface-2 hover:text-ink"
             >
-              Lieblingsteam entfernen
+              {f.remove}
             </button>
           )}
         </div>
@@ -148,12 +151,13 @@ export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
 
 /** Kleines Kennzeichen "Dein Team"; nur sichtbar, wenn ein umgebendes Element zum Lieblingsteam gehoert. */
 export function FavBadge({ className = "" }: { className?: string }) {
+  const { m } = useI18n();
   return (
     <span className={`fav-badge items-center gap-1 rounded-full border border-[var(--fav)] px-2 py-[1px] text-[11.5px] font-medium text-[var(--fav)] ${className}`}>
       <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
       </svg>
-      Dein Team
+      {m.favorite.badge}
     </span>
   );
 }
@@ -166,6 +170,8 @@ export function FavBadge({ className = "" }: { className?: string }) {
 export function FavoriteWelcome({ teams }: { teams: PickerTeam[] }) {
   const [open, setOpen] = useState(false);
   const [pick, setPick] = useState<string | null>(null);
+  const { m } = useI18n();
+  const f = m.favorite;
   const dialog = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -219,17 +225,16 @@ export function FavoriteWelcome({ teams }: { teams: PickerTeam[] }) {
         className="fav-welcome__card flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-line bg-surface shadow-2xl shadow-black/40 sm:max-w-[620px] sm:rounded-2xl"
       >
         <div className="px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
-          <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-ink-3">Willkommen bei GFL Analytics</p>
+          <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-ink-3">{f.welcomeKicker}</p>
           <h2 id="fav-welcome-title" className="display mt-1.5 text-[30px] font-bold leading-none tracking-tight text-ink">
-            Was ist dein Lieblingsteam?
+            {f.welcomeTitle}
           </h2>
           <p id="fav-welcome-text" className="mt-2.5 max-w-[58ch] text-[14px] leading-relaxed text-ink-2">
-            Wähle dein Team, damit du dich in den vielen Zahlen schneller zurechtfindest: Spieler deines Teams werden auf der ganzen
-            Website dezent in den Teamfarben markiert – in Tabellen, Ranglisten und Spielberichten erkennst du sie auf einen Blick.
+            {f.welcomeText}
           </p>
         </div>
 
-        <ul className="grid min-h-0 grid-cols-2 gap-2 overflow-y-auto px-5 pb-4 sm:grid-cols-3 sm:px-6" aria-label="GFL-Teams">
+        <ul className="grid min-h-0 grid-cols-2 gap-2 overflow-y-auto px-5 pb-4 sm:grid-cols-3 sm:px-6" aria-label={f.teamsList}>
           {teams.map((t) => {
             const on = t.id === pick;
             const c1 = t.colors?.primary ?? "var(--line-strong)";
@@ -261,10 +266,10 @@ export function FavoriteWelcome({ teams }: { teams: PickerTeam[] }) {
         </ul>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-3.5 sm:px-6">
-          <p className="text-[12.5px] text-ink-3">Jederzeit änderbar oben rechts unter „Mein Team“.</p>
+          <p className="text-[12.5px] text-ink-3">{f.changeLater}</p>
           <div className="ml-auto flex items-center gap-2">
             <button type="button" onClick={skip} className="rounded-md px-3 py-2 text-[14px] text-ink-2 hover:bg-surface-2 hover:text-ink">
-              Überspringen
+              {f.skip}
             </button>
             <button
               type="button"
@@ -272,7 +277,7 @@ export function FavoriteWelcome({ teams }: { teams: PickerTeam[] }) {
               disabled={!pick}
               className="rounded-md bg-accent px-4 py-2 text-[14px] font-semibold text-accent-ink transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {chosen ? `${chosen.short} auswählen` : "Team auswählen"}
+              {chosen ? f.choose(chosen.short) : f.chooseTeam}
             </button>
           </div>
         </div>

@@ -49,7 +49,7 @@ export interface Breakout {
   games: number;
   prevGames: number;
   /** wichtigste Kennzahl der Rolle vorher/nachher, fertig formatiert */
-  keyStat: { label: string; before: string; after: string };
+  keyStat: { key: string; label: string; before: string; after: string; beforeValue: number | null; afterValue: number | null };
 }
 
 /**
@@ -84,7 +84,7 @@ export function breakouts(all: Entry[], season: number, availability: Record<str
         const d = stat(k);
         out.push({
           player: e.player, role, season, teams: e.teams, prevTeams: p.teams, before: b, after: a, games: e.games, prevGames: p.games,
-          keyStat: { label: d.label, before: formatStat(d, value(d, p.stats, p.games)), after: formatStat(d, value(d, e.stats, e.games)) },
+          keyStat: { key: k, label: d.label, before: formatStat(d, value(d, p.stats, p.games)), after: formatStat(d, value(d, e.stats, e.games)), beforeValue: value(d, p.stats, p.games), afterValue: value(d, e.stats, e.games) },
         });
       }
     }

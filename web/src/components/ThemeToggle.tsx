@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/i18n/react";
 
 type Theme = "dark" | "light";
 
 /** Wechselt zwischen dunklem (Standard) und hellem Design; merkt sich die Wahl im Browser. */
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("dark");
+  const { m } = useI18n();
 
   useEffect(() => {
     setTheme((document.documentElement.dataset.theme as Theme) || "dark");
@@ -28,8 +30,8 @@ export default function ThemeToggle() {
       type="button"
       onClick={toggle}
       className="grid h-9 w-9 place-items-center rounded-md text-ink-2 hover:bg-surface-2 hover:text-ink"
-      aria-label={theme === "dark" ? "Helles Design einschalten" : "Dunkles Design einschalten"}
-      title={theme === "dark" ? "Helles Design" : "Dunkles Design"}
+      aria-label={theme === "dark" ? m.shell.themeToLight : m.shell.themeToDark}
+      title={theme === "dark" ? m.shell.themeLight : m.shell.themeDark}
     >
       {theme === "dark" ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">

@@ -12,7 +12,8 @@ import {
   type TeamLite,
 } from "@/lib/dashboard";
 import { getGames, getMeta, getPlayerGames, getPlayerSeasons, getTeamSeasons, getTeams, isAvailable, playerMap, teamNameIn } from "@/lib/data";
-import { fmt, fmtDate, fmtDec, fmtStamp } from "@/lib/format";
+import { DateText, Num, T, Titled } from "@/i18n/react";
+import { PlayoffRound, SourceLine } from "./I18nBits";
 import type { Game, Scope } from "@/lib/types";
 import DashboardBody, { type DashboardData } from "./DashboardBody";
 import GamePoster from "./GamePoster";
@@ -59,7 +60,7 @@ export default function SeasonDashboard({ season }: { season: number }) {
         <div className="yardlines pointer-events-none absolute inset-0 opacity-[0.35]" aria-hidden="true" />
         <div className="relative grid gap-10 lg:grid-cols-[1fr_minmax(0,460px)] lg:items-end">
           <div>
-            <nav aria-label="Saison wählen" className="mb-5 flex flex-wrap gap-1">
+            <nav className="mb-5 flex flex-wrap gap-1">
               {meta.seasons.map((y) => (
                 <Link
                   key={y}
@@ -77,13 +78,13 @@ export default function SeasonDashboard({ season }: { season: number }) {
               GFL {season}
             </h1>
             <dl className="mt-6 grid max-w-[560px] grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
-              <Fact label="Spiele" value={fmt(facts.games)} hint={`${facts.regular} Regular Season, ${facts.playoff} Playoffs`} />
-              <Fact label="Teams" value={fmt(facts.teams)} />
-              <Fact label="Spieler" value={fmt(facts.players)} hint="mit mindestens einem Eintrag im Statistikbogen" />
-              <Fact label="Punkte pro Spiel" value={fmtDec(facts.pointsPerGame)} hint="beide Teams zusammen" />
+              <Fact label={<T k="home.factGames" />} value={<Num v={facts.games} />} hint="home.factGamesHint" hintArgs={[facts.regular, facts.playoff]} />
+              <Fact label={<T k="home.factTeams" />} value={<Num v={facts.teams} />} />
+              <Fact label={<T k="home.factPlayers" />} value={<Num v={facts.players} />} hint="home.factPlayersHint" />
+              <Fact label={<T k="home.factPpg" />} value={<Num v={facts.pointsPerGame} digits={1} />} hint="home.factPpgHint" />
             </dl>
           </div>
-          {final ? <Scorebug final={final} teams={teams} /> : <p className="text-ink-2">Noch keine Playoff-Ergebnisse für {season}.</p>}
+          {final ? <Scorebug final={final} teams={teams} /> : <p className="text-ink-2"><T k="home.noPlayoffs" a={[season]} /></p>}
         </div>
       </section>
 
@@ -100,11 +101,9 @@ export default function SeasonDashboard({ season }: { season: number }) {
 
       <aside className="mt-16 rounded-xl border border-line bg-surface px-5 py-4 text-[13.5px] text-ink-2">
         <p>
-          Datenquelle: Spielbögen von statsnscore.online, Stand {fmtStamp(meta.builtAt)}. Vor der Anzeige bereinigt:{" "}
-          {meta.corrections.filter((c) => c.type === "Spiel ausgeschlossen").length} Spiele ausgeschlossen, Heim/Gast 2023 korrigiert,{" "}
-          {meta.corrections.filter((c) => c.type === "Spieler zusammengefuehrt").length} Spieler mit mehreren Schreibweisen zusammengeführt.{" "}
+          <SourceLine builtAt={meta.builtAt} excluded={meta.corrections.filter((c) => c.type === "Spiel ausgeschlossen").length} merged={meta.corrections.filter((c) => c.type === "Spieler zusammengefuehrt").length} />{" "}
           <Link href="/methodik/" className="text-accent-text underline-offset-4 hover:underline">
-            Alle Korrekturen und Rechenwege
+            <T k="home.allCorrections" />
           </Link>
         </p>
       </aside>
@@ -119,11 +118,11 @@ function SeasonVideos({ games, teams, season }: { games: Game[]; teams: Record<s
     <section className="mt-14" aria-labelledby="sv-h">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="sv-h" className="display text-[28px] font-bold leading-none tracking-tight text-ink">Highlights {season}</h2>
-          <p className="mt-2 text-[13.5px] text-ink-2">Playoff-Spiele und die knappsten Partien der Regular Season mit Highlight-Video.</p>
+          <h2 id="sv-h" className="display text-[28px] font-bold leading-none tracking-tight text-ink"><T k="home.highlightsTitle" a={[season]} /></h2>
+          <p className="mt-2 text-[13.5px] text-ink-2"><T k="home.highlightsNote" /></p>
         </div>
         <Link href={`/spiele/?saison=${season}&highlights=1`} className="rounded-md border border-line px-3 py-1.5 text-[13.5px] font-medium text-ink-2 hover:border-line-strong hover:text-ink">
-          Alle Spiele mit Highlights
+          <T k="home.allHighlights" />
         </Link>
       </div>
       <ul className="grid gap-4 md:grid-cols-3">
@@ -143,7 +142,7 @@ function SeasonVideos({ games, teams, season }: { games: Game[]; teams: Record<s
                 </span>
               </span>
               <span className="block px-4 pb-3 text-[12.5px] text-ink-3">
-                {playoffRound(g) ?? (g.type === "playoff" ? "Playoffs" : "Regular Season")}, {fmtDate(g.date)}
+                {playoffRound(g) ? <PlayoffRound name={playoffRound(g)!} /> : <T k={g.type === "playoff" ? "common.playoffs" : "common.regularSeason"} />}, <DateText iso={g.date} />
               </span>
             </Link>
           </li>
@@ -153,12 +152,12 @@ function SeasonVideos({ games, teams, season }: { games: Game[]; teams: Record<s
   );
 }
 
-function Fact({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Fact({ label, value, hint, hintArgs }: { label: React.ReactNode; value: React.ReactNode; hint?: "home.factGamesHint" | "home.factPlayersHint" | "home.factPpgHint"; hintArgs?: unknown[] }) {
   return (
-    <div title={hint}>
+    <Titled as="div" k={hint} a={hintArgs}>
       <dt className="text-[12.5px] text-ink-3">{label}</dt>
       <dd className="num display text-[26px] font-semibold leading-tight text-ink">{value}</dd>
-    </div>
+    </Titled>
   );
 }
 
@@ -171,8 +170,8 @@ function Scorebug({ final, teams }: { final: NonNullable<ReturnType<typeof seaso
   return (
     <figure className="rounded-xl border border-line-strong bg-surface shadow-[0_1px_0_var(--line)]">
       <figcaption className="flex items-center justify-between border-b border-line px-4 py-2.5 text-[13px]">
-        <Link href={`/spiele/${final.id}/`} className="font-semibold text-ink hover:underline hover:underline-offset-4">{final.label}</Link>
-        <span className="text-ink-3">{fmtDate(final.date)}</span>
+        <Link href={`/spiele/${final.id}/`} className="font-semibold text-ink hover:underline hover:underline-offset-4"><PlayoffRound name={final.label} /></Link>
+        <span className="text-ink-3"><DateText iso={final.date} /></span>
       </figcaption>
       {rows.map((r) => (
         <div key={r.team} className="relative flex items-center justify-between gap-4 border-b border-line px-4 py-3 last:border-0">
@@ -183,7 +182,7 @@ function Scorebug({ final, teams }: { final: NonNullable<ReturnType<typeof seaso
           <span className={`num display text-[40px] font-bold leading-none ${r.won ? "text-ink" : "text-ink-3"}`}>{r.score}</span>
         </div>
       ))}
-      <p className="px-4 py-2 text-[12.5px] text-ink-3">Deutscher Meister {final.date.slice(0, 4)}: {teams[final.winner.team]?.name ?? final.winner.team}</p>
+      <p className="px-4 py-2 text-[12.5px] text-ink-3"><T k="home.champion" a={[final.date.slice(0, 4), teams[final.winner.team]?.name ?? final.winner.team]} /></p>
     </figure>
   );
 }

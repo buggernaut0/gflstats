@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { teamsAttr } from "@/lib/favorite";
+import { useI18n } from "@/i18n/react";
 
 export interface Column<T> {
   key: string;
@@ -37,6 +38,7 @@ export default function ResultTable<T>({
 }) {
   const [sort, setSort] = useState(initialSort ?? { key: columns[0].key, desc: true });
   const [limit, setLimit] = useState(pageSize);
+  const { m } = useI18n();
 
   const sorted = useMemo(() => {
     const col = columns.find((c) => c.key === sort.key);
@@ -112,7 +114,7 @@ export default function ResultTable<T>({
             {sorted.length === 0 && (
               <tr>
                 <td colSpan={columns.length + 1} className="px-4 py-6 text-[14px] text-ink-3">
-                  Keine Treffer. Bedingungen lockern oder Filter zurücksetzen.
+                  {m.table.noHits}
                 </td>
               </tr>
             )}
@@ -121,7 +123,7 @@ export default function ResultTable<T>({
       </div>
       {sorted.length > limit && (
         <button type="button" onClick={() => setLimit((l) => l + pageSize)} className="mt-3 rounded-md border border-line px-3 py-1.5 text-[13.5px] text-ink-2 hover:text-ink">
-          Weitere {Math.min(pageSize, sorted.length - limit)} von {sorted.length - limit} anzeigen
+          {m.table.showMore(Math.min(pageSize, sorted.length - limit), sorted.length - limit)}
         </button>
       )}
     </div>

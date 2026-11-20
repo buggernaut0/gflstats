@@ -8,6 +8,8 @@ import "@fontsource/barlow-condensed/700.css";
 import "./globals.css";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import { langInitScript } from "@/i18n/config";
+import { I18nReady, T } from "@/i18n/react";
 import { FAVORITE_STYLE_ID, favoriteInitScript, type FavoriteColors } from "@/lib/favorite";
 import { getTeams } from "@/lib/data";
 import { teamAccent } from "@/lib/teamColors";
@@ -42,12 +44,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Leer ausgeliefert; das Skript darunter fuellt es mit den Regeln fuers Lieblingsteam (lib/favorite.ts). */}
         <style id={FAVORITE_STYLE_ID} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: "" }} />
-        <script dangerouslySetInnerHTML={{ __html: themeScript + favoriteInitScript(favoriteColors()) }} />
+        <script dangerouslySetInnerHTML={{ __html: themeScript + langInitScript + favoriteInitScript(favoriteColors()) }} />
       </head>
       <body className="min-h-screen">
         <a href="#inhalt" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded focus:bg-accent focus:px-3 focus:py-1.5 focus:text-accent-ink">
-          Zum Inhalt springen
+          <T k="shell.skipToContent" />
         </a>
+        <I18nReady />
         <SiteHeader />
         <div id="inhalt">{children}</div>
         <SiteFooter />

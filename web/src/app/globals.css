@@ -262,3 +262,8 @@ html.trapview-page body > footer {
 @media (prefers-reduced-motion: reduce) {
   .elite-badge::after { animation: none; display: none; }
 }
+
+/* Sprache: Englisch gespeichert, das statische HTML ist aber deutsch – bis zur Umstellung nach dem Laden
+   unsichtbar statt deutsch aufzublitzen (I18nReady in src/i18n/react.tsx). Notausgang nach 1,5 s. */
+html:lang(en):not([data-i18n]) body { visibility: hidden; animation: i18n-reveal 0s linear 1.5s forwards; }
+@keyframes i18n-reveal { to { visibility: visible; } }

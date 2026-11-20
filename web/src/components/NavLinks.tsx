@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV, isActive } from "@/lib/nav";
+import { useI18n } from "@/i18n/react";
 
 export default function NavLinks() {
   const path = usePathname() || "/";
+  const { m } = useI18n();
   return (
-    <nav aria-label="Hauptnavigation" className="-mx-1 flex min-w-0 items-center gap-0.5 overflow-x-auto sm:overflow-visible">
+    <nav aria-label={m.nav.main} className="-mx-1 flex min-w-0 items-center gap-0.5 overflow-x-auto sm:overflow-visible">
       {NAV.map((item) => {
         const active = isActive(path, item);
         return (
@@ -19,7 +21,7 @@ export default function NavLinks() {
               active ? "text-ink" : "text-ink-2 hover:text-ink"
             }`}
           >
-            {item.label}
+            {m.nav[item.key]}
             {active && <span className="absolute inset-x-2.5 bottom-0 xl:inset-x-3 h-[3px] sm:-bottom-[13px] rounded-full bg-accent" aria-hidden="true" />}
           </Link>
         );
