@@ -10,6 +10,7 @@ import { LineupBoard } from './ui/LineupBoard';
 import { LabelLayer, type LabelRegistry } from './labels/PlayerLabels';
 import { useTrapView } from './state/store';
 import { ASSET_BASE } from './paths';
+import { JERSEY_NAME_FONT } from './players/numberAtlas';
 import './ui/styles.css';
 
 export interface TrapViewProps {
@@ -23,14 +24,7 @@ export interface TrapViewProps {
   audioSrc?: string | string[];
   /** Wird aufgerufen, wenn der Nutzer den Kinomodus verlässt. */
   onExit?: () => void;
-  /** Öffnet den Simulator (nur Saison 2026) mit den gewählten Teams. */
-  onSimulate?: (teamA: string, teamB: string, autoStart?: boolean) => void;
-  /** true, während der Übergang in den Simulator läuft (Kamera fährt ins Bild, Szene blendet ab). */
-  leaving?: boolean;
 }
-
-/** Ausblenden der Musik beim Wechsel in den Simulator – so lang wie der ganze Übergang, kein Schnitt. */
-export const HANDOFF_AUDIO_FADE = 2.2;
 
 /** Lieder der Trap View (public/trapview/audio/). Bei jedem „Enter Trap View“ wird eines zufällig gewählt. */
 export const TRACKS = ['track.mp3', 'track-2.mp3', 'track-3.mp3', 'track-4.mp3'].map((f) => `${ASSET_BASE}/audio/${f}`);
@@ -48,7 +42,7 @@ const ENTER_MS = 1500;
 type Stage = 'ok' | 'unsupported' | 'error' | 'lost';
 
 /** Öffentlicher Einstiegspunkt des Features – füllt seinen Container vollständig. */
-export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRACKS, onExit, onSimulate, leaving = false }: TrapViewProps) {
+export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRACKS, onExit }: TrapViewProps) {
   const { index, season } = data;
   const phase = useTrapView((s) => s.phase);
   const storedOffense = useTrapView((s) => s.offenseId);
@@ -80,7 +74,7 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
     let alive = true;
     Promise.all([
       document.fonts.load('64px Anton'),
-      document.fonts.load('600 30px "Barlow Condensed"'),
+      document.fonts.load(JERSEY_NAME_FONT),
     ]).finally(() => alive && setFontsReady(true));
     return () => { alive = false; };
   }, []);
@@ -154,6 +148,7 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
     const s = useTrapView.getState();
     s.setChapter(null);
     s.setSpotlight(null);
+    s.setDuel(null);
     s.setVisibleLabels([]);
   };
 
@@ -168,7 +163,7 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
   const inCinema = phase !== 'select';
 
   return (
-    <div className={`tv-root${leaving ? ' is-leaving' : ''}`}>
+    <div className="tv-root">
       {inCinema && fontsReady && (
         <div className={`tv-stage${stage === 'ok' ? '' : ' tv-stage--plain'}`}>
           {stage === 'ok' ? (
@@ -200,18 +195,6 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
               audioStatus={audioStatus}
               onUnlockAudio={() => audio.current!.unlock()}
               onExit={exit}
-              onSimulate={
-                onSimulate
-                  ? season.season === 2026
-                    ? () => {
-                      // Musik weich über den ganzen Übergang ausblenden; die Szene gibt Canvas und Speicher
-                      // beim Aushängen selbst frei
-                      audio.current!.stop(HANDOFF_AUDIO_FADE);
-                      onSimulate(model.offense.id, model.defense.id, true);
-                    }
-                    : null
-                  : undefined
-              }
             />
           )}
         </div>
@@ -229,7 +212,6 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
           onSeason={(s) => onSeasonChange?.(s)}
           onChange={(o, d) => useTrapView.getState().setTeams(o, d)}
           onEnter={enter}
-          onSimulate={onSimulate && season.season === 2026 ? () => onSimulate(offenseId, defenseId) : undefined}
         />
       )}
     </div>

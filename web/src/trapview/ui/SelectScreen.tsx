@@ -12,8 +12,6 @@ interface Props {
   onSeason: (season: number) => void;
   onChange: (offenseId: string, defenseId: string) => void;
   onEnter: () => void;
-  /** Nur in Saison 2026: Simulator mit den gewählten Teams öffnen */
-  onSimulate?: () => void;
 }
 
 function Side(props: {
@@ -68,7 +66,7 @@ function Side(props: {
 }
 
 /** Stille Auswahloberfläche: Saison oben, Offense links, Defense rechts, ein Button in der Mitte. */
-export function SelectScreen({ teams, seasons, season, offenseId, defenseId, leaving, loading, onSeason, onChange, onEnter, onSimulate }: Props) {
+export function SelectScreen({ teams, seasons, season, offenseId, defenseId, leaving, loading, onSeason, onChange, onEnter }: Props) {
   const offense = teams.find((t) => t.id === offenseId) ?? teams[0];
   const defense = teams.find((t) => t.id === defenseId && t.id !== offense.id) ?? teams.find((t) => t.id !== offense.id) ?? teams[0];
   return (
@@ -94,11 +92,6 @@ export function SelectScreen({ teams, seasons, season, offenseId, defenseId, lea
           <span>ENTER TRAP VIEW</span>
         </button>
         <span className="tv-select__hint">Sound on · the beat starts when you enter</span>
-        {onSimulate && (
-          <button className="tv-sim-link" onClick={onSimulate} disabled={loading}>
-            Spiel simulieren ({season}) →
-          </button>
-        )}
       </footer>
     </div>
   );

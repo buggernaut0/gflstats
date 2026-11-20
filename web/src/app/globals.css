@@ -212,3 +212,53 @@ html.trapview-page body > footer {
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
+
+/* Begrüßung „Lieblingsteam“ (components/FavoriteTeam.tsx): sanftes Einblenden */
+.fav-welcome { animation: fav-fade 0.25s ease-out both; }
+.fav-welcome__card { animation: fav-rise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes fav-fade { from { opacity: 0; } }
+@keyframes fav-rise { from { opacity: 0; transform: translateY(16px); } }
+@media (prefers-reduced-motion: reduce) {
+  .fav-welcome, .fav-welcome__card { animation: none; }
+}
+
+/* ── Elite-Abzeichen (components/EliteBadge.tsx): beste zehn je Positionsgruppe ──
+   Goldene Plakette mit metallischem Verlauf, schräg geschnitten wie eine TV-Bauchbinde. */
+.elite-badge {
+  --eb-ink: #2b1c05;
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 0.42em;
+  padding: 0.3em 0.95em 0.26em 0.62em; vertical-align: middle; white-space: nowrap;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 700; line-height: 1;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--eb-ink);
+  text-shadow: 0 1px 0 rgba(255, 246, 214, 0.55);
+  background: linear-gradient(118deg, #fff4c9 0%, #f0d073 22%, #c9952f 48%, #e8c25c 70%, #fff0b8 100%);
+  clip-path: polygon(0.5em 0, 100% 0, calc(100% - 0.5em) 100%, 0 100%);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.25));
+}
+/* feine helle Kante oben und dunkle unten – wirkt wie geprägtes Metall */
+.elite-badge::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(rgba(255, 255, 255, 0.55), transparent 38%, transparent 70%, rgba(90, 55, 6, 0.35));
+}
+/* langsamer Glanz, der einmal über die Plakette läuft */
+.elite-badge::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.75) 50%, transparent 65%);
+  transform: translateX(-120%); animation: elite-sheen 5.5s ease-in-out 1.2s infinite;
+}
+@keyframes elite-sheen { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+.elite-badge__crest { width: 1.25em; height: 1.25em; flex: none; margin: -0.1em 0; }
+.elite-badge__word { padding-left: 0.05em; }
+.elite-badge__meta {
+  margin-left: 0.15em; padding-left: 0.55em; border-left: 1px solid rgba(43, 28, 5, 0.35);
+  font-weight: 600; letter-spacing: 0.1em; opacity: 0.9;
+}
+.elite-badge__meta b { font-weight: 800; letter-spacing: 0.04em; margin-right: 0.3em; }
+.elite-badge--sm { font-size: 10.5px; padding: 0.28em 0.8em 0.24em 0.5em; gap: 0.32em; }
+.elite-badge--md { font-size: 12.5px; }
+.elite-badge--lg { font-size: 15px; padding: 0.42em 1.15em 0.36em 0.75em; max-width: 100%; }
+.elite-badge--lg .elite-badge__meta { overflow: hidden; text-overflow: ellipsis; }
+.elite-badge--lg .elite-badge__crest { width: 1.45em; height: 1.45em; }
+@media (prefers-reduced-motion: reduce) {
+  .elite-badge::after { animation: none; display: none; }
+}

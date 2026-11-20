@@ -482,10 +482,18 @@
         "ifm Razorbacks Ravensburg"
       ],
       "colors": {
-        "primary": "#18223C",
-        "secondary": "#CE152F",
-        "source": "https://ifm-razorbacks.de/wp-content/uploads/2024/03/ifm-Razorbacks-CI-StyleGuide.pdf",
-        "note": "Razorbacks-Blau (Primärfarbe 1) und Razorbacks-Rot (Primärfarbe 2) laut CI-Styleguide des Vereins, abgerufen 12.11.2026. Markenfarben, kein Abbild des tatsächlichen Trikots."
+        "primary": "#152139",
+        "secondary": "#C88035",
+        "accent": "#CE152F",
+        "source": "Trikotfoto der Herren (#10, weißes Trikot, Beitrag „Out for Season – Injured“ der Razorbacks), vom Nutzer bereitgestellt am 20.11.2026",
+        "note": "Navy und Orange laut Trikotfoto: weißes Trikot mit Navy-Nummern und oranger Kontur, Navy-Kragen und -Hose. Werte aus dem Foto gemessen (Navy-Hose #152139, Nummern #0E1B2D im Schatten, Orange beleuchtet #C88035). Rot (#CE152F) bleibt als Akzent – Farbe des Keiler-Logos laut CI-Styleguide (https://ifm-razorbacks.de/wp-content/uploads/2024/03/ifm-Razorbacks-CI-StyleGuide.pdf). Das Foto hat Vorrang vor den früheren Markenfarben Blau/Rot. Trikot (kit): weiß dominiert – weißes Trikot mit Navy-Kragen und -Ärmelabschluss, Navy-Nummern mit oranger Kontur, Navy-Hose (Foto). Helm im Foto nicht zu sehen, daher Navy (Hauptfarbe).",
+        "kit": {
+          "jersey": "#F2F2EF",
+          "trim": "#152139",
+          "number": "#152139",
+          "numberOutline": "#C88035",
+          "pants": "#152139"
+        }
       },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/RVR.png",

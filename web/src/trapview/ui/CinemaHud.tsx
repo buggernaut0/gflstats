@@ -2,23 +2,25 @@ import { useEffect, useState } from 'react';
 import { playerTag, type SceneModel } from '../data/sceneModel';
 import type { DataIndex } from '../data/types';
 import { MatchupPanel } from '../matchup/MatchupPanel';
+import { DuelBar } from '../matchup/DuelBar';
+import { EliteRoster } from './EliteRoster';
+import { EliteCrest } from '../../components/EliteBadge';
 import { SpotlightCard } from '../spotlight/SpotlightCard';
 import { useTrapView } from '../state/store';
 import type { AudioStatus } from '../audio/AudioEngine';
 
 /** Zurückhaltende Bedienelemente über der Szene; blenden sich bei Inaktivität aus. */
-export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit, onSimulate }: {
+export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit }: {
   model: SceneModel;
   index: DataIndex;
   audioStatus: AudioStatus;
   /** Musik starten, nachdem der Browser die automatische Wiedergabe blockiert hat. */
   onUnlockAudio: () => void;
   onExit: () => void;
-  /** Simulator mit genau diesen beiden Teams starten; null = in dieser Saison nicht verfügbar (nur 2026). */
-  onSimulate?: (() => void) | null;
 }) {
   const chapter = useTrapView((s) => s.chapter);
   const spotlight = useTrapView((s) => s.spotlight);
+  const duel = useTrapView((s) => s.duel);
   const matchupId = useTrapView((s) => s.matchupId);
   const ended = useTrapView((s) => s.ended);
   const volume = useTrapView((s) => s.volume);
@@ -57,10 +59,15 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit, on
   const active = model.matchups.find((m) => m.id === matchupId);
   const quiet = idle && !active && !ended;
   const spot = spotlight && !active ? model.spotlights[spotlight.index] : undefined;
+  // Duell-Einstellung der Präsentation: beide Profile sofort (nicht, wenn das Vergleichsfenster offen ist)
+  const duelMatch = duel && !active ? model.matchups.find((m) => m.id === duel.id) : undefined;
+  // Elite-Übersicht im Einstieg und im Final Shot – dort ist die ganze Formation im Bild
+  const showElite = !active && !spot && !duelMatch && (chapter?.shot === 'establishing' || chapter?.shot === 'final');
+  const eliteCount = model.elite.offense.length + model.elite.defense.length;
   const provisional = [model.offense, model.defense].some((t) => t.lineup.basis === 'provisional');
 
   return (
-    <div className={`tv-hud${quiet ? ' is-quiet' : ''}${spot ? ' has-spotlight' : ''}`}>
+    <div className={`tv-hud${quiet ? ' is-quiet' : ''}${spot ? ' has-spotlight' : ''}${showElite ? ' has-eroster' : ''}`}>
       <div className="tv-bars" />
 
       <div className="tv-title" key={restartToken}>
@@ -73,21 +80,16 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit, on
         <span className="tv-wordmark tv-wordmark--sm">TRAP VIEW</span>
         <span className="tv-tag">Saison {model.season.season}</span>
         {provisional && <span className="tv-tag" title="Ohne offiziellen Kader: keine Rückennummern, Positionen nur grob aus der Statistik">Vorläufige Aufstellung</span>}
+        {eliteCount > 0 && (
+          <span className="tv-tag tv-tag--elite" title={`Elite-Spieler auf dem Feld (Top 10 ihrer Positionsgruppe ${model.season.season}): ${model.offense.abbreviation} Offense ${model.elite.offense.length}, ${model.defense.abbreviation} Defense ${model.elite.defense.length}`}>
+            <EliteCrest />
+            Elite {model.elite.offense.length} · {model.elite.defense.length}
+          </span>
+        )}
       </div>
 
-      {onSimulate !== undefined && (
-        <button
-          className="tv-simulate"
-          onClick={onSimulate ?? undefined}
-          disabled={!onSimulate}
-          title={onSimulate ? `${model.offense.name} gegen ${model.defense.name} simulieren` : 'Der Simulator nutzt ausschließlich Saison 2026'}
-        >
-          <span className="tv-simulate__label">Spiel simulieren</span>
-          <span className="tv-simulate__sub">{onSimulate ? `${model.offense.abbreviation} vs ${model.defense.abbreviation} · 2026` : 'nur Saison 2026'}</span>
-        </button>
-      )}
 
-      {chapter && !active && (
+      {chapter && !active && !duelMatch && (
         <div className="tv-chapter" key={`${restartToken}-${chapter.index}`}>
           <span className="tv-chapter__idx">{String(chapter.index + 1).padStart(2, '0')}</span>
           <span className="tv-chapter__text">
@@ -96,6 +98,10 @@ export function CinemaHud({ model, index, audioStatus, onUnlockAudio, onExit, on
           </span>
         </div>
       )}
+
+      {duelMatch && duel && <DuelBar key={duel.key} model={model} matchup={duelMatch} index={index} />}
+
+      {showElite && chapter && <EliteRoster key={`elite-${restartToken}-${chapter.index}`} model={model} />}
 
       {spot && spotlight && (
         <SpotlightCard key={spotlight.key} model={model} spot={spot} duration={spotlight.duration} index={index} />

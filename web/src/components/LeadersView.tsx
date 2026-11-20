@@ -8,13 +8,16 @@ import { ROLE_LABELS, STAT, formatStat, qualifies, stat } from "@/lib/stats";
 import type { Meta, Player, PlayerSeason, Scope, Team } from "@/lib/types";
 import { Field, StatSelect, inputCls, selectCls } from "./QueryBuilder";
 import ResultTable, { type Column } from "./ResultTable";
+import EliteBadge from "./EliteBadge";
+import type { EliteEntry } from "@/trapview/spotlight/elite";
 import ScopeToggle from "./ScopeToggle";
 import SourceTag from "./SourceTag";
 import TeamTag from "./TeamTag";
 import { Loading } from "./Loading";
 
 /** Komplette Rangliste fuer jede Kennzahl: Saison, alle Saisons oder Karriere. */
-export default function LeadersView() {
+/** elite: "spieler-id:saison" → Elite-Platzierung (lib/elite.ts eliteIndex), vom Server übergeben */
+export default function LeadersView({ elite }: { elite?: Record<string, EliteEntry> } = {}) {
   const st = useData<[Meta, Player[], PlayerSeason[], Team[]]>(["meta.json", "players.json", "player_seasons.json", "teams.json"]);
   const [cat, setCat] = useState("receivingyards");
   const [season, setSeason] = useState("current");
@@ -56,7 +59,22 @@ export default function LeadersView() {
 
   const context = def.needs.filter((k) => k !== cat).slice(0, 3);
   const columns: Column<(typeof rows)[number]>[] = [
-    { key: "name", label: "Spieler", align: "left", render: (r) => <Link href={`/spieler/${r.player}/`} className="hover:underline hover:underline-offset-4">{r.name}</Link>, sort: (r) => r.name, descFirst: false },
+    {
+      key: "name",
+      label: "Spieler",
+      align: "left",
+      render: (r) => {
+        const e = r.season ? elite?.[`${r.player}:${r.season}`] : undefined;
+        return (
+          <span className="inline-flex items-center gap-2">
+            <Link href={`/spieler/${r.player}/`} className="hover:underline hover:underline-offset-4">{r.name}</Link>
+            {e && <EliteBadge entry={e} size="sm" season={r.season} />}
+          </span>
+        );
+      },
+      sort: (r) => r.name,
+      descFirst: false,
+    },
     { key: "team", label: "Team", align: "left", render: (r) => <span className="flex gap-1">{r.teams.map((t) => <TeamTag key={t} team={teams[t]} />)}</span> },
     ...(season === "career" ? [] : [{ key: "season", label: "Saison", align: "left" as const, render: (r: (typeof rows)[number]) => <span className="num">{r.season}</span>, sort: (r: (typeof rows)[number]) => r.season }]),
     { key: "role", label: "Rolle", align: "left", render: (r) => <span className="text-ink-3">{r.role ?? "–"}</span> },

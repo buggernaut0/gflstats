@@ -9,6 +9,8 @@ import SourceTag from "@/components/SourceTag";
 import TeamLogo from "@/components/TeamLogo";
 import TeamTag from "@/components/TeamTag";
 import Videos from "@/components/Videos";
+import EliteBadge from "@/components/EliteBadge";
+import { eliteSeason } from "@/lib/elite";
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
 import { gameMap, getMeta, getPlayers, getTeams, leagueRank, playerGameRows, playerMap, teamNameIn } from "@/lib/data";
 import { teamsAttr } from "@/lib/favorite";
@@ -18,6 +20,7 @@ import { allEntries } from "@/lib/serverCache";
 import { ROLE_HEADLINE, ROLE_LABELS, ROLE_MIN, addStats, formatStat, stat, statAvailable, value } from "@/lib/stats";
 import { GAMELOG_COLS } from "@/lib/tables";
 import type { Scope, Stats } from "@/lib/types";
+import SeasonNotice from "@/components/SeasonNotice";
 
 export const dynamicParams = false;
 
@@ -81,6 +84,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   // Logo im Kopf: Team mit den meisten Spielen in der letzten Saison des Spielers
   const mainTeam = [...currentTeams].sort((a, b) => (split.get(`${lastSeason.season}|${b}|all`)?.games ?? 0) - (split.get(`${lastSeason.season}|${a}|all`)?.games ?? 0))[0];
   const formerTeams = allTeams.filter((t) => !currentTeams.includes(t));
+  // Elite: jüngste Saison, in der der Spieler zu den besten zehn seiner Positionsgruppe gehörte (lib/elite.ts)
+  const eliteNow = [...p.seasons]
+    .map((s) => s.season)
+    .sort((a, b) => b - a)
+    .map((season) => ({ season, entries: eliteSeason(season).get(p.id) ?? [] }))
+    .find((x) => x.entries.length > 0);
   const span = p.seasons.length > 1 ? `${p.seasons[0].season}–${lastSeason.season}` : String(lastSeason.season);
 
   return (
@@ -110,18 +119,35 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                 </span>
               ))}
             </p>
+            {eliteNow && (
+              <p className="mt-3.5 flex flex-wrap items-center gap-2 text-[13px] text-ink-3">
+                {eliteNow.entries.map((e) => (
+                  <EliteBadge key={e.profile} entry={e} size="md" season={eliteNow.season} />
+                ))}
+                <span>
+                  Top 10 der Liga {eliteNow.season} in der Positionsgruppe
+                  {eliteNow.entries.length === 1 ? ` (Platz ${eliteNow.entries[0].rank} von ${eliteNow.entries[0].of} ${eliteNow.entries[0].group})` : ""}
+                </span>
+              </p>
+            )}
             {p.shared && <p className="mt-2 text-[13.5px] text-ink-3">Gemeinsamer Eintrag zweier Spieler in der Quelle; wird in Ranglisten nicht gewertet.</p>}
           </div>
         </div>
         <dl className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-[13.5px] sm:grid-cols-3 lg:w-[480px]">
           <Info label="Saisons" value={`${span} (${p.seasons.length})`} />
           <Info label="Spiele" value={fmt(careerGames)} hint="mit Eintrag im Statistikbogen" />
-          <Info label="Aktuelles Team" value={currentTeams.map((t) => teams[t]?.short).join(", ")} hint={`Stand Saison ${lastSeason.season}`} />
+          <Info label={lastSeason.season === meta.currentSeason ? "Aktuelles Team" : "Letztes Team"} value={currentTeams.map((t) => teams[t]?.short).join(", ")} hint={`Stand Saison ${lastSeason.season}`} />
           <Info label="Frühere Teams" value={formerTeams.length ? formerTeams.map((t) => teams[t]?.short).join(", ") : "–"} />
           <Info label="Rückennummer" value="keine Angabe" muted />
           <Info label="Größe, Gewicht" value="keine Angabe" muted />
         </dl>
       </section>
+
+      {lastSeason.season < meta.currentSeason && (
+        <div className="mt-8">
+          <SeasonNotice current={meta.currentSeason} latest={lastSeason.season} subject="player" />
+        </div>
+      )}
 
       <section aria-labelledby="karriere-h" className="mt-10">
         <Head id="karriere-h" title="Karriere seit 2023" note={`Summe aller Spiele (Regular Season und Playoffs). Rang = Platz in der Liga ${lastSeason.season}.`}>

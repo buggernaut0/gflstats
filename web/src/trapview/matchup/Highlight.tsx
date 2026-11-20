@@ -31,7 +31,9 @@ export function Highlight({ model }: { model: SceneModel }) {
 
   useFrame((state, dt) => {
     const st = useTrapView.getState();
-    const m = st.matchupId ? model.matchups.find((x) => x.id === st.matchupId) : undefined;
+    // Gewähltes Duell oder Duell-Einstellung der Präsentation
+    const duelId = st.matchupId ?? st.duel?.id ?? null;
+    const m = duelId ? model.matchups.find((x) => x.id === duelId) : undefined;
     // Player Spotlight: derselbe Spot und Ring auf dem vorgestellten Spieler
     const sp = !m && st.spotlight ? model.spotlights[st.spotlight.index] : undefined;
     const pair = m ? [m.offense, m.defense] : sp ? [sp.player] : [];

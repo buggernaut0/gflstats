@@ -43,6 +43,8 @@ export interface SquadPlayer {
   stance: Stance;
   build: Build;
   kit: Kit;
+  /** Elite-Spieler (beste zehn der Positionsgruppe): goldenes Gegenlicht im Shader */
+  elite?: boolean;
 }
 
 /** Stabiler Wert je Spieler – bestimmt Hautton und Atemtakt, unabhängig von der Reihenfolge. */
@@ -65,19 +67,35 @@ export interface Squad {
 }
 
 /**
- * Alle Spieler der Partie als instanzierte Körperteile: 13 InstancedMeshes für sämtliche belegten
- * Plätze (plus 13 für unbesetzte Plätze, falls es welche gibt). Geometrien sind für alle Spieler
- * dieselben; Teamfarben, Hautton und Nummern-Kachel hängen als Instanz-Attribute an jedem Spieler.
+ * Alle Spieler der Partie als instanzierte Körperteile: 13 InstancedMeshes für alle Plätze.
+ * Geometrien sind für alle Spieler dieselben; Teamfarben, Hautton und Nummern-Kachel hängen als
+ * Instanz-Attribute an jedem Spieler. In der Trap View steht jeder Platz als vollwertiger Spieler im
+ * Teamtrikot auf dem Feld – auch ohne Daten (dann ohne Nummer und Namen, nichts wird erfunden).
  */
 export function createSquad(model: SceneModel): Squad {
-  return createSquadFrom(model.players.map((p) => ({
-    id: p.id, player: p.player, shortName: p.shortName, world: p.world, rotationY: p.rotationY,
-    stance: p.slot.stance, build: p.slot.build, kit: p.kit,
-  })));
+  return createSquadFrom(
+    model.players.map((p) => ({
+      id: p.id, player: p.player, shortName: p.shortName, world: p.world, rotationY: p.rotationY,
+      stance: p.slot.stance, build: p.slot.build, kit: p.kit, elite: !!p.player?.elite?.length,
+    })),
+    { emptySlots: 'placeholder' },
+  );
+}
+
+export interface SquadOptions {
+  /**
+   * Darstellung unbesetzter Plätze (keine Spielerdaten):
+   *   placeholder – Spieler im Teamtrikot ohne Nummer und Namen (Trap View: komplette Formation)
+   *   ghost       – blasse, durchscheinende Silhouette (Teamseite: zeigt offen, welche Plätze fehlen)
+   * Sichtbarkeit auf dem Feld und vorhandene Daten sind damit getrennt: Kommen Daten hinzu, trägt derselbe
+   * Platz automatisch Nummer und Namen.
+   */
+  emptySlots?: 'placeholder' | 'ghost';
 }
 
 /** Wie createSquad, aber für beliebige Plätze (z. B. die Starting Lineup auf der Teamseite). */
-export function createSquadFrom(players: SquadPlayer[]): Squad {
+export function createSquadFrom(players: SquadPlayer[], options: SquadOptions = {}): Squad {
+  const placeholders = (options.emptySlots ?? 'ghost') === 'placeholder';
   const geo = playerGeometries();
   const group = new THREE.Group();
   const owned: { dispose: () => void }[] = [];
@@ -93,13 +111,14 @@ export function createSquadFrom(players: SquadPlayer[]): Squad {
     });
   };
 
-  const filled = players.filter((p) => p.player);
-  const empty = players.filter((p) => !p.player);
+  // „filled“ = im Teamtrikot gezeichnet; mit Platzhaltern auch Plätze ohne Daten
+  const filled = placeholders ? players : players.filter((p) => p.player);
+  const empty = placeholders ? [] : players.filter((p) => !p.player);
   const rigOf = new Map<SquadPlayer, Rig>();
   const allSets: { rigs: Rig[]; meshes: THREE.InstancedMesh[] }[] = [];
 
   if (filled.length) {
-    const atlas = createNumberAtlas(filled.map((p) => ({ number: p.player!.number, name: p.shortName })));
+    const atlas = createNumberAtlas(filled.map((p) => ({ number: p.player?.number ?? null, name: p.player ? p.shortName : null })));
     const body = createPlayerMaterial();
     const jersey = createPlayerMaterial({ numbers: atlas });
     const helmet = createPlayerMaterial({ gloss: true });
@@ -127,12 +146,14 @@ export function createSquadFrom(players: SquadPlayer[]): Squad {
       (['iA', 'iB', 'iC'] as const).forEach((attr, slot) => {
         g.setAttribute(attr, perPlayer((p, i) => palette(p.kit, SKIN_TONES[seeds[i] % SKIN_TONES.length])[slot]));
       });
+      if (name !== 'torso') g.setAttribute('iElite', new THREE.InstancedBufferAttribute(Float32Array.from(filled, (p) => (p.elite ? 1 : 0)), 1));
       if (name === 'torso') {
         g.setAttribute('iNum', perPlayer((p) => p.kit.number));
         g.setAttribute('iOutline', perPlayer((p) => p.kit.numberOutline));
-        const tiles = new Float32Array(n * 2);
-        filled.forEach((_, i) => tiles.set(atlas.tile(i), i * 2));
-        g.setAttribute('iTile', new THREE.InstancedBufferAttribute(tiles, 2));
+        // Kachel-Ursprung (xy) und Elite (z) in einem Attribut – siehe playerMaterial.ts
+        const tiles = new Float32Array(n * 3);
+        filled.forEach((p, i) => tiles.set([...atlas.tile(i), p.elite ? 1 : 0], i * 3));
+        g.setAttribute('iTile', new THREE.InstancedBufferAttribute(tiles, 3));
       }
       owned.push(g);
       const mesh = new THREE.InstancedMesh(g, name === 'torso' ? jersey : name === 'head' ? helmet : body, n);

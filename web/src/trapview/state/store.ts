@@ -11,12 +11,17 @@ interface TrapViewState {
   /** IDs der Spieler, deren Label gerade sichtbar ist (setzt der Kamera-Director). */
   visibleLabels: string[];
   /** Aktueller Abschnitt der Präsentation für die Bauchbinde. */
-  chapter: { index: number; title: string; subtitle: string } | null;
+  chapter: { index: number; shot: string; title: string; subtitle: string } | null;
   /**
    * Laufendes Player Spotlight (setzt der Kamera-Director): Index in model.spotlights, Dauer der
    * Einstellung und ein Schlüssel, der sich bei jeder Wiederholung ändert (startet die Karten-Animation neu).
    */
   spotlight: { index: number; duration: number; key: string } | null;
+  /**
+   * Duell-Einstellung der laufenden Präsentation (setzt der Kamera-Director): ID des Matchups und ein
+   * Schlüssel je Wiederholung. Beide Spielerprofile stehen ab dem ersten Bild der Einstellung.
+   */
+  duel: { id: string; key: string } | null;
   ended: boolean;
   volume: number;
   muted: boolean;
@@ -29,6 +34,7 @@ interface TrapViewState {
   setVisibleLabels: (ids: string[]) => void;
   setChapter: (c: TrapViewState['chapter']) => void;
   setSpotlight: (s: TrapViewState['spotlight']) => void;
+  setDuel: (d: TrapViewState['duel']) => void;
   setEnded: (ended: boolean) => void;
   setVolume: (v: number) => void;
   toggleMuted: () => void;
@@ -61,6 +67,7 @@ export const useTrapView = create<TrapViewState>((set) => ({
   visibleLabels: [],
   chapter: null,
   spotlight: null,
+  duel: null,
   ended: false,
   volume: 0.7,
   muted: readMuted(),
@@ -72,12 +79,13 @@ export const useTrapView = create<TrapViewState>((set) => ({
   setVisibleLabels: (visibleLabels) => set({ visibleLabels }),
   setChapter: (chapter) => set({ chapter }),
   setSpotlight: (spotlight) => set({ spotlight }),
+  setDuel: (duel) => set({ duel }),
   setEnded: (ended) => set({ ended }),
   setVolume: (volume) => set({ volume }),
   toggleMuted: () => set((s) => {
     writeMuted(!s.muted);
     return { muted: !s.muted };
   }),
-  restart: () => set((s) => ({ restartToken: s.restartToken + 1, matchupId: null, spotlight: null, ended: false })),
-  exit: () => set({ phase: 'select', matchupId: null, visibleLabels: [], chapter: null, spotlight: null, ended: false }),
+  restart: () => set((s) => ({ restartToken: s.restartToken + 1, matchupId: null, spotlight: null, duel: null, ended: false })),
+  exit: () => set({ phase: 'select', matchupId: null, visibleLabels: [], chapter: null, spotlight: null, duel: null, ended: false }),
 }));

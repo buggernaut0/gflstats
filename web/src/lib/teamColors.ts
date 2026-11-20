@@ -7,6 +7,8 @@
 /** Abweichende Farben des dunklen Heimtrikots, wenn es nicht einfach die Hauptfarbe trägt (z. B. schwarzes Trikot, roter Helm). */
 export interface TeamKitColors {
   jersey?: string;
+  /** Kragen, Ärmelabschluss, Streifen (sonst die Zweitfarbe) */
+  trim?: string;
   helmet?: string;
   facemask?: string;
   number?: string;

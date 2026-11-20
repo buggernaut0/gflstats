@@ -1,5 +1,6 @@
 import AnalyticsCrumb from "@/components/AnalyticsCrumb";
 import LeadersView from "@/components/LeadersView";
+import { eliteIndex } from "@/lib/elite";
 
 export const metadata = { title: "League Leaders" };
 
@@ -12,7 +13,7 @@ export default function LeadersPage() {
         Rangliste für jede Kennzahl, als Saisonwert, beste Einzelsaisons oder Karrierewert seit 2023. Mit * markierte Kennzahlen sind berechnet; Quoten zählen erst ab einem
         Mindestvolumen. Gleiche Werte teilen sich den Rang (2=).
       </p>
-      <LeadersView />
+      <LeadersView elite={eliteIndex()} />
     </main>
   );
 }

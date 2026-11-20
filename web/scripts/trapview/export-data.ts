@@ -33,6 +33,7 @@ import {
   type TeamRoster,
 } from '../../src/lib/lineup.ts';
 import { buildPools, describeMethod, pickSpotlight, type SpotlightPick } from '../../src/trapview/spotlight/scoring.ts';
+import { eliteBoard, eliteIn } from '../../src/trapview/spotlight/elite.ts';
 
 type Stats = Record<string, number>;
 interface PgRow { g: string; p: string; t: string; s: Stats }
@@ -240,6 +241,8 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
     [...byPT.values()].map((e) => ({ id: e.id, team: e.team, role: roleOf(e.id), games: e.games.size, stats: e.stats })),
     Object.entries(meta.availability).filter(([, s]) => s.includes(season)).map(([k]) => k),
   );
+  // Elite: beste zehn je Positionsgruppe dieser Saison (spotlight/elite.ts – einzige Stelle mit dieser Regel)
+  const elite = eliteBoard(spotlightPools);
 
   const seasonTeams = [...new Set(rows.map((r) => r.t))]
     .map((id) => teams.find((t) => t.id === id))
@@ -284,6 +287,8 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
           stats: pick(e?.stats ?? lp.stats),
           ranks,
           vs,
+          // Platzierungen unter den besten zehn je Positionsgruppe der Liga (leer = kein Elite)
+          elite: elite.get(lp.player) ?? [],
         },
       };
     };
@@ -302,7 +307,13 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
     // Bis zu drei herausragende Spieler je Seite, nur aus der Starting Lineup (sie stehen auf dem Feld)
     const spotlightOf = (entries: LineupPlayer[]): SpotlightPick[] =>
       pickSpotlight(spotlightPools, t.id, entries.flatMap((lp) => (lp.player ? [{ id: lp.player, group: lp.position }] : [])))
-        .map((pick) => ({ ...pick, photo: photoOf(pick.id) }));
+        .map((pick) => ({
+          ...pick,
+          // „Elite“ nur für die besten zehn der Positionsgruppe (im vorgestellten Profil), sonst Star bzw. Schlüsselspieler
+          tier: eliteIn(elite.get(pick.id), pick.profile) ? 'elite' as const : pick.tier === 'elite' ? 'star' as const : pick.tier,
+          elite: eliteIn(elite.get(pick.id), pick.profile),
+          photo: photoOf(pick.id),
+        }));
 
     teamOut.push({
       id: t.id,

@@ -10,8 +10,12 @@ import type { Meta, Player, PlayerSeason, Scope, Team } from "@/lib/types";
 import { Loading } from "./Loading";
 import QueryBuilder, { Field, selectCls } from "./QueryBuilder";
 import ResultTable, { type Column } from "./ResultTable";
+import EliteBadge from "./EliteBadge";
+import type { EliteEntry } from "@/trapview/spotlight/elite";
 import ScopeToggle from "./ScopeToggle";
 import TeamTag from "./TeamTag";
+import SeasonOptions from "@/components/SeasonOptions";
+import { ALL_SEASONS, seasonOfFilter, seasonSelectValue } from "@/lib/seasonFilter";
 
 /** Spalten ohne Bedingungen und ohne Rolle */
 const DEFAULT_COLUMNS = ["passingyards", "runyards", "receivingyards", "tackletotal", "sacktotal", "touchdown"];
@@ -23,7 +27,8 @@ const DEFAULT_COLUMNS = ["passingyards", "runyards", "receivingyards", "tackleto
  * Jede Kennzahl gibt es als Saisonwert und als Karrierewert ("Karriere: ...", Schluessel "k.<kennzahl>").
  * Alle Einstellungen stehen in der Adresse; Links der frueheren /analytics/spieler/ bleiben gueltig.
  */
-export default function PlayerSearch() {
+/** elite: "spieler-id:saison" → Elite-Platzierung (lib/elite.ts eliteIndex), vom Server übergeben */
+export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEntry> } = {}) {
   const st = useData<[Meta, Player[], PlayerSeason[], Team[]]>(["meta.json", "players.json", "player_seasons.json", "teams.json"]);
   const [season, setSeason] = useState("");
   const [scope, setScope] = useState<Scope>("all");
@@ -71,14 +76,20 @@ export default function PlayerSearch() {
       const row = isCareerKey(k) ? career.get(r.player) : r;
       return !!row && rowRecorded(stat(baseKey(k)), row, meta.availability);
     };
-    let rows = seasonRows(ps, pm, scope).filter((r) => !season || r.season === Number(season));
-    rows = rows.filter((r) => (!team || r.teams.includes(team)) && (!role || r.role === role) && words.every((w) => norm(r.name).includes(w)));
-    rows = rows.filter((r) => matches(active, "and", (k) => valueOf(r, k)));
-    return { meta, rows, teams: Object.fromEntries(teamList.map((t) => [t.id, t])), teamList, valueOf, recordedOf };
+    // Standard: aktuelle Saison – ältere Saisons und „alle“ über den Saisonfilter
+    const only = seasonOfFilter(season, meta.currentSeason);
+    let all = seasonRows(ps, pm, scope);
+    all = all.filter((r) => (!team || r.teams.includes(team)) && (!role || r.role === role) && words.every((w) => norm(r.name).includes(w)));
+    all = all.filter((r) => matches(active, "and", (k) => valueOf(r, k)));
+    const rows = all.filter((r) => only === null || r.season === only);
+    // Treffer nur in anderen Saisons (z. B. Namenssuche nach einem Spieler ohne Einsatz in der gewählten Saison)
+    const inSeason = new Set(rows.map((r) => r.player));
+    const elsewhere = only === null ? 0 : new Set(all.filter((r) => !inSeason.has(r.player)).map((r) => r.player)).size;
+    return { meta, rows, only, elsewhere, teams: Object.fromEntries(teamList.map((t) => [t.id, t])), teamList, valueOf, recordedOf };
   }, [ready, season, scope, team, role, name, active]);
 
   if (st.status !== "ready" || !result) return <Loading state={st} />;
-  const { meta, rows, teams, teamList, valueOf, recordedOf } = result;
+  const { meta, rows, only, elsewhere, teams, teamList, valueOf, recordedOf } = result;
   type R = (typeof rows)[number];
 
   const anyFilter = conds.length > 0 || !!(name.trim() || season || team || role || scope !== "all");
@@ -91,7 +102,22 @@ export default function PlayerSearch() {
   const show = [...new Set(base.length ? base : DEFAULT_COLUMNS)].slice(0, 8);
   const playerCount = new Set(rows.map((r) => r.player)).size;
   const columns: Column<R>[] = [
-    { key: "name", label: "Spieler", align: "left", render: (r) => <Link href={`/spieler/${r.player}/`} className="hover:underline hover:underline-offset-4">{r.name}</Link>, sort: (r) => r.name, descFirst: false },
+    {
+      key: "name",
+      label: "Spieler",
+      align: "left",
+      render: (r) => {
+        const e = r.season ? elite?.[`${r.player}:${r.season}`] : undefined;
+        return (
+          <span className="inline-flex items-center gap-2">
+            <Link href={`/spieler/${r.player}/`} className="hover:underline hover:underline-offset-4">{r.name}</Link>
+            {e && <EliteBadge entry={e} size="sm" season={r.season} />}
+          </span>
+        );
+      },
+      sort: (r) => r.name,
+      descFirst: false,
+    },
     { key: "team", label: "Team", align: "left", render: (r) => <span className="flex gap-1">{r.teams.map((t) => <TeamTag key={t} team={teams[t]} />)}</span> },
     { key: "season", label: "Saison", align: "left", render: (r) => <span className="num">{r.season}</span>, sort: (r) => r.season },
     { key: "role", label: "Rolle", align: "left", render: (r) => <span className="text-ink-3">{r.role ?? "–"}</span>, sort: (r) => r.role ?? "", descFirst: false },
@@ -130,9 +156,8 @@ export default function PlayerSearch() {
         </label>
         <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
           <Field label="Saison">
-            <select value={season} onChange={(e) => setSeason(e.target.value)} className={selectCls}>
-              <option value="">Alle Saisons</option>
-              {[...meta.seasons].reverse().map((s) => <option key={s} value={s}>{s}</option>)}
+            <select value={seasonSelectValue(season, meta.currentSeason)} onChange={(e) => setSeason(e.target.value)} className={selectCls}>
+              <SeasonOptions seasons={meta.seasons} current={meta.currentSeason} />
             </select>
           </Field>
           <Field label="Team">
@@ -166,10 +191,18 @@ export default function PlayerSearch() {
 
       <div className="mb-3 mt-6 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="text-[14px] text-ink">
-          <span className="num font-semibold">{rows.length}</span> Spieler-Saisons
+          <span className="num font-semibold">{rows.length}</span> Spieler-Saisons {only !== null ? <>in <span className="num">{only}</span></> : "aus allen Saisons"}
           {playerCount !== rows.length && <span className="text-ink-3"> ({playerCount} Spieler)</span>}
           {active.length > 0 && <span className="text-ink-3"> mit {active.map((c) => describe(c, labelOf(c.stat))).join(" und ")}</span>}
         </p>
+        {elsewhere > 0 && (name.trim() || active.length > 0 || team || role) && (
+          <p className="w-full text-[13px] text-ink-2 sm:order-last">
+            {elsewhere} weitere{elsewhere === 1 ? "r" : ""} Spieler ohne passenden Eintrag {only}, aber in anderen Saisons.{" "}
+            <button type="button" onClick={() => setSeason(ALL_SEASONS)} className="text-accent-text underline-offset-4 hover:underline">
+              Alle Saisons anzeigen
+            </button>
+          </p>
+        )}
         {anyFilter && (
           <button type="button" onClick={reset} className="text-[13px] text-ink-2 underline-offset-4 hover:text-ink hover:underline">
             Alle Filter zurücksetzen

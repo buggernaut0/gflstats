@@ -13,6 +13,8 @@ import { Loading } from "./Loading";
 import QueryBuilder, { Field, inputCls, selectCls } from "./QueryBuilder";
 import ResultTable, { type Column } from "./ResultTable";
 import TeamTag from "./TeamTag";
+import SeasonOptions from "@/components/SeasonOptions";
+import { seasonOfFilter, seasonSelectValue } from "@/lib/seasonFilter";
 
 const PRESETS: { label: string; role?: string; logic?: Logic; conds: Condition[] }[] = [
   { label: "Reception über 50 Yards", conds: [{ stat: "longestcatch", op: "gt", a: 50 }] },
@@ -82,8 +84,9 @@ export default function GameSearch() {
   const hits = useMemo(() => {
     if (!all) return [];
     const norm = (s: string) => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    const only = seasonOfFilter(season, all.meta.currentSeason);
     return all.rows.filter((r) => {
-      if ((season && r.game.season !== Number(season)) || (phase && r.game.type !== phase) || (team && r.team !== team) || (opp && r.opponent !== opp) || (role && r.role !== role) || (name && !norm(r.name).includes(norm(name)))) return false;
+      if ((only !== null && r.game.season !== only) || (phase && r.game.type !== phase) || (team && r.team !== team) || (opp && r.opponent !== opp) || (role && r.role !== role) || (name && !norm(r.name).includes(norm(name)))) return false;
       return matches(conds, logic, (k) => (statAvailable(stat(k), r.game.season, all.meta.availability) ? value(stat(k), r.s, 1) : null));
     });
   }, [all, season, phase, team, opp, role, name, conds, logic]);
@@ -127,9 +130,8 @@ export default function GameSearch() {
       </div>
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <Field label="Saison">
-          <select value={season} onChange={(e) => setSeason(e.target.value)} className={selectCls}>
-            <option value="">Alle Saisons</option>
-            {[...meta.seasons].reverse().map((s) => <option key={s} value={s}>{s}</option>)}
+          <select value={seasonSelectValue(season, meta.currentSeason)} onChange={(e) => setSeason(e.target.value)} className={selectCls}>
+            <SeasonOptions seasons={meta.seasons} current={meta.currentSeason} />
           </select>
         </Field>
         <Field label="Spielphase">

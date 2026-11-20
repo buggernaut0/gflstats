@@ -107,12 +107,14 @@ export function Director({ model, fadeRef, steady = false }: {
     if (index !== shotIndex.current) {
       shotIndex.current = index;
       const shot = sequence.shots[index];
-      s.setChapter({ index, title: shot.shot.title, subtitle: shot.shot.subtitle });
-      // Player Spotlight: Runde im Schlüssel, damit die Karte bei jeder Wiederholung neu einfährt
+      s.setChapter({ index, shot: shot.shot.id, title: shot.shot.title, subtitle: shot.shot.subtitle });
+      // Player Spotlight und Duell: Runde im Schlüssel, damit die Karten bei jeder Wiederholung neu einfahren
       const round = loops && time.current >= sequence.firstDuration ? Math.floor((time.current - sequence.firstDuration) / sequence.loopDuration) + 1 : 0;
+      const key = `${restartSeen.current}-${round}-${index}`;
       s.setSpotlight(shot.shot.spotlight !== undefined
-        ? { index: shot.shot.spotlight, duration: shot.shot.duration, key: `${restartSeen.current}-${round}-${index}` }
+        ? { index: shot.shot.spotlight, duration: shot.shot.duration, key }
         : null);
+      s.setDuel(shot.shot.duel !== undefined ? { id: shot.shot.duel, key } : null);
       if (!inMatchup) s.setVisibleLabels(shot.labelIds);
     }
     const ended = !loops && time.current >= sequence.firstDuration - 0.01;

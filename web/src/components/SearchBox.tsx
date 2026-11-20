@@ -62,7 +62,7 @@ export default function SearchBox() {
   }
 
   return (
-    <div className="relative w-full sm:w-64">
+    <div className="relative w-full sm:w-64 md:w-48 xl:w-64">
       <label htmlFor="global-search" className="sr-only">
         Spieler oder Team suchen
       </label>
