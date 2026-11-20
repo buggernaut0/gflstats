@@ -6,6 +6,7 @@ import { Field } from '../field/Field';
 import { Roster } from '../players/Roster';
 import { LabelProjector, type LabelRegistry } from '../labels/PlayerLabels';
 import { Highlight } from '../matchup/Highlight';
+import { EliteAura } from '../elite/EliteAura';
 import { Director } from '../camera/Director';
 import { Environment } from './Environment';
 import { Lighting } from './Lighting';
@@ -65,6 +66,7 @@ export function Scene({ model, fadeRef, labels, onFail }: SceneProps) {
         <Environment />
         <Field model={model} ppy={quality.fieldPPY} />
         <Roster model={model} animate={!reduced} />
+        <EliteAura model={model} steady={reduced} />
         <Highlight model={model} />
         <LabelProjector model={model} registry={labels} />
         <Director model={model} fadeRef={fadeRef} steady={reduced} />

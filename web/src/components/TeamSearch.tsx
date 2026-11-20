@@ -10,6 +10,8 @@ import { Loading } from "./Loading";
 import QueryBuilder, { Field, selectCls } from "./QueryBuilder";
 import ResultTable, { type Column } from "./ResultTable";
 import ScopeToggle from "./ScopeToggle";
+import SeasonOptions from "@/components/SeasonOptions";
+import { seasonOfFilter, seasonSelectValue } from "@/lib/seasonFilter";
 
 const TOTALS: TeamMetricDef[] = [
   { key: "wins", label: "Siege", abbr: "S", decimals: 0, formula: "Siege" },
@@ -62,7 +64,8 @@ export default function TeamSearch() {
   if (!data) return <Loading state={st} />;
   const { meta, all, teams } = data;
 
-  const rows = all.filter((t) => t.scope === scope && (!season || t.season === Number(season)) && matches(conds, logic, (k) => get(t, k)));
+  const only = seasonOfFilter(season, meta.currentSeason);
+  const rows = all.filter((t) => t.scope === scope && (only === null || t.season === only) && matches(conds, logic, (k) => get(t, k)));
   const show = [...new Set([...conds.map((c) => c.stat), sortKey, ...DEFAULT_COLS])].slice(0, 8);
   const keyOf = (t: TeamSeasonMetrics) => `${t.team}:${t.season}`;
   type R = TeamSeasonMetrics;
@@ -96,9 +99,8 @@ export default function TeamSearch() {
       </div>
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <Field label="Saison">
-          <select value={season} onChange={(e) => setSeason(e.target.value)} className={selectCls}>
-            <option value="">Alle Saisons</option>
-            {[...meta.seasons].reverse().map((s) => <option key={s} value={s}>{s}</option>)}
+          <select value={seasonSelectValue(season, meta.currentSeason)} onChange={(e) => setSeason(e.target.value)} className={selectCls}>
+            <SeasonOptions seasons={meta.seasons} current={meta.currentSeason} />
           </select>
         </Field>
         <ScopeToggle value={scope} onChange={setScope} />

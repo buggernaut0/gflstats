@@ -13,6 +13,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { resolveKit } from "@/trapview/data/kits";
 import type { Build, Stance } from "@/trapview/data/types";
 import { createSquadFrom, type SquadPlayer } from "@/trapview/players/squad";
+import { JERSEY_NAME_FONT } from "@/trapview/players/numberAtlas";
 import { animateRig, type Rig } from "@/trapview/players/rig";
 import type { FieldPlayer, LineupColors, Unit } from "./types";
 
@@ -135,7 +136,7 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
     let cleanup: (() => void) | undefined;
     // Nummern und Namen zeichnet der Nummern-Atlas der Trap View in Anton und Barlow Condensed
     const fonts = document.fonts
-      ? Promise.all([document.fonts.load("100px Anton"), document.fonts.load('600 26px "Barlow Condensed"')]).catch(() => undefined)
+      ? Promise.all([document.fonts.load("100px Anton"), document.fonts.load(JERSEY_NAME_FONT)]).catch(() => undefined)
       : Promise.resolve();
     Promise.race([fonts, new Promise((r) => setTimeout(r, 1500))]).then(() => {
       if (!cancelled) cleanup = build();

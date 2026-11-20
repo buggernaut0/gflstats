@@ -55,11 +55,13 @@ export function buildMainSequence(model: SceneModel): Shot[] {
       { at: `matchup:${m.id}`, offset: [-7.6, 1.55, 7.4], mirror: true },
       { at: `matchup:${m.id}`, offset: [-6.0, 1.85, 5.6], mirror: true },
     ],
-    lookAt: [{ at: `matchup:${m.id}`, offset: [0.4, 1.15, 0] }],
+    // Blickziel tief: die Spieler stehen im oberen Bildteil, darunter die Duell-Bauchbinde mit beiden Profilen
+    lookAt: [{ at: `matchup:${m.id}`, offset: [0.4, 0.35, 0] }],
     fov: [31, 29],
     ease: 'linear',
     transition: { type: 'dip' },
     labels: [`matchup:${m.id}`],
+    duel: m.id,
   }));
 
   /** Startpunkt der Line-Einstellung – hier münden Einstieg und Final Shot. */

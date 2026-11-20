@@ -29,15 +29,37 @@ test("Hervorhebungs-CSS gilt nur fuer das gewaehlte Team, ungueltige IDs ergeben
   assert.equal(favoriteCss('x"]{}body{display:none'), "");
 });
 
-test("Startskript erzeugt dieselben Regeln wie favoriteCss", () => {
-  const store = new Map([["gfl-favorite-team", "kiel-baltic-hurricanes"]]);
-  const style = { textContent: "" };
-  const root = { dataset: {} as Record<string, string> };
-  const fn = new Function("localStorage", "document", favoriteInitScript);
-  fn({ getItem: (k: string) => store.get(k) ?? null }, { documentElement: root, getElementById: () => style });
-  assert.equal(style.textContent, favoriteCss("kiel-baltic-hurricanes"));
-  assert.equal(root.dataset.favTeam, "kiel-baltic-hurricanes");
+test("Startskript erzeugt dieselben Regeln wie favoriteCss, inklusive Teamfarben", () => {
+  const colors = { "kiel-baltic-hurricanes": ["#E77F3F", "#11634D"] as [string, string] };
+  const run = (fav: string) => {
+    const store = new Map([["gfl-favorite-team", fav]]);
+    const style = { textContent: "" };
+    const root = { dataset: {} as Record<string, string> };
+    const win: { __GFL_FAV_COLORS?: unknown } = {};
+    const fn = new Function("window", "localStorage", "document", favoriteInitScript(colors));
+    fn(win, { getItem: (k: string) => store.get(k) ?? null }, { documentElement: root, getElementById: () => style });
+    return { style, root, win };
+  };
+  const kiel = run("kiel-baltic-hurricanes");
+  assert.equal(kiel.style.textContent, favoriteCss("kiel-baltic-hurricanes", colors["kiel-baltic-hurricanes"]));
+  assert.match(kiel.style.textContent, /:root\[data-theme="dark"\]\{--fav:#E77F3F/);
+  assert.match(kiel.style.textContent, /:root\[data-theme="light"\]\{--fav:#11634D/);
+  assert.equal(kiel.root.dataset.favTeam, "kiel-baltic-hurricanes");
+  assert.deepEqual(kiel.win.__GFL_FAV_COLORS, colors);
+  // Team ohne Farben: nur die Grundregeln (neutrales Violett aus globals.css)
+  assert.equal(run("berlin-adler").style.textContent, favoriteCss("berlin-adler"));
   for (const t of teams) assert.ok(favoriteCss(t.id).length > 0, t.id);
+});
+
+test("Ungueltige Farben gelangen nicht ins Startskript", () => {
+  const script = favoriteInitScript({ "a-team": ["red;}body{display:none", "#000000"], 'x"]': ["#111111", "#222222"] });
+  assert.ok(script.startsWith("window.__GFL_FAV_COLORS={};"));
+});
+
+test("Simulieren hat einen eigenen Menuepunkt", () => {
+  const sim = NAV.find((n) => n.href === "/simulieren/");
+  assert.ok(sim && sim.label === "Simulieren");
+  assert.deepEqual(NAV.map((n) => n.label), ["Spieler", "Teams", "Spiele", "Analytics", "Trap View", "Simulieren"]);
 });
 
 test("Navigation: Leaders und Rekorde nicht mehr in der Leiste, aber unter Analytics aktiv", () => {

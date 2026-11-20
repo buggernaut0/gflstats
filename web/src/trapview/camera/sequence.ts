@@ -33,6 +33,8 @@ export interface Shot {
   labels: string[];
   /** Player Spotlight: Index in model.spotlights – die HUD zeigt währenddessen die Spielerkarte. */
   spotlight?: number;
+  /** Duell: ID in model.matchups – die HUD zeigt ab dem Schnitt beide Spielerprofile nebeneinander. */
+  duel?: string;
 }
 
 export interface CameraPose {

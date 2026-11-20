@@ -1,6 +1,6 @@
 /* Player Spotlight – Spielerkarte über der 3D-Szene. Gekapselt unter .tv-root wie der Rest der Trap View. */
 .tv-root .tv-spot {
-  --in: 0.45s;           /* Einfahrt nach dem Schnitt */
+  --in: 0.1s;            /* Einfahrt direkt mit dem Schnitt – Name, Elite und Werte stehen nach einem Moment */
   --out: calc(var(--dur, 7.4s) - 0.85s);
   position: absolute; top: 50%; z-index: 25; pointer-events: none;
   width: min(500px, 41vw);
@@ -67,7 +67,7 @@
   position: absolute; inset: -20% auto -20% -40%; width: 40%; z-index: 3; pointer-events: none;
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.16), transparent);
   transform: skewX(-18deg); opacity: 0;
-  animation: tv-spot-sheen 1.1s ease calc(var(--in) + 0.55s) both;
+  animation: tv-spot-sheen 1.1s ease calc(var(--in) + 0.3s) both;
 }
 @keyframes tv-spot-sheen { 0% { opacity: 1; left: -40%; } 100% { opacity: 1; left: 120%; } }
 
@@ -77,13 +77,13 @@
   position: absolute; left: 50%; top: 4px; transform: translateX(-50%);
   font-family: var(--tv-display); font-size: 170px; line-height: 1; letter-spacing: -0.02em;
   color: transparent; -webkit-text-stroke: 1.5px color-mix(in srgb, var(--accent) 45%, transparent);
-  animation: tv-spot-num 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.2s) both;
+  animation: tv-spot-num 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.05s) both;
 }
 @keyframes tv-spot-num { from { opacity: 0; transform: translateX(-50%) scale(1.25); } }
 .tv-portrait {
   position: absolute; inset: 22px -8px 0 -8px;
   -webkit-mask-image: linear-gradient(#000 72%, transparent 100%); mask-image: linear-gradient(#000 72%, transparent 100%);
-  animation: tv-spot-bust 1s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.3s) both;
+  animation: tv-spot-bust 1s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.08s) both;
 }
 @keyframes tv-spot-bust { from { opacity: 0; transform: translateY(18px); } }
 .tv-bust { position: absolute; left: 50%; bottom: -6%; width: 128%; height: auto; transform: translateX(-50%); filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 28%, transparent)); }
@@ -94,20 +94,20 @@
 .tv-spot__team {
   display: flex; align-items: center; gap: 8px; min-width: 0;
   font-family: var(--tv-cond); font-weight: 600; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--tv-dim);
-  animation: tv-rise 0.6s ease calc(var(--in) + 0.35s) both;
+  animation: tv-rise 0.6s ease calc(var(--in) + 0.1s) both;
 }
 .tv-spot__team img { width: 22px; height: 22px; object-fit: contain; }
 .tv-spot__team span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tv-spot__pos {
   display: flex; align-items: baseline; gap: 8px; margin-top: 14px;
   font-family: var(--tv-cond); font-weight: 600; font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--tv-dim);
-  animation: tv-rise 0.6s ease calc(var(--in) + 0.45s) both;
+  animation: tv-rise 0.6s ease calc(var(--in) + 0.12s) both;
 }
 .tv-spot__pos b { color: var(--accent); font-weight: 700; }
 .tv-spot__pos .tv-spot__num { color: var(--tv-ink); }
 .tv-spot__name {
   margin: 4px 0 0; display: flex; flex-direction: column; line-height: 0.92; font-weight: 400;
-  animation: tv-spot-name 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.5s) both;
+  animation: tv-spot-name 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.12s) both;
 }
 .tv-spot__name small { font-family: var(--tv-cond); font-weight: 500; font-size: 20px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(241, 242, 240, 0.8); margin-bottom: 4px; }
 .tv-spot__name span {
@@ -119,7 +119,7 @@
   display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px;
   margin: 10px 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--tv-faint);
   font-family: var(--tv-cond); font-weight: 600; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tv-dim);
-  animation: tv-rise 0.6s ease calc(var(--in) + 0.65s) both;
+  animation: tv-rise 0.6s ease calc(var(--in) + 0.18s) both;
 }
 .tv-spot__score b { font-family: var(--tv-display); font-weight: 400; font-size: 18px; letter-spacing: 0.04em; color: var(--tv-ink); margin-left: 4px; }
 
@@ -128,7 +128,7 @@
 .tv-spot__stat {
   position: relative; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: 12px; align-items: baseline;
   padding-bottom: 7px;
-  animation: tv-spot-stat 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.8s + var(--i) * 0.16s) both;
+  animation: tv-spot-stat 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.22s + var(--i) * 0.06s) both;
 }
 @keyframes tv-spot-stat { from { opacity: 0; transform: translateY(10px); } }
 .tv-spot__val { grid-row: 1 / 3; font-family: var(--tv-display); font-weight: 400; font-size: 32px; line-height: 1; min-width: 2.6ch; font-variant-numeric: tabular-nums; }
@@ -140,13 +140,13 @@
 .tv-spot__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(241, 242, 240, 0.08); }
 .tv-spot__bar::after {
   content: ''; position: absolute; inset: 0 auto 0 0; width: var(--pct); background: linear-gradient(90deg, transparent, var(--accent));
-  transform-origin: 0 50%; animation: tv-spot-bar 1s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 1.05s + var(--i) * 0.16s) both;
+  transform-origin: 0 50%; animation: tv-spot-bar 1s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.3s + var(--i) * 0.06s) both;
 }
 @keyframes tv-spot-bar { from { transform: scaleX(0); } }
 .tv-spot__foot {
   margin-top: auto; padding-top: 12px; font-family: var(--tv-cond); font-weight: 500; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
   color: rgba(241, 242, 240, 0.4);
-  animation: tv-rise 0.6s ease calc(var(--in) + 1.3s) both;
+  animation: tv-rise 0.6s ease calc(var(--in) + 0.4s) both;
 }
 
 /* Kapitel-Bauchbinde weicht der Karte */
@@ -184,3 +184,22 @@
   .tv-root .tv-spot { animation: tv-spot-out 0.3s ease var(--out) forwards !important; }
   .tv-spot__sheen { display: none; }
 }
+
+/* Elite (beste zehn der Positionsgruppe): goldene Plakette über dem Namen, goldene Kante an der Karte */
+.tv-root .tv-spot__elite { align-self: flex-start; margin: 0 0 12px -2px; animation: tv-spot-elite 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--in) + 0.08s) both; }
+.tv-root .tv-spot.is-elite .tv-spot__card::before { background: linear-gradient(#f6d983, #c9952f 55%, transparent); width: 5px; }
+.tv-root .tv-spot.is-elite .tv-spot__card { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 233, 160, 0.18), 0 0 0 1px rgba(232, 194, 92, 0.22); }
+@keyframes tv-spot-elite { from { opacity: 0; transform: translateX(-14px) scale(0.96); } }
+
+/* Gegenspieler im Duell – direkt unter den Kennzahlen, damit das Matchup ohne Warten klar ist */
+.tv-root .tv-spot__opp {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 12px; padding: 9px 12px;
+  border-radius: 10px; background: rgba(241, 242, 240, 0.05); border: 1px solid rgba(241, 242, 240, 0.1);
+  animation: tv-rise 0.5s ease calc(var(--in) + 0.3s) both;
+}
+.tv-root .tv-spot__opp.is-elite { background: rgba(240, 196, 88, 0.08); border-color: rgba(243, 210, 122, 0.35); }
+.tv-spot__opp-k { font-family: var(--tv-cond); font-weight: 700; font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--tv-dim); }
+.tv-spot__opp-who { font-family: var(--tv-cond); font-size: 15px; letter-spacing: 0.04em; }
+.tv-spot__opp-who b { font-weight: 700; color: var(--accent); }
+.tv-root .tv-spot__opp-elite { font-size: 10.5px; }
+.tv-spot__opp-stats { flex-basis: 100%; font-family: var(--tv-cond); font-size: 12.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(241, 242, 240, 0.72); }

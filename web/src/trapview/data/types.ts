@@ -8,6 +8,7 @@ import type { TeamKitColors } from '../../lib/teamColors';
  */
 
 import type { SpotlightPick as ScoredPick } from '../spotlight/scoring';
+import type { EliteEntry } from '../spotlight/elite';
 
 export type Side = 'offense' | 'defense';
 
@@ -15,6 +16,8 @@ export type Side = 'offense' | 'defense';
 export interface SpotlightPick extends ScoredPick {
   /** Pfad unter public/trapview/ zu einem echten Spielerfoto, sonst null (stilisierte Silhouette) */
   photo: string | null;
+  /** Elite-Platzierung im vorgestellten Profil (beste zehn der Positionsgruppe), sonst null */
+  elite: EliteEntry | null;
 }
 
 /** Platz in der dargestellten Formation (reine Darstellung, keine Positionsangabe der Daten). */
@@ -76,6 +79,8 @@ export interface Player {
   ranks: Partial<Record<MetricKey, Rank>>;
   /** Werte aus den Spielen gegen einen bestimmten Gegner (Team-ID) */
   vs: Record<string, { games: number; stats: Stats }>;
+  /** Platzierungen unter den besten zehn je Positionsgruppe der Saison (spotlight/elite.ts); leer = kein Elite */
+  elite: EliteEntry[];
 }
 
 export interface LineupEntry {

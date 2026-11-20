@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 interface Options {
-  /** Nummern-Atlas (nur Rumpf): R = Ziffern/Name, G = Kontur */
+  /** Nummern-Atlas (nur Rumpf): R = Ziffern/Name, G = Kontur, B = Relief (weiche Höhe der Beschriftung) */
   numbers?: { texture: THREE.Texture; tileScale: [number, number] };
   /** Klarlack für den Helm */
   gloss?: boolean;
@@ -10,7 +10,8 @@ interface Options {
 /**
  * Material des Spielermodells: ein Standard-Material, das Farbe, Rauheit und Metall je Vertex liest
  * (siehe parts.ts) und die Teamfarben je Instanz (iA, iB, iC). So reichen drei Materialien
- * (Körper, Rumpf mit Nummern, Helm) für alle Spieler beider Teams.
+ * (Körper, Rumpf mit Nummern, Helm) für alle Spieler beider Teams. iElite (0/1; beim Rumpf iTile.z) gibt
+ * Elite-Spielern ein dezentes goldenes Gegenlicht.
  */
 export function createPlayerMaterial(o: Options = {}): THREE.MeshStandardMaterial {
   const base = { vertexColors: true, roughness: 1, metalness: 1 };
@@ -23,22 +24,43 @@ export function createPlayerMaterial(o: Options = {}): THREE.MeshStandardMateria
     attribute vec2 aNumUv;
     attribute vec3 iNum;
     attribute vec3 iOutline;
-    attribute vec2 iTile;
+    // xy: UV-Ursprung der Kachel, z: Elite (0/1) – zusammengelegt, weil der Rumpf sonst über 16 Attribute käme
+    attribute vec3 iTile;
     uniform vec2 uTileScale;
     varying vec3 vNumUv;
     varying vec3 vNumCol;
     varying vec3 vOutCol;`;
   const numVertex = /* glsl */ `
-    vNumUv = vec3(iTile + aNumUv * uTileScale, step(0.0, aNumUv.x));
+    vNumUv = vec3(iTile.xy + aNumUv * uTileScale, step(0.0, aNumUv.x));
+    vElite = iTile.z;
     vNumCol = iNum;
     vOutCol = iOutline;`;
   const numFragmentPars = /* glsl */ `
     uniform sampler2D uNumbers;
     varying vec3 vNumUv;
     varying vec3 vNumCol;
-    varying vec3 vOutCol;`;
+    varying vec3 vOutCol;
+    // Aufgenähte Beschriftung: Höhe aus dem Blaukanal, Normale per Bildschirm-Ableitung geneigt
+    // (wie three.js' Bump-Mapping, aber auf die Atlas-Kachel des Spielers bezogen)
+    const float TV_BUMP = 0.9;
+    vec3 tvLetterNormal(vec3 surfPos, vec3 surfNorm, float faceDir) {
+      vec2 dSTdx = dFdx(vNumUv.xy);
+      vec2 dSTdy = dFdy(vNumUv.xy);
+      float h0 = texture2D(uNumbers, vNumUv.xy).b;
+      vec2 dH = TV_BUMP * vNumUv.z * vec2(texture2D(uNumbers, vNumUv.xy + dSTdx).b - h0, texture2D(uNumbers, vNumUv.xy + dSTdy).b - h0);
+      vec3 sx = normalize(dFdx(surfPos));
+      vec3 sy = normalize(dFdy(surfPos));
+      vec3 r1 = cross(sy, surfNorm);
+      vec3 r2 = cross(surfNorm, sx);
+      float det = dot(sx, r1) * faceDir;
+      vec3 grad = sign(det) * (dH.x * r1 + dH.y * r2);
+      return normalize(abs(det) * surfNorm - grad);
+    }`;
   const numFragment = /* glsl */ `
-    vec2 tvNum = texture2D(uNumbers, vNumUv.xy).rg * vNumUv.z;
+    vec3 tvNum = texture2D(uNumbers, vNumUv.xy).rgb * vNumUv.z;
+    float tvInk = max(tvNum.r, tvNum.g);
+    // Schmaler Kontaktschatten am Rand der Buchstaben: das Relief ragt über die Beschriftung hinaus
+    diffuseColor.rgb *= 1.0 - 0.32 * clamp(tvNum.b - tvInk, 0.0, 1.0);
     diffuseColor.rgb = mix(diffuseColor.rgb, vOutCol, tvNum.g);
     diffuseColor.rgb = mix(diffuseColor.rgb, vNumCol, tvNum.r);`;
 
@@ -53,23 +75,33 @@ export function createPlayerMaterial(o: Options = {}): THREE.MeshStandardMateria
         attribute vec3 iA;
         attribute vec3 iB;
         attribute vec3 iC;
+        ${num ? '' : 'attribute float iElite;'}
         varying vec2 vSurf;
+        varying float vElite;
         ${num ? numVertexPars : ''}
         #include <common>`)
       .replace('#include <color_vertex>', /* glsl */ `
         #include <color_vertex>
         if (aMat.x > 0.5) vColor.rgb = aMat.x < 1.5 ? iA : (aMat.x < 2.5 ? iB : iC);
         vSurf = aMat.yz;
-        ${num ? numVertex : ''}`);
+        ${num ? numVertex : 'vElite = iElite;'}`);
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', /* glsl */ `
         varying vec2 vSurf;
+        varying float vElite;
         ${num ? numFragmentPars : ''}
         #include <common>`)
       .replace('#include <color_fragment>', /* glsl */ `
         #include <color_fragment>
         ${num ? numFragment : ''}`)
-      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor *= vSurf.x;')
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor *= vSurf.x;
+        ${num ? 'roughnessFactor *= mix(1.0, 0.72, tvInk); // Twill-Buchstaben glänzen etwas mehr als der Trikotstoff' : ''}`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        // Elite: warmes Gegenlicht an den Konturen (Fresnel) – wie ein Führungslicht im Broadcast, kein Umriss
+        totalEmissiveRadiance += vElite * vec3(1.0, 0.72, 0.3) * 0.5 * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.0);`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        ${num ? 'normal = tvLetterNormal(-vViewPosition, normal, faceDirection);' : ''}`)
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\n metalnessFactor *= vSurf.y;');
   };
   m.customProgramCacheKey = () => `tv-player:${num ? 'n' : ''}${o.gloss ? 'g' : ''}`;

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import EliteBadge from '../../components/EliteBadge';
 import type { SceneMatchup, SceneModel, ScenePlayer } from '../data/sceneModel';
 import { screenSides } from '../camera/matchupView';
 import type { DataIndex, SeasonData } from '../data/types';
@@ -15,6 +16,7 @@ function Card({ p, align }: { p: ScenePlayer; align: 'left' | 'right' }) {
       <div className="tv-card__info">
         <div className="tv-card__pos" title={GROUP_NAME[p.dataGroup]}>{p.posLabel} · {p.team.abbreviation}</div>
         <div className="tv-card__name">{player.name}</div>
+        {player.elite[0] && <EliteBadge entry={player.elite[0]} size="md" className="tv-card__elite" />}
         <div className="tv-card__meta">{player.games} {player.games === 1 ? 'Spiel' : 'Spiele'} · {p.team.name}</div>
       </div>
     </div>

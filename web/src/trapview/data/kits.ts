@@ -33,7 +33,7 @@ export function resolveKit(colors: TeamColors, variant: 'dark' | 'light'): Kit {
       jersey,
       number: k.number ?? colors.secondary,
       numberOutline: k.numberOutline ?? jersey,
-      trim: colors.secondary,
+      trim: k.trim ?? colors.secondary,
       pants: k.pants ?? colors.primary,
       helmet,
       helmetStripe: colors.secondary,

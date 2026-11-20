@@ -41,8 +41,8 @@ function occlusion(model: SceneModel, target: THREE.Vector3, cams: THREE.Vector3
     const len2 = ab.lengthSq();
     for (const p of model.players) {
       if (p.id === self) continue;
-      // Unbesetzte Plätze sind nur durchscheinende Silhouetten – stören weniger
-      const w = p.player ? 1 : 0.5;
+      // Auch Plätze ohne Daten stehen als vollwertige Spieler auf dem Feld und verdecken genauso
+      const w = 1;
       q.set(p.world[0], p.world[2]);
       const raw = q.clone().sub(a).dot(ab) / len2;
       const t = THREE.MathUtils.clamp(raw, 0, 1.8);

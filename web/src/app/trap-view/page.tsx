@@ -3,7 +3,7 @@ import TrapViewPage from "@/components/TrapViewPage";
 
 export const metadata: Metadata = {
   title: "Trap View",
-  description: "Zwei GFL-Teams im 3D-Matchup mit echten Starting Lineups – und daraus eine komplette Spielsimulation der Saison 2026.",
+  description: "Zwei GFL-Teams im 3D-Matchup mit echten Starting Lineups – Formation, Duelle und Schlüsselspieler im Broadcast-Stil.",
 };
 
 export default function Page() {

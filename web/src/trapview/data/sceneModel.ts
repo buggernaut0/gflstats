@@ -1,4 +1,6 @@
+import type { EliteEntry } from '../spotlight/elite';
 import type { DataGroup, FormationSlot, LineupEntry, Player, SeasonData, Side, SpotlightPick, Team } from './types';
+import { luminance } from '../../lib/teamColors';
 import { resolveKit, type Kit } from './kits';
 import { DUELS, FORMATION } from './formation';
 import { GROUP_LABEL, initialName, lastName } from './names';
@@ -23,7 +25,7 @@ export interface ScenePlayer {
   role: string;
   side: Side;
   group: Group;
-  /** null = Platz laut Daten unbesetzt (wird als Silhouette ohne Namen gezeigt) */
+  /** null = keine Spielerdaten für diesen Platz (steht als Spieler im Teamtrikot ohne Nummer und Namen auf dem Feld) */
   player: Player | null;
   /** Positionsgruppe laut Daten (z. B. "WR", "WR/TE", "DEF") */
   dataGroup: DataGroup;
@@ -70,6 +72,16 @@ export interface SceneModel {
   matchups: SceneMatchup[];
   /** Player Spotlights: Offense-Stars des einen und Defense-Stars des anderen Teams, abwechselnd */
   spotlights: SceneSpotlight[];
+  /**
+   * Elite-Spieler auf dem Feld (beste zehn ihrer Positionsgruppe laut spotlight/elite.ts), je Seite nach
+   * bester Platzierung sortiert. Nur aus dem Export – Trap View vergibt keinen Elite-Status selbst.
+   */
+  elite: Record<Side, ScenePlayer[]>;
+}
+
+/** Beste Elite-Platzierung eines Platzes, sonst null. */
+export function eliteOf(p: ScenePlayer): EliteEntry | null {
+  return p.player?.elite?.[0] ?? null;
 }
 
 const v = (p: Player | null, k: string) => p?.stats[k] ?? 0;
@@ -160,7 +172,9 @@ export function buildSceneModel(season: SeasonData, offenseId: string, defenseId
   const offense = season.teams.find((t) => t.id === offenseId) ?? season.teams[0];
   const defense = season.teams.find((t) => t.id === defenseId && t.id !== offense.id) ?? season.teams.find((t) => t.id !== offense.id) ?? season.teams[0];
   const offenseKit = resolveKit(offense.colors, 'dark');
-  const defenseKit = resolveKit(defense.colors, 'light');
+  // Trägt die Offense schon ein helles Heimtrikot (z. B. Ravensburg: weiß laut Trikotfoto), spielt die
+  // Defense im dunklen – beide Teams bleiben immer klar unterscheidbar
+  const defenseKit = resolveKit(defense.colors, luminance(offenseKit.jersey) > 0.5 ? 'dark' : 'light');
   const { ballOn } = FORMATION;
 
   const players = [
@@ -182,7 +196,23 @@ export function buildSceneModel(season: SeasonData, offenseId: string, defenseId
     losX: losWorldX(ballOn),
     players, byRole, matchups,
     spotlights: spotlightOrder(players, offense.spotlight?.offense ?? [], defense.spotlight?.defense ?? []),
+    elite: {
+      offense: eliteOnSide(players, 'offense'),
+      defense: eliteOnSide(players, 'defense'),
+    },
   };
+}
+
+/** Elite-Spieler einer Seite, beste Platzierung zuerst (bei Gleichstand Formationsreihenfolge). */
+function eliteOnSide(players: ScenePlayer[], side: Side): ScenePlayer[] {
+  return players
+    .filter((p) => p.side === side && eliteOf(p))
+    .sort((a, b) => eliteOf(a)!.rank - eliteOf(b)!.rank || eliteOf(b)!.score - eliteOf(a)!.score);
+}
+
+/** Das Duell, in dem ein Spieler steht (Receiver gegen Passverteidiger), sonst undefined. */
+export function matchupOf(model: SceneModel, p: ScenePlayer): SceneMatchup | undefined {
+  return model.matchups.find((m) => m.offense.id === p.id || m.defense.id === p.id);
 }
 
 /**

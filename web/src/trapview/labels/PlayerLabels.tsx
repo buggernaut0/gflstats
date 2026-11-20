@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { SceneModel, ScenePlayer } from '../data/sceneModel';
 import { buildRig, labelAnchor } from '../players/rig';
 import { useTrapView } from '../state/store';
+import { EliteCrest } from '../../components/EliteBadge';
 
 /** Gemeinsame Ablage: Spieler-ID → DOM-Element des Labels. */
 export type LabelRegistry = Map<string, HTMLDivElement>;
@@ -27,6 +28,8 @@ const Label = memo(function Label({ p, state, registry }: { p: ScenePlayer; stat
   const team = p.team.colors.primary;
   const teamInk = useMemo(() => inkOn(team), [team]);
   const number = p.player?.number;
+  // Elite: beste zehn der Positionsgruppe (Datenexport, spotlight/elite.ts) – kleines Wappen auf der Plakette
+  const elite = p.player?.elite?.[0] ?? null;
   const cls = state === 'off' ? '' : state === 'on' ? ' is-on' : ` is-on is-${state}`;
   return (
     <div
@@ -42,11 +45,12 @@ const Label = memo(function Label({ p, state, registry }: { p: ScenePlayer; stat
       <div className="tv-label__leader" />
       <div className="tv-label-lift">
         <div
-          className={`tv-label${cls}${p.player ? '' : ' is-empty'}`}
+          className={`tv-label${cls}${p.player ? '' : ' is-empty'}${elite ? ' is-elite' : ''}`}
           style={{ ['--team' as string]: team, ['--team-ink' as string]: teamInk }}
         >
           <div className="tv-label__plate">
             {number != null && <span className="tv-label__num">{number}</span>}
+            {elite && <EliteCrest className="tv-label__elite" />}
             <span className="tv-label__text">
               <span className="tv-label__pos">{p.posLabel}</span>
               <span className="tv-label__name">{p.shortName ?? 'nicht belegt'}</span>
@@ -54,6 +58,16 @@ const Label = memo(function Label({ p, state, registry }: { p: ScenePlayer; stat
           </div>
           <div className="tv-label__tick" />
         </div>
+        {/* Elite-Marke: steht immer über dem Helm, auch wenn das Namenslabel ausgeblendet ist (dann allein) */}
+        {elite && (
+          <div className="tv-elite-pin">
+            <EliteCrest className="tv-elite-pin__crest" />
+            <span className="tv-elite-pin__text">
+              <b>Elite</b>
+              <small>#{elite.rank} {elite.short}</small>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
