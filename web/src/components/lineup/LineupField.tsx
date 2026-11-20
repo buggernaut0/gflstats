@@ -4,7 +4,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import type { FieldPlayer, Unit } from "./types";
+import { contrast } from "@/lib/teamColors";
+import type { FieldPlayer, Unit, LineupColors } from "./types";
 
 const LineupScene = dynamic(() => import("./LineupScene"), { ssr: false });
 
@@ -24,7 +25,7 @@ function webglAvailable(): boolean {
  */
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
-export default function LineupField({ players, colors, teamGames, logo, provisional = false }: { players: FieldPlayer[]; colors: { primary: string; secondary: string }; teamGames: number; logo?: string | null; provisional?: boolean }) {
+export default function LineupField({ players, colors, teamGames, logo, provisional = false }: { players: FieldPlayer[]; colors: LineupColors; teamGames: number; logo?: string | null; provisional?: boolean }) {
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
   const [unit, setUnit] = useState<Unit>("offense");
@@ -49,11 +50,14 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
     return () => io.disconnect();
   }, [failed]);
 
+  // Nummernfeld wie das Trikot: Trikotfarbe mit Nummernfarbe (aus curation/teams.json, Abweichungen unter colors.kit)
+  const jersey = colors.kit?.jersey ?? colors.primary;
+  const numberInk = colors.kit?.number ?? (contrast(colors.secondary, jersey) >= 2.5 ? colors.secondary : isLight(jersey) ? "#141c28" : "#ffffff");
   const shown = active !== null && players[active].unit === unit ? players[active] : null;
   const list = players.map((p, i) => ({ p, i })).filter((x) => x.p.unit === unit);
 
   return (
-    <div style={{ "--lineup-jersey": colors.primary, "--lineup-ink": isLight(colors.primary) ? "#141c28" : "#ffffff" } as React.CSSProperties}>
+    <div style={{ "--lineup-jersey": jersey, "--lineup-ink": isLight(jersey) ? "#141c28" : "#ffffff" } as React.CSSProperties}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div role="radiogroup" aria-label="Einheit" className="inline-flex rounded-lg border border-line bg-surface p-0.5">
           {(["offense", "defense"] as Unit[]).map((u) => (
@@ -87,7 +91,7 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
           {shown && (
             <div className="pointer-events-auto flex max-w-full items-stretch overflow-hidden rounded-lg border border-white/15 bg-[#0c1420]/92 text-white shadow-xl shadow-black/40 backdrop-blur">
               {shown.number !== null ? (
-                <span className="num display grid min-w-[64px] place-items-center px-3 text-[40px] font-bold leading-none" style={{ background: colors.secondary }}>
+                <span className="num display grid min-w-[64px] place-items-center px-3 text-[40px] font-bold leading-none" style={{ background: jersey, color: numberInk, boxShadow: "inset -1px 0 0 rgb(255 255 255 / 0.12)" }}>
                   {shown.number}
                 </span>
               ) : (

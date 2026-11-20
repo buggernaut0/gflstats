@@ -1,3 +1,4 @@
+import type { TeamColorSpec } from "./teamColors";
 /** Datentypen der von scripts/build_data.py erzeugten Dateien in public/data/. */
 
 export type Stats = Record<string, number>;
@@ -23,7 +24,8 @@ export interface Team {
   short: string;
   abbr: string;
   namesBySeason: Record<string, string>;
-  colors: { primary: string; secondary?: string } | null;
+  /** Teamfarben aus curation/teams.json (siehe lib/teamColors.ts); null = keine belegten Farben */
+  colors: TeamColorSpec | null;
   /** Pfad unter public/ (z. B. logos/kiel-baltic-hurricanes.png); null = kein offizielles Logo hinterlegt. */
   logo: string | null;
   logoSource?: string | null;

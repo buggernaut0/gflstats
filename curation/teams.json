@@ -1,5 +1,5 @@
 {
-  "_info": "Ordnet die Teamnamen aus der Datenbank stabilen Team-IDs zu und verwaltet zentral alles, was die Website über ein Team zeigt. 'names' = alle Schreibweisen in den Daten (auch frühere Namen). 'short' = Kurzname, 'abbr' = Kürzel. 'logo' = offizielles Logo: 'url' (Quelle der Datei), 'sourcePage' (Seite, auf der es verlinkt ist), 'file' (Ablage unter web/public/logos/). scripts/download_logos.py lädt die Dateien; ohne heruntergeladene Datei zeigt die Website ein neutrales Kürzel. 'colors' nur mit Quellenangabe in 'sources' eintragen.",
+  "_info": "Ordnet die Teamnamen aus der Datenbank stabilen Team-IDs zu und verwaltet zentral alles, was die Website über ein Team zeigt. 'names' = alle Schreibweisen in den Daten (auch frühere Namen). 'short' = Kurzname, 'abbr' = Kürzel. 'logo' = offizielles Logo: 'url' (Quelle der Datei), 'sourcePage' (Seite, auf der es verlinkt ist), 'file' (Ablage unter web/public/logos/). scripts/download_logos.py lädt die Dateien; ohne heruntergeladene Datei zeigt die Website ein neutrales Kürzel. 'colors' nur mit Quellenangabe in 'sources' eintragen. 'colors': primary/secondary (Pflicht), accent (optional, UI-Akzent), kit (optional: abweichende Farben des dunklen Heimtrikots – jersey, helmet, facemask, number, numberOutline, pants), source und note.",
   "franchises": [
     {
       "id": "allgaeu-comets",
@@ -9,14 +9,23 @@
       "names": [
         "Allgäu Comets"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#1C4177",
+        "secondary": "#DC081C",
+        "accent": "#FFFFFF",
+        "source": "https://www.instagram.com/allgaeucomets/",
+        "note": "Blau und Rot mit Weiß. Vereinsgrafiken flächig Blau (#193E75), blaue Helme (Instagram). Blau und Rot exakt aus dem offiziellen Komet-Logo. Kein Trikotfoto der Herren im sichtbaren Bereich – Trikotdetails (Nummernfarbe) nicht belegt. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/ALC.png",
         "sourcePage": "https://gfl.info/teams/allgaeu-comets/",
         "file": "allgaeu-comets.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/ALC.png",
+        "https://www.instagram.com/allgaeucomets/"
+      ]
     },
     {
       "id": "berlin-adler",
@@ -38,14 +47,23 @@
       "names": [
         "Berlin Rebels"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#121212",
+        "secondary": "#FFFFFF",
+        "accent": "#A7A9AC",
+        "source": "https://www.instagram.com/berlinrebels/",
+        "note": "Schwarz und Weiß, Silbergrau als Akzent. Schwarzes Trikot mit weißen Schulterpartien und weißen Nummern, schwarzer Helm (Instagram), Logo Schwarz/Grau/Weiß. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/BRE.png",
         "sourcePage": "https://gfl.info/teams/berlin-rebels/",
         "file": "berlin-rebels.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/BRE.png",
+        "https://www.instagram.com/berlinrebels/"
+      ]
     },
     {
       "id": "braunschweig-lions",
@@ -57,14 +75,29 @@
         "Braunschweig Lions",
         "New Yorker Lions"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#08325A",
+        "secondary": "#C0393F",
+        "accent": "#FFFFFF",
+        "kit": {
+          "helmet": "#EEF0F2",
+          "facemask": "#1F2A44",
+          "number": "#FFFFFF",
+          "numberOutline": "#C0393F"
+        },
+        "source": "https://www.instagram.com/braunschweig__lions/",
+        "note": "Dunkelblau, Rot und Weiß. Weißer Helm, dunkelblaues Trikot mit weißen Nummern, weißes Auswärtstrikot mit Blau/Rot; Vereinsgrafik „Braunschweig Lions“ Blau/Rot (Instagram). Farbtöne aus der Grafik gemessen (Blau #033D59–#08254E, Rot #BB3A3E). Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/BSL.png",
         "sourcePage": "https://gfl.info/teams/braunschweig-lions/",
         "file": "braunschweig-lions.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": [],
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/BSL.png",
+        "https://www.instagram.com/braunschweig__lions/"
+      ],
       "note": "Bis 2025 als 'New Yorker Lions Braunschweig' geführt, ab 2026 als 'Braunschweig Lions'. Gleiche statsnscore-Team-ID 6460f1a3e5baf517a73fe2c6."
     },
     {
@@ -75,14 +108,27 @@
       "names": [
         "Dresden Monarchs"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#0E3468",
+        "secondary": "#C7A767",
+        "kit": {
+          "helmet": "#C7A767",
+          "number": "#FFFFFF",
+          "numberOutline": "#C7A767"
+        },
+        "source": "https://www.instagram.com/dresdenmonarchs/",
+        "note": "Navy und Gold. Navy-Heimtrikot mit weißen Nummern, goldenes Auswärtstrikot, goldener Helm (Spielfotos auf Instagram). Farbtöne exakt aus dem offiziellen Logo (Navy #0E3468, Gold #C7A767). Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/DDM.png",
         "sourcePage": "https://gfl.info/teams/dresden-monarchs/",
         "file": "dresden-monarchs.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/DDM.png",
+        "https://www.instagram.com/dresdenmonarchs/"
+      ]
     },
     {
       "id": "duesseldorf-panther",
@@ -92,14 +138,26 @@
       "names": [
         "Düsseldorf Panther"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#141414",
+        "secondary": "#DD203C",
+        "kit": {
+          "number": "#FFFFFF",
+          "numberOutline": "#DD203C"
+        },
+        "source": "https://www.instagram.com/duesseldorfpanther/",
+        "note": "Schwarz und Rot. Schwarzes Trikot und schwarzer Helm, weiße Nummern mit roter Kontur, weißes Auswärtstrikot (Instagram). Rot exakt aus dem offiziellen Logo. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/DPA.png",
         "sourcePage": "https://gfl.info/teams/duesseldorf-panther/",
         "file": "duesseldorf-panther.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/DPA.png",
+        "https://www.instagram.com/duesseldorfpanther/"
+      ]
     },
     {
       "id": "hamburg-pioneers",
@@ -122,14 +180,27 @@
       "names": [
         "Hildesheim Invaders"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#1B3359",
+        "secondary": "#FFCB06",
+        "kit": {
+          "helmet": "#FFCB06",
+          "number": "#FFFFFF",
+          "numberOutline": "#FFCB06"
+        },
+        "source": "https://www.instagram.com/hildesheiminvaders/",
+        "note": "Navy und Gelb. Navy-Trikot mit weißen Nummern, gelber Besatz, goldener Helm; Vereinsgrafiken flächig Navy #1B3359 / Gelb #FFCB06 (Instagram), deckt sich mit dem Logo (#FFC800). Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/HII.png",
         "sourcePage": "https://gfl.info/teams/hildesheim-invaders/",
         "file": "hildesheim-invaders.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/HII.png",
+        "https://www.instagram.com/hildesheiminvaders/"
+      ]
     },
     {
       "id": "ingolstadt-dukes",
@@ -151,14 +222,22 @@
       "names": [
         "Kiel Baltic Hurricanes"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#11634D",
+        "secondary": "#E77F3F",
+        "source": "https://www.instagram.com/kielbaltichurricanes/",
+        "note": "Grün und Orange. Weißes Trikot mit grünen Nummern und Orange, grüne Kleidung und Helme (Instagram). Farbtöne exakt aus dem offiziellen Logo. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/KBH.png",
         "sourcePage": "https://gfl.info/teams/kiel-baltic-hurricanes/",
         "file": "kiel-baltic-hurricanes.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/KBH.png",
+        "https://www.instagram.com/kielbaltichurricanes/"
+      ]
     },
     {
       "id": "kirchdorf-wildcats",
@@ -192,14 +271,22 @@
       "names": [
         "Munich Cowboys"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#1A1A1A",
+        "secondary": "#FABE00",
+        "source": "https://www.instagram.com/munichcowboys/",
+        "note": "Schwarz und Gold. Schwarze Trikots, gelb-goldenes Trainingstrikot, Vereinsgrafiken Schwarz/Gold (Instagram). Gold exakt aus dem offiziellen Logo. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/MUC.png",
         "sourcePage": "https://gfl.info/teams/munich-cowboys/",
         "file": "munich-cowboys.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/MUC.png",
+        "https://www.instagram.com/munichcowboys/"
+      ]
     },
     {
       "id": "paderborn-dolphins",
@@ -221,14 +308,22 @@
       "names": [
         "Pforzheim Wilddogs"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#091A54",
+        "secondary": "#6CA9E5",
+        "source": "https://www.instagram.com/pforzheimwilddogs/",
+        "note": "Navy und Hellblau. Alle Vereinsgrafiken Navy/Hellblau, weißes Trikot mit blauem Besatz (Instagram). Farbtöne aus den flächigen Vereinsgrafiken gemessen. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/PFW.png",
         "sourcePage": "https://gfl.info/teams/pforzheim-wilddogs/",
         "file": "pforzheim-wilddogs.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/PFW.png",
+        "https://www.instagram.com/pforzheimwilddogs/"
+      ]
     },
     {
       "id": "potsdam-royals",
@@ -238,14 +333,30 @@
       "names": [
         "Potsdam Royals"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#CF0A0A",
+        "secondary": "#141414",
+        "accent": "#EEAD32",
+        "kit": {
+          "jersey": "#17171A",
+          "pants": "#17171A",
+          "helmet": "#CF0A0A",
+          "number": "#FFFFFF",
+          "numberOutline": "#CF0A0A"
+        },
+        "source": "https://www.instagram.com/potsdamroyals/",
+        "note": "Rot, Schwarz und Gold. Roter Helm, schwarzes Heimtrikot mit roten Schultern und weißen Nummern, weißes Auswärtstrikot; Vereinsgrafiken flächig Rot (Instagram). Gold aus dem offiziellen Logo. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/PRO.png",
         "sourcePage": "https://gfl.info/teams/potsdam-royals/",
         "file": "potsdam-royals.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/PRO.png",
+        "https://www.instagram.com/potsdamroyals/"
+      ]
     },
     {
       "id": "regensburg-phoenix",
@@ -255,14 +366,23 @@
       "names": [
         "Regensburg Phoenix"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#5E1A2F",
+        "secondary": "#C9A24D",
+        "accent": "#E5542B",
+        "source": "https://www.instagram.com/regensburg_phoenix/",
+        "note": "Bordeaux und Gold, Phönix-Orange als Akzent. Bordeaux-Heimtrikot mit goldenen Nummern und goldenem Helm, weißes Auswärtstrikot mit Rot-, Orange- und Goldbesatz (Spielfotos auf Instagram). Farbtöne aus Fotos geschätzt – kein Logo in Farbe im Projekt, daher nicht exakt belegt. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/RPX.png",
         "sourcePage": "https://gfl.info/teams/regensburg-phoenix/",
         "file": "regensburg-phoenix.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/RPX.png",
+        "https://www.instagram.com/regensburg_phoenix/"
+      ]
     },
     {
       "id": "saarland-hurricanes",
@@ -272,14 +392,25 @@
       "names": [
         "Saarland Hurricanes"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#E60A14",
+        "secondary": "#111111",
+        "kit": {
+          "helmet": "#111111"
+        },
+        "source": "https://www.instagram.com/saarlandhurricanes/",
+        "note": "Rot und Schwarz. Weißes Trikot mit roten Nummern, schwarzer Helm mit rotem Logo, Vereinsgrafiken Rot/Schwarz (Instagram). Rot exakt aus dem offiziellen Logo. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/SAH.png",
         "sourcePage": "https://gfl.info/teams/saarland-hurricanes/",
         "file": "saarland-hurricanes.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/SAH.png",
+        "https://www.instagram.com/saarlandhurricanes/"
+      ]
     },
     {
       "id": "schwaebisch-hall-unicorns",
@@ -289,14 +420,27 @@
       "names": [
         "Schwäbisch Hall Unicorns"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#1F4B35",
+        "secondary": "#FFFFFF",
+        "accent": "#A7B1AC",
+        "kit": {
+          "helmet": "#EEF0EF",
+          "facemask": "#2A2D2B"
+        },
+        "source": "https://www.instagram.com/unicornsfootball/",
+        "note": "Dunkelgrün und Weiß. Dunkelgrünes Trikot mit weißen Nummern, weißer Helm, Vereinsgrafiken Dunkelgrün (Instagram). Grün aus Grafiken und Trikotfotos gemessen. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/SHU.png",
         "sourcePage": "https://gfl.info/teams/schwaebisch-hall-unicorns/",
         "file": "schwaebisch-hall-unicorns.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/SHU.png",
+        "https://www.instagram.com/unicornsfootball/"
+      ]
     },
     {
       "id": "straubing-spiders",
@@ -306,14 +450,28 @@
       "names": [
         "Straubing Spiders"
       ],
-      "colors": null,
+      "colors": {
+        "primary": "#2E8B45",
+        "secondary": "#273B5C",
+        "accent": "#2E8B45",
+        "kit": {
+          "helmet": "#1B4D35",
+          "number": "#FFFFFF",
+          "numberOutline": "#273B5C"
+        },
+        "source": "https://www.instagram.com/straubingspidersofficial/",
+        "note": "Grün und Navy auf Weiß. GFL-Spielerfotos 2026 (u. a. #21, #6): weißes Trikot mit grünen Schulterpartien, dunkle Navy-Nummern, grün-schwarzer Helm. Die Vereinsgrafiken nutzen dagegen Blau/Gelb – maßgeblich ist hier das Trikot. Grünes Heimtrikot nicht gesehen. Gesichtet am 20.11.2026."
+      },
       "logo": {
         "url": "https://gfl.info/wp-content/uploads/Grafiken/SRS.png",
         "sourcePage": "https://gfl.info/teams/straubing-spiders/",
         "file": "straubing-spiders.png",
         "note": "Offizielles Teamlogo, verlinkt auf gfl.info (Startseite, Tabellen GFL Nord/Süd), abgerufen 12.11.2026"
       },
-      "sources": []
+      "sources": [
+        "https://gfl.info/wp-content/uploads/Grafiken/SRS.png",
+        "https://www.instagram.com/straubingspidersofficial/"
+      ]
     },
     {
       "id": "ravensburg-razorbacks",

@@ -56,7 +56,7 @@ const read = <T>(file: string): T => JSON.parse(readFileSync(file, 'utf-8')) as 
 
 interface WebTeam {
   id: string; name: string; short: string | null; abbr: string;
-  colors: { primary?: string; secondary?: string; source?: string; note?: string } | null;
+  colors: { primary?: string; secondary?: string; accent?: string; kit?: Record<string, string>; source?: string; note?: string } | null;
   logo: string | null;
 }
 interface WebPlayer {
@@ -290,7 +290,13 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
 
     if (!logoCache.has(t.id)) logoCache.set(t.id, exportLogo(t));
     const colors = t.colors?.primary
-      ? { primary: t.colors.primary, secondary: t.colors.secondary ?? t.colors.primary, source: t.colors.source ?? null }
+      ? {
+          primary: t.colors.primary,
+          secondary: t.colors.secondary ?? t.colors.primary,
+          accent: t.colors.accent ?? null,
+          kit: t.colors.kit ?? null,
+          source: t.colors.source ?? null,
+        }
       : null;
 
     // Bis zu drei herausragende Spieler je Seite, nur aus der Starting Lineup (sie stehen auf dem Feld)

@@ -5,7 +5,7 @@ import { FORMATION, MIN_GAME_SHARE, PROVISIONAL_SLOTS, REGULAR_GAME_SHARE, SLOTS
 import { MAX_FIELDS, formatStat, stat } from "@/lib/stats";
 import type { Team } from "@/lib/types";
 import LineupField from "./LineupField";
-import type { FieldPlayer } from "./types";
+import type { FieldPlayer, LineupColors } from "./types";
 
 const POSITION_LABELS: Record<string, string> = {
   QB: "Quarterback", RB: "Running Back", WR: "Wide Receiver", TE: "Tight End", OL: "Offensive Line",
@@ -31,7 +31,9 @@ export default function LineupSection({ team, season }: { team: Team; season: nu
   if (!lineup) return null;
   const provisional = lineup.basis === "provisional";
   const slots = provisional ? PROVISIONAL_SLOTS : SLOTS;
-  const colors = team.colors?.primary ? { primary: team.colors.primary, secondary: team.colors.secondary ?? "#f5c63c" } : NEUTRAL;
+  const colors: LineupColors = team.colors?.primary
+    ? { primary: team.colors.primary, secondary: team.colors.secondary ?? team.colors.primary, kit: team.colors.kit }
+    : NEUTRAL;
   const players: FieldPlayer[] = [...lineup.offense.map((p) => ({ p, unit: "offense" as const })), ...lineup.defense.map((p) => ({ p, unit: "defense" as const }))].map(({ p, unit }) => {
     const [x, z] = FORMATION[p.spot[0]][p.spot[1]] ?? [0, 0];
     const def = slots.find((s) => s.position === p.position)!;
@@ -96,7 +98,7 @@ export default function LineupSection({ team, season }: { team: Team; season: nu
           <p>
             Die Grundformation und die Anordnung auf dem Feld sind schematisch und keine Aussage über das Spielsystem. Für die Offensive Line gibt es keine Leistungswerte; ein Platz
             wird nur besetzt, wenn Einsätze im Statistikbogen belegt sind.{" "}
-            {team.colors?.primary ? "Trikotfarben sind die Markenfarben des Vereins, kein Abbild des echten Trikots." : "Das Trikot ist neutral gehalten, weil für dieses Team noch keine belegten Vereinsfarben hinterlegt sind."}{" "}
+            {team.colors?.primary ? "Trikotfarben nach Vereinsfarben und Trikotfotos des Teams (Quelle: Teamseite unten), vereinfacht dargestellt." : "Das Trikot ist neutral gehalten, weil für dieses Team noch keine belegten Vereinsfarben hinterlegt sind."}{" "}
             <Link href="/methodik/" className="text-accent-text underline-offset-4 hover:underline">Methodik</Link>
           </p>
           {roster?.note && <p className="text-ink-3">Hinweis zum Kader: {roster.note}</p>}

@@ -1,3 +1,4 @@
+import { teamAccent, type TeamKitColors } from '../../lib/teamColors';
 import type { DataIndex, SeasonData, Team, TeamColors } from './types';
 
 /**
@@ -7,7 +8,7 @@ import type { DataIndex, SeasonData, Team, TeamColors } from './types';
 export const PLACEHOLDER_COLORS: TeamColors = { primary: '#2b313b', secondary: '#c9d0d9', accent: '#f5c63c' };
 
 interface RawTeam extends Omit<Team, 'colors' | 'colorsVerified' | 'colorSource'> {
-  colors: { primary: string; secondary: string; source: string | null } | null;
+  colors: { primary: string; secondary: string; accent: string | null; kit: TeamKitColors | null; source: string | null } | null;
 }
 
 import { ASSET_BASE, SITE_BASE } from '../paths';
@@ -43,7 +44,12 @@ async function fetchSeason(season: number): Promise<SeasonData> {
       ...t,
       logo: t.logo ? `${SITE_BASE}/${t.logo}` : null,
       colors: t.colors
-        ? { primary: t.colors.primary, secondary: t.colors.secondary, accent: t.colors.secondary }
+        ? {
+            primary: t.colors.primary,
+            secondary: t.colors.secondary,
+            accent: teamAccent({ primary: t.colors.primary, secondary: t.colors.secondary, accent: t.colors.accent ?? undefined }, '#08090b'),
+            kit: t.colors.kit ?? undefined,
+          }
         : PLACEHOLDER_COLORS,
       colorsVerified: !!t.colors,
       colorSource: t.colors?.source ?? null,

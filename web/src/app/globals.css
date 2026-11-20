@@ -140,6 +140,12 @@ body {
 }
 
 /* Teamlogos: immer auf dunkler Plakette, weil mehrere offizielle Logos weiss sind. */
+/* Kopf der Teamseite: dezenter Verlauf in den Teamfarben (nur, wenn belegte Farben hinterlegt sind) */
+.team-hero[style*="--team-1"] {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--team-1) 26%, transparent) 0%, transparent 62%),
+    linear-gradient(90deg, var(--team-1) 0 38%, var(--team-2) 38% 62%, transparent 62%) bottom / 100% 2px no-repeat;
+}
 .logo-plate {
   background: #16243a;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);

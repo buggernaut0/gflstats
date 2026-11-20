@@ -14,12 +14,12 @@ import { resolveKit } from "@/trapview/data/kits";
 import type { Build, Stance } from "@/trapview/data/types";
 import { createSquadFrom, type SquadPlayer } from "@/trapview/players/squad";
 import { animateRig, type Rig } from "@/trapview/players/rig";
-import type { FieldPlayer, Unit } from "./types";
+import type { FieldPlayer, LineupColors, Unit } from "./types";
 
 interface Props {
   players: FieldPlayer[];
   unit: Unit;
-  colors: { primary: string; secondary: string };
+  colors: LineupColors;
   /** Adresse des Teamlogos fuer die Feldmitte (offizielles Logo aus curation/teams.json) */
   logo?: string | null;
   active: number | null;
@@ -146,7 +146,7 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
     };
     // Szene wird nur bei geaenderten Daten neu aufgebaut
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [players, colors.primary, colors.secondary, logo]);
+  }, [players, colors, logo]);
 
   function build(): (() => void) | undefined {
     const el = mount.current!;
@@ -221,7 +221,7 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
     }
 
     // Spielerfiguren: dasselbe Modell wie in der Trap View (players/parts.ts, instanziert) – je Einheit ein Satz
-    const kit = resolveKit({ primary: colors.primary, secondary: colors.secondary, accent: colors.secondary }, "dark");
+    const kit = resolveKit({ primary: colors.primary, secondary: colors.secondary, accent: colors.secondary, kit: colors.kit }, "dark");
     const toSquad = (p: FieldPlayer, index: number): SquadPlayer => {
       const look = LOOK[p.spot] ?? LOOK.DB;
       return {
