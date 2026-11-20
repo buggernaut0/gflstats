@@ -75,7 +75,10 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
 
   return (
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
-      <section className="mb-6 flex flex-wrap items-end justify-between gap-6">
+      <section
+        className="team-hero -mx-4 mb-6 flex flex-wrap items-end justify-between gap-6 rounded-2xl px-4 py-5 sm:-mx-6 sm:px-6"
+        style={team.colors?.primary ? ({ "--team-1": team.colors.primary, "--team-2": team.colors.secondary ?? team.colors.primary } as React.CSSProperties) : undefined}
+      >
         <div className="flex items-center gap-5">
           <TeamLogo team={team} size={88} />
           <div>

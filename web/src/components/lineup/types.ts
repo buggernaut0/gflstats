@@ -1,3 +1,5 @@
+import type { TeamKitColors } from "@/lib/teamColors";
+
 export type Unit = "offense" | "defense";
 
 /** Ein Platz der Aufstellung, fertig aufbereitet fuer die Anzeige (alle Werte aus den Daten). */
@@ -20,4 +22,11 @@ export interface FieldPlayer {
   /** Schematische Lage in Yards (x quer, z in Spielrichtung) */
   x: number;
   z: number;
+}
+
+/** Trikotfarben fuer die Lineup-Szene (aus curation/teams.json, sonst neutral) */
+export interface LineupColors {
+  primary: string;
+  secondary: string;
+  kit?: TeamKitColors;
 }

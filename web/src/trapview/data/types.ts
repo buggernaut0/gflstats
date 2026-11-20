@@ -1,3 +1,4 @@
+import type { TeamKitColors } from '../../lib/teamColors';
 /**
  * Trap View – öffentliche Datenschnittstelle.
  *
@@ -32,8 +33,10 @@ export interface TeamColors {
   primary: string;
   /** Zweitfarbe (Nummern, Streifen). */
   secondary: string;
-  /** Akzent für UI und Details. */
+  /** Akzent für UI und Details – immer auf dunklem Grund lesbar (siehe lib/teamColors.ts teamAccent). */
   accent: string;
+  /** Abweichende Farben des dunklen Heimtrikots laut curation/teams.json (z. B. schwarzes Trikot, roter Helm). */
+  kit?: TeamKitColors;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { contrast } from '../../lib/teamColors';
 import { buildProfiles, randomSeed, simulateGame, type Profiles } from '../sim/index.ts';
 import { MultiPanel } from './MultiPanel';
 import { SimMethod } from './SimMethod';
@@ -56,10 +57,14 @@ const inkFor = (fill: string) => (lum(fill) > 0.55 ? '#0b0d10' : '#ffffff');
 function teamLooks(a: Team, b: Team): [TeamLook, TeamLook] {
   const fa = a.colorsVerified ? a.colors.primary : '#d9dde3';
   let fb = b.colorsVerified ? b.colors.primary : '#55606f';
-  if (dist(fa, fb) < 110) fb = lum(fa) > 0.5 ? '#1c2129' : '#f1f2f0';
+  const own = dist(fa, fb) >= 110;
+  if (!own) fb = lum(fa) > 0.5 ? '#1c2129' : '#f1f2f0';
+  // Schrift in der Zweitfarbe, wenn sie auf der Hauptfarbe gut lesbar ist (z. B. Gold auf Schwarz)
+  const ink = (t: Team, fill: string, teamFill: boolean) =>
+    teamFill && t.colorsVerified && contrast(t.colors.secondary, fill) >= 3 ? t.colors.secondary : inkFor(fill);
   return [
-    { id: a.id, abbr: a.abbreviation, fill: fa, ink: inkFor(fa) },
-    { id: b.id, abbr: b.abbreviation, fill: fb, ink: inkFor(fb) },
+    { id: a.id, abbr: a.abbreviation, fill: fa, ink: ink(a, fa, true) },
+    { id: b.id, abbr: b.abbreviation, fill: fb, ink: ink(b, fb, own) },
   ];
 }
 
