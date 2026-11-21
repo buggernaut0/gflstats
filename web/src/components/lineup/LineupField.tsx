@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { contrast } from "@/lib/teamColors";
 import { stat } from "@/lib/stats";
 import { useI18n } from "@/i18n/react";
+import PlayerPhoto from "@/components/PlayerPhoto";
 import type { FieldPlayer, Unit, LineupColors } from "./types";
 
 const LineupScene = dynamic(() => import("./LineupScene"), { ssr: false });
@@ -94,6 +95,8 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
         <div className={`pointer-events-none absolute inset-x-3 bottom-3 flex justify-start sm:inset-x-4 sm:bottom-4 ${shown ? "" : "opacity-0"}`} aria-live="polite">
           {shown && (
             <div className="pointer-events-auto flex max-w-full items-stretch overflow-hidden rounded-lg border border-white/15 bg-[#0c1420]/92 text-white shadow-xl shadow-black/40 backdrop-blur">
+              {/* Echtes Foto vor der Nummer; ohne Foto bleibt es bei der Nummer wie bisher */}
+              {shown.photo && <PlayerPhoto key={shown.id} photo={shown.photo} name={shown.name ?? ""} width={60} fallback={null} className="self-stretch" />}
               {shown.number !== null ? (
                 <span className="num display grid min-w-[64px] place-items-center px-3 text-[40px] font-bold leading-none" style={{ background: jersey, color: numberInk, boxShadow: "inset -1px 0 0 rgb(255 255 255 / 0.12)" }}>
                   {shown.number}

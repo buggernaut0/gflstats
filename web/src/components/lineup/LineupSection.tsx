@@ -38,7 +38,7 @@ export default function LineupSection({ team, season }: { team: Team; season: nu
     const def = slots.find((s) => s.position === p.position)!;
     return {
       slot: p.slot, position: p.position, positionLabel: POSITION_LABELS[p.position] ?? p.position, unit,
-      id: p.player, name: p.player ? (names.get(p.player)?.name ?? p.rosterName) : null, number: p.number, games: p.games,
+      id: p.player, name: p.player ? (names.get(p.player)?.name ?? p.rosterName) : null, number: p.number, photo: p.player ? names.get(p.player)?.photo ?? null : null, games: p.games,
       stats: p.player ? def.show.map((key) => ({ key, value: p.stats[key] ?? 0 })) : [],
       spot: p.spot[0],
       down: p.spot[0] === "OL" || p.spot[0] === "DL",

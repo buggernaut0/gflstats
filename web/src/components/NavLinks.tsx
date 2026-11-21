@@ -9,7 +9,7 @@ export default function NavLinks() {
   const path = usePathname() || "/";
   const { m } = useI18n();
   return (
-    <nav aria-label={m.nav.main} className="-mx-1 flex min-w-0 items-center gap-0.5 overflow-x-auto sm:overflow-visible">
+    <nav aria-label={m.nav.main} className="no-scrollbar -mx-1 flex min-w-0 items-center gap-0.5 overflow-x-auto sm:overflow-visible">
       {NAV.map((item) => {
         const active = isActive(path, item);
         return (

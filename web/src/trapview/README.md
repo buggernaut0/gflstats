@@ -88,9 +88,11 @@ Verdeckung, Spieler im Bilddrittel gegenüber der Karte; innerhalb eines Blocks 
 `src/matchup/Highlight.tsx` (Spot und Bodenring), `src/spotlight/SpotlightCard.tsx` + `spotlight.css` (Karte),
 `src/spotlight/PlayerPortrait.tsx` (stilisierte Büste in der Ausrüstung des Spielers, getöntes Visier, Nummer aus dem Kader).
 
-**Spielerfotos ergänzen:** Datei `web/public/trapview/photos/<spieler-id>.webp` (oder `.jpg`/`.png`) ablegen,
-`npm run data:trapview` – die Karte zeigt dann das Foto statt der Büste (Hochformat, Kopf im oberen Drittel).
-Lädt ein Foto nicht, fällt die Karte automatisch auf die Büste zurück.
+**Spielerfotos:** eine zentrale Zuordnung für Website und Trap View – `curation/player_photos.json`
+(Spieler-ID → Foto der offiziellen Roster-Seite, erzeugt von `scripts/match_player_photos.py`, Prüffälle in
+`curation/FOTO_ABGLEICH_2026.md`), Dateien `web/public/players/<spieler-id>.webp` (`npm run photos`, 320 × 400 px).
+`build_data.py` schreibt die Referenz in `players.json` (`photo`), `export-data.ts` übernimmt sie für Aufstellung und
+Spotlight. Ohne Foto – oder wenn eines nicht lädt – bleibt der bisherige Platzhalter (Büste bzw. Nummer).
 
 ## Spielermodell
 

@@ -6,10 +6,11 @@ import type { TeamLite } from "@/lib/dashboard";
 import { stat } from "@/lib/stats";
 import { useI18n } from "@/i18n/react";
 import { TEAM_METRICS, fmtMetric } from "@/lib/team";
-import type { Scope, Stats } from "@/lib/types";
+import type { Player, Scope, Stats } from "@/lib/types";
 import ScopeToggle from "./ScopeToggle";
 import SourceTag from "./SourceTag";
 import TeamTag from "./TeamTag";
+import PlayerPhoto from "./PlayerPhoto";
 import { VideoMark } from "./VideoPlayer";
 
 export interface RosterRow {
@@ -22,6 +23,8 @@ export interface RosterRow {
   position: string | null;
   games: number;
   stats: Stats;
+  /** Spielerfoto aus der zentralen Zuordnung (players.json → photo), null = Platzhalter */
+  photo?: Player["photo"] | null;
 }
 
 export interface TeamSeasonView {
@@ -187,13 +190,16 @@ export default function TeamView({ seasons, teams }: { seasons: TeamSeasonView[]
                 <tr key={r.player ?? `kader:${r.number}:${r.name}`} className="border-b border-line last:border-0 hover:bg-surface-2/60">
                   {hasRoster && <td className="num py-1.5 pl-4 text-right font-semibold text-ink">{r.number ?? <span className="font-normal text-ink-3">–</span>}</td>}
                   <td className="py-1.5 pl-4">
-                    {r.player ? (
-                      <Link href={`/spieler/${r.player}/`} className="text-ink hover:underline hover:underline-offset-4">
-                        {r.name}
-                      </Link>
-                    ) : (
-                      <span className="text-ink-2" title={tx.team.rosterOnly}>{r.name}</span>
-                    )}
+                    <span className="flex items-center gap-2.5">
+                      <PlayerPhoto photo={r.photo} name={r.name} size="xs" />
+                      {r.player ? (
+                        <Link href={`/spieler/${r.player}/`} className="text-ink hover:underline hover:underline-offset-4">
+                          {r.name}
+                        </Link>
+                      ) : (
+                        <span className="text-ink-2" title={tx.team.rosterOnly}>{r.name}</span>
+                      )}
+                    </span>
                   </td>
                   {hasRoster && <td className="py-1.5 pr-2 text-ink-2" title={r.position ? tx.stats.positions[r.position] : undefined}>{r.position ?? "–"}</td>}
                   <td className="py-1.5 text-ink-3">{r.role ?? "–"}</td>

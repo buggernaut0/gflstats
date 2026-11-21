@@ -35,7 +35,7 @@ export default function SectionTabs({ items, accent }: { items: { id: string; la
       className="z-30 -mx-4 border-b border-line bg-bg/95 px-4 sm:sticky sm:top-[72px] sm:-mx-8 sm:px-8"
       style={accent ? ({ "--tab-accent": accent } as React.CSSProperties) : undefined}
     >
-      <div className="flex gap-1 overflow-x-auto">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto">
         {items.filter((i) => !present || present.has(i.id)).map((i) => (
           <a
             key={i.id}

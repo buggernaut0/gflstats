@@ -12,6 +12,7 @@ import QueryBuilder, { Field, describeCondition, selectCls } from "./QueryBuilde
 import { useI18n } from "@/i18n/react";
 import ResultTable, { type Column } from "./ResultTable";
 import EliteBadge from "./EliteBadge";
+import PlayerPhoto from "./PlayerPhoto";
 import type { EliteEntry } from "@/trapview/spotlight/elite";
 import ScopeToggle from "./ScopeToggle";
 import TeamTag from "./TeamTag";
@@ -63,6 +64,8 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
 
   const active = useMemo(() => conds.filter(isComplete), [conds]);
   const ready = st.status === "ready" ? st.data : null;
+  // Spielerfotos aus der zentralen Zuordnung (players.json → photo)
+  const photos = useMemo(() => new Map((ready?.[1] ?? []).map((p) => [p.id, p.photo])), [ready]);
   const result = useMemo(() => {
     if (!ready) return null;
     const [meta, players, ps, teamList] = ready;
@@ -113,7 +116,8 @@ export default function PlayerSearch({ elite }: { elite?: Record<string, EliteEn
       render: (r) => {
         const e = r.season ? elite?.[`${r.player}:${r.season}`] : undefined;
         return (
-          <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-2.5">
+            <PlayerPhoto photo={photos.get(r.player)} name={r.name} size="xs" />
             <Link href={`/spieler/${r.player}/`} className="hover:underline hover:underline-offset-4">{r.name}</Link>
             {e && <EliteBadge entry={e} size="sm" season={r.season} />}
           </span>

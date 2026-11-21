@@ -1,3 +1,4 @@
+import type { Player } from "@/lib/types";
 import type { TeamKitColors } from "@/lib/teamColors";
 
 export type Unit = "offense" | "defense";
@@ -13,6 +14,8 @@ export interface FieldPlayer {
   name: string | null;
   /** Rueckennummer laut offiziellem Kader */
   number: number | null;
+  /** Spielerfoto aus der zentralen Zuordnung (players.json → photo), null = Platzhalter */
+  photo: Player["photo"] | null;
   games: number;
   /** Kennzahl-Schlüssel und Saisonwert (Name und Format je Sprache in der Anzeige) */
   stats: { key: string; value: number }[];

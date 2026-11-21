@@ -55,7 +55,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
       const ps = p.seasons.find((s) => s.season === season);
       // Rückennummer/Position nur aus dem offiziellen Kader dieses Teams in dieser Saison (players.json, build_data.py)
       const own = ps?.rosterTeam === id;
-      const e = roster.get(r.p) ?? { player: r.p, name: p.name, role: ps?.role ?? null, number: own ? ps!.number! : null, position: own ? ps!.position ?? null : null, games: 0, stats: {} };
+      const e = roster.get(r.p) ?? { player: r.p, name: p.name, role: ps?.role ?? null, number: own ? ps!.number! : null, position: own ? ps!.position ?? null : null, games: 0, stats: {}, photo: p.photo ?? null };
       e.games += 1;
       addStats(e.stats, r.s);
       roster.set(r.p, e);

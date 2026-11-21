@@ -57,6 +57,8 @@ export interface Player {
   shared: boolean;
   seasons: PlayerSeasonInfo[];
   videos: { player: string; platform: string; url: string; title?: string }[];
+  /** Spielerfoto (zentrale Zuordnung curation/player_photos.json); src ab Website-Wurzel, source = Roster-Seite des Vereins */
+  photo?: { src: string; source: string };
 }
 
 export interface TeamGameStats {

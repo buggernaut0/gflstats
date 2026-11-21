@@ -4,6 +4,7 @@ export const player = {
   sparkLabel: (label: string, season: number) => `${label} Spiel für Spiel, Saison ${season}`,
   sparkNote: (season: number) => `Linien: Spiel für Spiel in der Saison ${season}, gestrichelt = Saisonschnitt.`,
   numberBlock: (n: number) => `Rückennummer ${n}`,
+  photoSource: "Foto:",
   derivedRole: "(aus Statistik abgeleitet)",
   roleUnclear: "Rolle nicht eindeutig",
   officialRoster: (season: number) => `(offizieller Kader ${season})`,

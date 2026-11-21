@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import PlayerPhoto from "./PlayerPhoto";
 import { useEffect, useMemo, useState } from "react";
 import { readQuery, useData, writeQuery } from "@/lib/clientData";
 import { comparisonGroup, entries, qualified, type Entry } from "@/lib/profile";
@@ -233,7 +234,10 @@ function SlotPicker({ index, slot, players, all, teams, onChange, disabled, hidd
       </div>
       {p && slot ? (
         <div className="flex items-center justify-between gap-2">
-          <Link href={`/spieler/${p.id}/`} className="truncate text-[15px] font-medium text-ink hover:underline hover:underline-offset-4">{p.name}</Link>
+          <span className="flex min-w-0 items-center gap-2.5">
+            <PlayerPhoto photo={p.photo} name={p.name} size="sm" />
+            <Link href={`/spieler/${p.id}/`} className="truncate text-[15px] font-medium text-ink hover:underline hover:underline-offset-4">{p.name}</Link>
+          </span>
           <select aria-label={f.m.common.season} value={slot.season} onChange={(e) => onChange({ player: p.id, season: Number(e.target.value) })} className={selectCls}>
             {seasons.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>

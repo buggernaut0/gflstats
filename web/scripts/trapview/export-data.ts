@@ -62,6 +62,8 @@ interface WebTeam {
 }
 interface WebPlayer {
   id: string; name: string; shared: boolean;
+  /** Zentrale Foto-Referenz der Website (curation/player_photos.json → build_data.py), Pfad ab Website-Wurzel */
+  photo?: { src: string; source: string };
   seasons: { season: number; teams: string[]; games: number; role: string | null }[];
 }
 interface WebGame { id: string; season: number; home: string; away: string }
@@ -167,15 +169,12 @@ function exportLogo(t: WebTeam): string | null {
 }
 
 /**
- * Spielerfoto für die Spotlight-Karte, falls vorhanden: web/public/trapview/photos/<spieler-id>.(webp|jpg|png).
- * Fehlt es, zeigt die Karte die stilisierte Silhouette. Ein Foto ergänzen = Datei ablegen, `npm run data:trapview`.
+ * Spielerfoto aus der zentralen Zuordnung der Website (players.json → photo, Datei web/public/players/<id>.webp).
+ * Pfad ab Website-Wurzel; ohne Foto null – dann zeigt die Trap View den bisherigen Platzhalter.
  */
-const PHOTO_DIR = join(WEB_PUBLIC, 'trapview', 'photos');
-function photoOf(id: string): string | null {
-  for (const ext of ['webp', 'jpg', 'png']) {
-    if (existsSync(join(PHOTO_DIR, `${id}.${ext}`))) return `photos/${id}.${ext}`;
-  }
-  return null;
+const photoById = new Map(players.filter((p) => p.photo).map((p) => [p.id, p.photo!.src]));
+function photoOf(id: string | null | undefined): string | null {
+  return (id && photoById.get(id)) || null;
 }
 
 const out = {
@@ -289,6 +288,7 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
           vs,
           // Platzierungen unter den besten zehn je Positionsgruppe der Liga (leer = kein Elite)
           elite: elite.get(lp.player) ?? [],
+          photo: photoOf(lp.player),
         },
       };
     };

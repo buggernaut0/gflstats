@@ -14,7 +14,7 @@ export type Side = 'offense' | 'defense';
 
 /** Ein vorgestellter Spieler (Player Spotlight) – Auswahl und Gründe aus spotlight/scoring.ts. */
 export interface SpotlightPick extends ScoredPick {
-  /** Pfad unter public/trapview/ zu einem echten Spielerfoto, sonst null (stilisierte Silhouette) */
+  /** Spielerfoto, Pfad ab Website-Wurzel (zentrale Zuordnung, players.json), sonst null (stilisierte Büste) */
   photo: string | null;
   /** Elite-Platzierung im vorgestellten Profil (beste zehn der Positionsgruppe), sonst null */
   elite: EliteEntry | null;
@@ -81,6 +81,8 @@ export interface Player {
   vs: Record<string, { games: number; stats: Stats }>;
   /** Platzierungen unter den besten zehn je Positionsgruppe der Saison (spotlight/elite.ts); leer = kein Elite */
   elite: EliteEntry[];
+  /** Spielerfoto, Pfad ab Website-Wurzel (zentrale Zuordnung, players.json → photo), sonst null = Platzhalter */
+  photo: string | null;
 }
 
 export interface LineupEntry {

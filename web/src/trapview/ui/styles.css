@@ -175,18 +175,8 @@
 /* Spieler-Labels */
 .tv-labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 20; }
 .tv-label-anchor { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; z-index: 0; }
-.tv-label-anchor[data-state='dim'] { z-index: 1; }
-.tv-label-anchor[data-state='on'] { z-index: 2; }
-.tv-label-anchor[data-state='featured'] { z-index: 3; }
-.tv-label-lift { position: absolute; left: 0; bottom: 0; width: 0; height: 0; will-change: transform; }
-/* Führungslinie zum Spieler, wenn das Label gestaffelt höher sitzt: 1px hoch, per scaleY gestreckt */
-.tv-label__leader {
-  position: absolute; left: -1px; bottom: 0; width: 2px; height: 1px; transform-origin: 50% 100%; transform: scaleY(0);
-  background: rgba(241, 242, 240, 0.55); opacity: 0; transition: opacity 0.6s ease;
-}
-.tv-label-anchor[data-state='on'] .tv-label__leader { opacity: 1; transition-delay: 0.5s; }
-.tv-label-anchor[data-state='featured'] .tv-label__leader { opacity: 1; background: var(--accent); transition-delay: 0.5s; }
-.tv-label-anchor[data-state='dim'] .tv-label__leader { opacity: 0.35; transition-delay: 0.5s; }
+/* Feste Position über dem Spieler; wird ein Label von einem vorrangigen überdeckt, blendet es nur aus (kein Verschieben) */
+.tv-label-body { position: absolute; left: 0; bottom: 0; width: 0; height: 0; transition: opacity 0.4s ease; }
 .tv-label { display: flex; flex-direction: column; align-items: center; position: absolute; left: 0; bottom: 0; opacity: 0; transform: translate(-50%, 8px); transition: opacity 0.6s ease, transform 0.6s ease; white-space: nowrap; }
 .tv-label.is-on { opacity: 1; transform: translate(-50%, 0); transition-delay: 0.3s; }
 .tv-label__plate {
@@ -557,4 +547,22 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .tv-duel, .tv-eroster, .tv-eroster__side li, .tv-duel__rank i { animation: none; }
+}
+
+/* ── Spielerfotos (ui/Headshot.tsx): Porträtkachel 4:5 auf dunklem Grund in Teamfarbe, Akzentkante unten.
+   Fotos sind einheitlich 320 × 400 px (npm run photos); Freisteller stehen auf dem Teamgrund, Studiofotos füllen die Kachel. */
+.tv-headshot {
+  position: relative; display: block; flex: none; aspect-ratio: 4 / 5; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--team, #1a2233) 70%, #0b0d12), #07080b);
+  box-shadow: inset 0 -2px 0 var(--accent, rgba(241, 242, 240, 0.4));
+}
+.tv-headshot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.tv-card__photo { width: 72px; }
+.tv-duel__photo { width: 64px; }
+.tv-duel__side.is-elite .tv-duel__photo { box-shadow: inset 0 -2px 0 #f0cc6c; }
+/* Fokus-Label im Duell: kleines Porträt links in der Plakette, gleiche Höhe wie die Nummer */
+.tv-label__photo { width: 30px; margin: -2px 0 -2px -2px; }
+@media (max-width: 640px) {
+  .tv-card__photo { width: 52px; }
+  .tv-duel__photo { width: 48px; }
 }

@@ -7,7 +7,7 @@ import type { DataIndex } from '../data/types';
 import EliteBadge from '../../components/EliteBadge';
 import type { SpotlightReason } from './scoring';
 import { GROUP_LABEL, lastName } from '../data/names';
-import { ASSET_BASE } from '../paths';
+import { photoUrl } from '../../lib/photo';
 import { PlayerPortrait } from './PlayerPortrait';
 import './spotlight.css';
 
@@ -151,7 +151,7 @@ export function SpotlightCard({ model, spot, duration, index }: {
         <div className="tv-spot__sheen" aria-hidden="true" />
         <div className="tv-spot__media">
           {number != null && <span className="tv-spot__bignum" aria-hidden="true">{number}</span>}
-          <PlayerPortrait kit={kit} number={number} photo={pick.photo ? `${ASSET_BASE}/${pick.photo}` : null} alt={name} />
+          <PlayerPortrait kit={kit} number={number} photo={photoUrl(pick.photo)} alt={name} />
         </div>
 
         <div className="tv-spot__body">

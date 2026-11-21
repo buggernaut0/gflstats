@@ -8,6 +8,7 @@ import { SelectScreen } from './ui/SelectScreen';
 import { CinemaHud } from './ui/CinemaHud';
 import { LineupBoard } from './ui/LineupBoard';
 import { LabelLayer, type LabelRegistry } from './labels/PlayerLabels';
+import { preloadPhotos } from './ui/Headshot';
 import { useTrapView } from './state/store';
 import { ASSET_BASE } from './paths';
 import { JERSEY_NAME_FONT } from './players/numberAtlas';
@@ -85,6 +86,11 @@ export function TrapView({ data, loading = false, onSeasonChange, audioSrc = TRA
     () => (playable ? buildSceneModel(season, offenseId, defenseId) : null),
     [playable, season, offenseId, defenseId],
   );
+
+  // Fotos der Startformation vorab laden: Duelle und Spotlight zeigen sie dann ohne Verzögerung
+  useEffect(() => {
+    if (model) preloadPhotos(model.players.map((p) => p.player?.photo));
+  }, [model]);
 
   useEffect(() => audio.current!.setVolume(volume), [volume]);
   useEffect(() => audio.current!.setMuted(muted), [muted]);

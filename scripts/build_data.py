@@ -144,7 +144,20 @@ def load_curation():
         "videos": load_json(CURATION / "videos.json")["videos"],
         "game_videos": load_json(CURATION / "game_videos.json")["videos"],
         "rosters": load_json(CURATION / "rosters.json")["rosters"],
+        "photos": load_json(CURATION / "player_photos.json")["photos"] if (CURATION / "player_photos.json").exists() else {},
     }
+
+
+# --------------------------------------------------------------------------- player photos
+def player_photo(pid, photos):
+    """Zentrale Foto-Referenz eines Spielers (curation/player_photos.json, Datei von `npm run photos`).
+    Nur, wenn die Datei existiert; der Inhalts-Hash im Pfad sorgt dafür, dass ein neues Foto nicht aus dem Cache kommt."""
+    entry = photos.get(pid)
+    f = OUT.parent / "players" / f"{pid}.webp"
+    if not entry or not f.exists():
+        return {}
+    digest = hashlib.sha1(f.read_bytes()).hexdigest()[:8]
+    return {"photo": {"src": f"players/{pid}.webp?v={digest}", "source": entry["source"]}}
 
 
 # --------------------------------------------------------------------------- official rosters
@@ -581,7 +594,8 @@ def build(write=True):
             continue
         seasons_of.sort(key=lambda s: s["season"])
         out_players.append({**p, "seasons": seasons_of,
-                            "videos": [v for v in cur["videos"] if v["player"] == pid]})
+                            "videos": [v for v in cur["videos"] if v["player"] == pid],
+                            **({} if p["shared"] else player_photo(pid, cur["photos"]))})
 
     out_teams = []
     for tid, t in sorted(team_meta.items()):

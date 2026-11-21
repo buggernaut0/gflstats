@@ -6,6 +6,7 @@ export const player: Widen<typeof de.player> = {
   sparkLabel: (label, season) => `${label} game by game, ${season} season`,
   sparkNote: (season) => `Lines: game by game in the ${season} season, dashed = season average.`,
   numberBlock: (n) => `Jersey number ${n}`,
+  photoSource: "Photo:",
   derivedRole: "(derived from stats)",
   roleUnclear: "Role unclear",
   officialRoster: (season) => `(official ${season} roster)`,

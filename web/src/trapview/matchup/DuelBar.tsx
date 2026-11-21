@@ -7,6 +7,7 @@ import { useI18n } from '../../i18n/react';
 import { lineText, lineValue, rankText } from '../i18n';
 import { screenSides } from '../camera/matchupView';
 import { familyOf, rankOf, statLines } from './compare';
+import { Headshot } from '../ui/Headshot';
 
 /** Akzentfarbe je Seite wie in Labels und Vergleichsfenster. */
 const accentOf = (p: ScenePlayer) => (p.side === 'offense' ? p.team.colors.accent : p.team.colors.secondary);
@@ -30,7 +31,12 @@ function Profile({ p, align, index, season }: { p: ScenePlayer; align: 'left' | 
       aria-label={`${player.name}, ${f.m.stats.positions[p.dataGroup] ?? p.posLabel}, ${p.team.name}${elite ? ', Elite' : ''}`}
     >
       <div className="tv-duel__head">
-        {player.number != null && <span className="tv-duel__num" aria-hidden="true">{player.number}</span>}
+        <Headshot
+          src={player.photo}
+          alt={player.name}
+          className="tv-duel__photo"
+          fallback={player.number != null && <span className="tv-duel__num" aria-hidden="true">{player.number}</span>}
+        />
         <div className="tv-duel__id">
           <span className="tv-duel__pos">
             {p.team.logo && <img src={p.team.logo} alt="" draggable={false} />}

@@ -6,6 +6,7 @@ import type { DataIndex, SeasonData } from '../data/types';
 import { useI18n } from '../../i18n/react';
 import { lineSub, lineText, lineValue, rankText } from '../i18n';
 import { familyOf, headToHead, rankOf, statLines, type HeadToHead, type RankView } from './compare';
+import { Headshot } from '../ui/Headshot';
 
 const accentOf = (p: ScenePlayer) => (p.side === 'offense' ? p.team.colors.accent : p.team.colors.secondary);
 
@@ -13,10 +14,15 @@ function Card({ p, align }: { p: ScenePlayer; align: 'left' | 'right' }) {
   const player = p.player!;
   const { m } = useI18n();
   return (
-    <div className={`tv-card tv-card--${align}`} style={{ '--accent': accentOf(p) } as CSSProperties}>
-      {player.number != null && <div className="tv-card__num">{player.number}</div>}
+    <div className={`tv-card tv-card--${align}`} style={{ '--accent': accentOf(p), '--team': p.team.colors.primary } as CSSProperties}>
+      <Headshot
+        src={player.photo}
+        alt={player.name}
+        className="tv-card__photo"
+        fallback={player.number != null && <div className="tv-card__num">{player.number}</div>}
+      />
       <div className="tv-card__info">
-        <div className="tv-card__pos" title={m.stats.positions[p.dataGroup] ?? p.posLabel}>{p.posLabel} · {p.team.abbreviation}</div>
+        <div className="tv-card__pos" title={m.stats.positions[p.dataGroup] ?? p.posLabel}>{p.posLabel}{player.photo && player.number != null ? ` · #${player.number}` : ''} · {p.team.abbreviation}</div>
         <div className="tv-card__name">{player.name}</div>
         {player.elite[0] && <EliteBadge entry={player.elite[0]} size="md" className="tv-card__elite" />}
         <div className="tv-card__meta">{m.common.gamesN(player.games)} · {p.team.name}</div>

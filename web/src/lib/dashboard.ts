@@ -34,6 +34,8 @@ export interface LeaderRow {
   teams: string[];
   value: number;
   games: number;
+  /** Spielerfoto aus der zentralen Zuordnung (players.json → photo), null = Platzhalter */
+  photo: Player["photo"] | null;
 }
 
 /**
@@ -57,7 +59,7 @@ export function leaders(
   for (let i = 0; i < rows.length; i++) {
     const rank = i > 0 && rows[i].value === rows[i - 1].value ? out[i - 1].rank : i + 1;
     if (rank > limit) break;
-    out.push({ ...rows[i], rank, tied: false, name: players.get(rows[i].player)?.name ?? rows[i].player });
+    out.push({ ...rows[i], rank, tied: false, name: players.get(rows[i].player)?.name ?? rows[i].player, photo: players.get(rows[i].player)?.photo ?? null });
   }
   for (const r of out) r.tied = out.filter((x) => x.rank === r.rank).length > 1;
   return out.slice(0, limit + 2);

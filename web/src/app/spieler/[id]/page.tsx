@@ -23,7 +23,9 @@ import { ROLE_HEADLINE, ROLE_MIN, addStats, stat, statAvailable, value } from "@
 import { Num, StatLabel, StatValue, T, Titled } from "@/i18n/react";
 import { RoleName, PositionName, QualifierText, StatFormula, EliteGroup, SourceNames } from "@/components/I18nBits";
 import { GAMELOG_COLS } from "@/lib/tables";
-import type { Scope, Stats } from "@/lib/types";
+import type { Player, Scope, Stats } from "@/lib/types";
+import type { ReactNode } from "react";
+import PlayerPhoto from "@/components/PlayerPhoto";
 import SeasonNotice from "@/components/SeasonNotice";
 
 export const dynamicParams = false;
@@ -104,13 +106,20 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
     <main className="mx-auto max-w-[1280px] px-4 pb-24 pt-10 sm:px-8">
       <section className="grid gap-8 pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
         <div className="flex items-start gap-5 sm:items-stretch sm:gap-6">
-          {lastSeason.number !== undefined ? (
-            <NumberBlock n={lastSeason.number} color={teamColor} />
-          ) : mainTeam && teams[mainTeam]?.logo ? (
-            <TeamLogo team={teams[mainTeam]} size={96} />
-          ) : (
-            <Avatar name={p.name} />
-          )}
+          {/* Echtes Spielerfoto aus der zentralen Zuordnung; ohne Foto der bisherige Platzhalter (Nummer, Logo, Initialen) */}
+          <PlayerPhotoBlock
+            photo={p.photo}
+            name={p.name}
+            number={lastSeason.number}
+            color={teamColor}
+            fallback={lastSeason.number !== undefined ? (
+              <NumberBlock n={lastSeason.number} color={teamColor} />
+            ) : mainTeam && teams[mainTeam]?.logo ? (
+              <TeamLogo team={teams[mainTeam]} size={96} />
+            ) : (
+              <Avatar name={p.name} />
+            )}
+          />
           <div className="min-w-0">
             <h1 className="display text-[44px] font-extrabold leading-[0.98] tracking-[-0.035em] text-ink sm:text-[72px]">{p.name}</h1>
             <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] text-ink-2">
@@ -120,7 +129,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                 </span>
               )}
               {role ? (
-                <span>
+                // Abgeleitete Rolle nur nennen, wenn der Kader sie nicht schon ausweist (sonst doppelt „Quarterback“)
+                !sameAsRoster(role, lastSeason.position) && <span>
                   <RoleName role={role} /> <span className="text-ink-3"><T k="player.derivedRole" /></span>
                 </span>
               ) : (
@@ -357,6 +367,42 @@ function NumberBlock({ n, color }: { n: number; color: string | null }) {
   );
 }
 
+/** Spielerfoto im Kopf des Profils (Breite wie der Nummernblock), Rückennummer als Plakette in Teamfarbe, Quelle darunter. */
+function PlayerPhotoBlock({ photo, name, number, color, fallback }: {
+  photo: Player["photo"];
+  name: string;
+  number: number | undefined;
+  color: string | null;
+  fallback: ReactNode;
+}) {
+  if (!photo) return <>{fallback}</>;
+  const bg = color ?? "var(--accent)";
+  const light = color ? luminance(color) > 0.45 : false;
+  const host = (() => {
+    try {
+      return new URL(photo.source).hostname.replace(/^www\./, "");
+    } catch {
+      return photo.source;
+    }
+  })();
+  return (
+    <figure className="w-[104px] shrink-0 sm:w-[132px]">
+      <div className="relative">
+        <PlayerPhoto photo={photo} name={name} size="fill" fallback={fallback} />
+        {number !== undefined && (
+          <span className="num absolute bottom-0 left-0 px-2 py-1 text-[20px] font-extrabold leading-none tracking-[-0.03em] sm:text-[24px]" style={{ background: bg, color: light ? "#0b1a33" : "#fff" }}>
+            {number}
+          </span>
+        )}
+      </div>
+      <figcaption className="mt-1.5 truncate text-[11px] text-ink-3">
+        <T k="player.photoSource" />{" "}
+        <a href={photo.source} rel="noopener" className="underline-offset-2 hover:underline">{host}</a>
+      </figcaption>
+    </figure>
+  );
+}
+
 /** Neutraler Platzhalter statt Spielerfoto: Initialen auf Trikot-Silhouette. */
 function Avatar({ name }: { name: string }) {
   const initials = name
@@ -374,4 +420,13 @@ function Avatar({ name }: { name: string }) {
       </text>
     </svg>
   );
+}
+
+/** Deckt die offizielle Kaderposition die aus der Statistik abgeleitete Rolle schon ab? */
+function sameAsRoster(role: string, position: string | undefined): boolean {
+  if (!position) return false;
+  if (role === position) return true;
+  if (role === "WR/TE") return position === "WR" || position === "TE";
+  if (role === "DEF") return position === "DL" || position === "LB" || position === "DB";
+  return false;
 }

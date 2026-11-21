@@ -6,6 +6,7 @@ import { buildRig, labelAnchor } from '../players/rig';
 import { useTrapView } from '../state/store';
 import { EliteCrest, eliteText } from '../../components/EliteBadge';
 import { useI18n } from '../../i18n/react';
+import { Headshot } from '../ui/Headshot';
 
 /** Gemeinsame Ablage: Spieler-ID → DOM-Element des Labels. */
 export type LabelRegistry = Map<string, HTMLDivElement>;
@@ -43,14 +44,15 @@ const Label = memo(function Label({ p, state, registry }: { p: ScenePlayer; stat
       }}
       style={{ ['--accent' as string]: accent }}
     >
-      {/* Führungslinie, wenn das Label zum Staffeln nach oben versetzt ist (Höhe per scaleY) */}
-      <div className="tv-label__leader" />
-      <div className="tv-label-lift">
+      {/* Hülle für die Sichtbarkeit bei Überdeckung (opacity setzt der LabelProjector) */}
+      <div className="tv-label-body">
         <div
           className={`tv-label${cls}${p.player ? '' : ' is-empty'}${elite ? ' is-elite' : ''}`}
           style={{ ['--team' as string]: team, ['--team-ink' as string]: teamInk }}
         >
           <div className="tv-label__plate">
+            {/* Im Duell: Foto des Spielers vor der Nummer – sonst bleibt die Plakette schlank */}
+            {state === 'featured' && <Headshot src={p.player?.photo} alt="" className="tv-label__photo" />}
             {number != null && <span className="tv-label__num">{number}</span>}
             {elite && <EliteCrest className="tv-label__elite" />}
             <span className="tv-label__text">
@@ -109,62 +111,73 @@ export function LabelLayer({ model, registry }: { model: SceneModel; registry: L
   );
 }
 
+
 /** Pixel pro Meter am Spieler, bei denen das Label in Originalgröße erscheint. */
 const REF_PX_PER_M = 60;
 const MIN_SCALE = 0.82;
 const MAX_SCALE = 1.3;
 
-/** Größenfaktor der Plakette je Zustand (entspricht dem CSS-scale) und Platzierungsreihenfolge. */
+/** Größenfaktor der Plakette je Zustand (entspricht dem CSS-scale) und Rang bei Überdeckung. */
 const STATE_SCALE: Record<LabelState, number> = { off: 1, on: 1, featured: 1.22, dim: 0.86 };
 const STATE_RANK: Record<LabelState, number> = { featured: 0, on: 1, dim: 2, off: 3 };
-/** Luft zwischen gestaffelten Labels und maximaler Versatz in Bildschirmpixeln. */
-const GAP = 4;
-const MAX_LIFT = 140;
-/** Zeitkonstante, mit der ein Label auf seine neue Staffelhöhe gleitet. */
-const LIFT_RATE = 9;
+/**
+ * Überdeckung (Anteil der eigenen Fläche unter vorrangigen Labels), ab der ein Label ausblendet –
+ * und die Schwelle, unter die sie sinken muss, damit es wieder erscheint. Der Abstand verhindert Flackern.
+ */
+const HIDE_AT = 0.2;
+const SHOW_AT = 0.08;
+/** Ein sichtbares Label gilt beim Vorrang als so viele Meter näher – kein Hin und Her bei gleicher Tiefe. */
+const STICKY_M = 1.5;
 
 interface Anchor {
   id: string;
-  order: number;
   pos: THREE.Vector3;
   // Zuletzt geschriebene Werte – DOM wird nur bei echter Änderung angefasst
   transform: string;
-  liftCss: string;
   hidden: boolean;
-  lift: number;
+  /** Von einem vorrangigen Label überdeckt und deshalb ausgeblendet. */
+  covered: boolean;
+  z: number;
   // Pro Frame befüllt
   x: number;
   y: number;
   s: number;
   w: number;
   h: number;
+  dist: number;
   state: LabelState;
-  target: number;
-  els: { leader: HTMLElement; lift: HTMLElement; label: HTMLElement } | null;
+  els: { body: HTMLElement; label: HTMLElement } | null;
 }
 
-const overlaps = (a: Anchor, b: Anchor, liftA: number) =>
-  Math.abs(a.x - b.x) * 2 < a.w + b.w + GAP * 2 &&
-  a.y - liftA - a.h < b.y - b.target + GAP &&
-  b.y - b.target - b.h < a.y - liftA + GAP;
+/** Fläche, die sich die Rechtecke zweier Labels (unten mittig verankert) auf dem Bildschirm teilen. */
+function sharedArea(a: Anchor, b: Anchor): number {
+  const w = Math.min(a.x + a.w / 2, b.x + b.w / 2) - Math.max(a.x - a.w / 2, b.x - b.w / 2);
+  if (w <= 0) return 0;
+  const h = Math.min(a.y, b.y) - Math.max(a.y - a.h, b.y - b.h);
+  return h <= 0 ? 0 : w * h;
+}
 
-/** Läuft in der 3D-Szene und hält die Labels über den Spielern – immer zur Kamera gerichtet. */
+/**
+ * Läuft in der 3D-Szene und hält jedes Label an einem festen Punkt knapp über dem Helm seines Spielers.
+ * Labels werden nie verschoben, um einander auszuweichen – sonst rutschen sie bei jeder Kamerafahrt
+ * auf und ab. Überdeckt ein vorrangiges Label (Fokus vor Normal vor Kontext, sonst das nähere) ein
+ * anderes zu großen Teilen, blendet das hintere ruhig aus und erscheint wieder, sobald es frei steht.
+ */
 export function LabelProjector({ model, registry }: { model: SceneModel; registry: RefObject<LabelRegistry> }) {
   // Ankerpunkt knapp über dem Helm – aus demselben Skelett berechnet, das auch das Modell stellt
   const anchors = useMemo<Anchor[]>(
-    () => model.players.map((p, order) => ({
+    () => model.players.map((p) => ({
       id: p.id,
-      order,
       pos: labelAnchor(buildRig({ world: p.world, rotationY: p.rotationY, stance: p.slot.stance, build: p.slot.build }, 0)),
-      transform: '', liftCss: '', hidden: false, lift: 0,
-      x: 0, y: 0, s: 1, w: 0, h: 0, state: 'off', target: 0, els: null,
+      transform: '', hidden: false, covered: false, z: -1,
+      x: 0, y: 0, s: 1, w: 0, h: 0, dist: 0, state: 'off', els: null,
     })),
     [model],
   );
   const v = useMemo(() => new THREE.Vector3(), []);
   // Wiederverwendete Arbeitslisten – keine Allokation pro Frame
   const active = useMemo<Anchor[]>(() => [], []);
-  const placed = useMemo<Anchor[]>(() => [], []);
+  const shown = useMemo<Anchor[]>(() => [], []);
 
   // Ungeskalierte Label-Größen pflegt ein ResizeObserver – keine Layout-Abfragen im Frame
   const sizes = useMemo(() => new WeakMap<Element, { w: number; h: number }>(), []);
@@ -180,22 +193,19 @@ export function LabelProjector({ model, registry }: { model: SceneModel; registr
     return () => observer.current?.disconnect();
   }, [anchors, sizes]);
 
-  useFrame(({ camera, size }, dt) => {
+  useFrame(({ camera, size }) => {
     const cam = camera as THREE.PerspectiveCamera;
     // Bildhöhe in Pixel pro Meter Abstand – einmal pro Frame statt pro Label
     const pxPerMeterAt1m = size.height / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov ?? 50) / 2));
     active.length = 0;
 
-    // 1. Projektion, Größe und Zustand jedes Labels
+    // 1. Projektion, Größe und Zustand jedes Labels – die Position folgt allein dem Spieler
     for (const a of anchors) {
       const el = registry.current.get(a.id);
       if (!el) continue;
       if (!a.els) {
-        a.els = {
-          leader: el.firstElementChild as HTMLElement,
-          lift: el.lastElementChild as HTMLElement,
-          label: el.lastElementChild!.firstElementChild as HTMLElement,
-        };
+        const body = el.firstElementChild as HTMLElement;
+        a.els = { body, label: body.firstElementChild as HTMLElement };
         observer.current?.observe(a.els.label);
       }
       v.copy(a.pos).project(camera);
@@ -205,58 +215,62 @@ export function LabelProjector({ model, registry }: { model: SceneModel; registr
         el.style.visibility = hidden ? 'hidden' : 'visible';
       }
       a.state = (el.dataset.state as LabelState) ?? 'off';
-      a.target = 0;
       if (hidden) continue;
 
       a.x = (v.x * 0.5 + 0.5) * size.width;
       a.y = (-v.y * 0.5 + 0.5) * size.height;
+      a.dist = a.pos.distanceTo(camera.position);
       // Wurzel dämpft: Totale nicht winzig, Nahaufnahme nicht riesig
-      const ppm = pxPerMeterAt1m / Math.max(a.pos.distanceTo(camera.position), 0.1);
-      a.s = THREE.MathUtils.clamp(Math.sqrt(ppm / REF_PX_PER_M), MIN_SCALE, MAX_SCALE);
+      a.s = THREE.MathUtils.clamp(Math.sqrt(pxPerMeterAt1m / Math.max(a.dist, 0.1) / REF_PX_PER_M), MIN_SCALE, MAX_SCALE);
+      const t = `translate3d(${a.x.toFixed(1)}px, ${a.y.toFixed(1)}px, 0) scale(${a.s.toFixed(3)})`;
+      if (t !== a.transform) {
+        a.transform = t;
+        el.style.transform = t;
+      }
       const box = sizes.get(a.els.label);
       if (a.state !== 'off' && box) {
         const k = a.s * STATE_SCALE[a.state];
         a.w = box.w * k;
         a.h = box.h * k;
         active.push(a);
+      } else {
+        // Ausgeschaltete Labels starten beim nächsten Einblenden frei und ohne alten Rang
+        if (a.covered) {
+          a.covered = false;
+          a.els.body.style.opacity = '';
+        }
+        if (a.z !== 0) {
+          a.z = 0;
+          el.style.zIndex = '';
+        }
       }
     }
 
-    // 2. Staffeln: in fester Reihenfolge (Fokus zuerst, dann Formationsplatz) – so springt nichts beim Kameraschwenk.
-    //    Ein Label, das ein bereits platziertes überdeckt, rutscht knapp darüber.
-    active.sort((a, b) => STATE_RANK[a.state] - STATE_RANK[b.state] || a.order - b.order);
-    placed.length = 0;
-    for (const a of active) {
-      let lift = 0;
-      for (let guard = 0; guard < 8; guard++) {
-        let hit: Anchor | null = null;
-        for (const b of placed) if (overlaps(a, b, lift)) { hit = b; break; }
-        if (!hit) break;
-        lift = a.y - (hit.y - hit.target - hit.h) + GAP;
-        if (lift > MAX_LIFT) { lift = MAX_LIFT; break; }
-      }
-      a.target = lift;
-      placed.push(a);
-    }
+    // 2. Vorrang: Fokus vor Normal vor Kontext, innerhalb davon das nähere (sichtbare leicht bevorzugt).
+    active.sort((a, b) => STATE_RANK[a.state] - STATE_RANK[b.state]
+      || (a.dist - (a.covered ? 0 : STICKY_M)) - (b.dist - (b.covered ? 0 : STICKY_M)));
 
-    // 3. Weich auf die Zielhöhe gleiten und nur geänderte Werte schreiben
-    const blend = 1 - Math.exp(-LIFT_RATE * Math.min(dt, 0.1));
-    for (const a of anchors) {
-      if (!a.els || a.hidden) continue;
-      a.lift += (a.target - a.lift) * blend;
-      if (Math.abs(a.lift - a.target) < 0.25) a.lift = a.target;
-
-      const t = `translate3d(${a.x.toFixed(1)}px, ${a.y.toFixed(1)}px, 0) scale(${a.s.toFixed(3)})`;
-      if (t !== a.transform) {
-        a.transform = t;
-        registry.current.get(a.id)!.style.transform = t;
+    // 3. Überdeckung prüfen: nur Sichtbarkeit ändert sich, nie die Position
+    shown.length = 0;
+    for (let i = 0; i < active.length; i++) {
+      const a = active[i];
+      let covered = false;
+      if (a.state !== 'featured') {
+        let area = 0;
+        for (const b of shown) area += sharedArea(a, b);
+        const ratio = area / Math.max(a.w * a.h, 1);
+        covered = a.covered ? ratio > SHOW_AT : ratio > HIDE_AT;
       }
-      // Versatz wirkt innerhalb des skalierten Ankers, daher durch die Skalierung teilen
-      const local = (a.lift / a.s).toFixed(1);
-      if (local !== a.liftCss) {
-        a.liftCss = local;
-        a.els.lift.style.transform = `translate3d(0, -${local}px, 0)`;
-        a.els.leader.style.transform = `scaleY(${local})`;
+      if (covered !== a.covered) {
+        a.covered = covered;
+        a.els!.body.style.opacity = covered ? '0' : '';
+      }
+      if (!covered) shown.push(a);
+      // Vorrangige Labels liegen oben
+      const z = active.length - i;
+      if (z !== a.z) {
+        a.z = z;
+        registry.current.get(a.id)!.style.zIndex = String(z);
       }
     }
   });
