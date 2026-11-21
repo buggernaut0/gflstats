@@ -3,7 +3,6 @@
 import Link from "next/link";
 import type { LeaderCategory, LeaderRow, TeamLite } from "@/lib/dashboard";
 import TeamTag from "./TeamTag";
-import PlayerPhoto from "./PlayerPhoto";
 import { teamsAttr } from "@/lib/favorite";
 import { useI18n } from "@/i18n/react";
 
@@ -40,21 +39,20 @@ export default function LeaderCard({
       ) : (
         <ol className="flex flex-col py-1.5">
           {rows.map((r, i) => (
-            <li key={r.player} {...teamsAttr(r.teams)} className="grid grid-cols-[1.25rem_auto_1fr_auto] items-center gap-x-2 px-4 py-[6px]">
-              <span className={`num display row-span-2 text-[15px] font-semibold ${i === 0 ? "text-accent-text" : "text-ink-3"}`}>
+            <li key={r.player} {...teamsAttr(r.teams)} className="grid grid-cols-[1.75rem_1fr_auto] items-center gap-x-2 px-4 py-[6px]">
+              <span className={`num display text-[15px] font-semibold ${i === 0 ? "text-accent-text" : "text-ink-3"}`}>
                 {r.tied ? `${r.rank}=` : r.rank}
               </span>
-              <PlayerPhoto photo={r.photo} name={r.name} width={32} className="row-span-2" />
-              {/* Name über die volle Breite, Wert unter dem Namen neben Team und Balken – so bleibt der Name lesbar */}
               <Link
                 href={`/spieler/${r.player}/`}
                 title={r.name}
-                className="col-span-2 truncate text-[14.5px] text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4"
+                className="truncate text-[14.5px] text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4"
               >
                 <span className="xl:hidden">{r.name}</span>
                 <span className="hidden xl:inline">{shortName(r.name)}</span>
               </Link>
-              <span className="mt-0.5 flex min-w-0 items-center gap-2">
+              <span className="num display text-right text-[18px] font-bold text-ink">{f.fmt(r.value)}</span>
+              <span className="col-start-2 col-end-4 mt-1 flex items-center gap-2">
                 {r.teams.map((t) => (
                   <TeamTag key={t} team={teams[t]} />
                 ))}
@@ -62,7 +60,6 @@ export default function LeaderCard({
                   <span className="block h-full" style={{ width: `${max ? (r.value / max) * 100 : 0}%`, background: i === 0 ? "var(--accent)" : "var(--ink-3)" }} />
                 </span>
               </span>
-              <span className="num display mt-0.5 text-right text-[17px] font-bold leading-none text-ink">{f.fmt(r.value)}</span>
             </li>
           ))}
         </ol>

@@ -128,10 +128,17 @@ const HIDE_AT = 0.2;
 const SHOW_AT = 0.08;
 /** Ein sichtbares Label gilt beim Vorrang als so viele Meter näher – kein Hin und Her bei gleicher Tiefe. */
 const STICKY_M = 1.5;
+/**
+ * Trenches (O-Line, D-Line): Jeder Spieler behält seinen Namen, auch wenn sich Labels überlappen – dort wird
+ * nie ausgeblendet, das nähere liegt nur oben. Lieber zwei teilweise überlagerte Namen als einer, der verschwindet.
+ */
+const TRENCH_GROUPS: ReadonlySet<ScenePlayer['group']> = new Set(['OL', 'DL']);
 
 interface Anchor {
   id: string;
   pos: THREE.Vector3;
+  /** O-Line/D-Line: Label wird bei Überdeckung nie ausgeblendet */
+  trench: boolean;
   // Zuletzt geschriebene Werte – DOM wird nur bei echter Änderung angefasst
   transform: string;
   hidden: boolean;
@@ -161,13 +168,15 @@ function sharedArea(a: Anchor, b: Anchor): number {
  * Läuft in der 3D-Szene und hält jedes Label an einem festen Punkt knapp über dem Helm seines Spielers.
  * Labels werden nie verschoben, um einander auszuweichen – sonst rutschen sie bei jeder Kamerafahrt
  * auf und ab. Überdeckt ein vorrangiges Label (Fokus vor Normal vor Kontext, sonst das nähere) ein
- * anderes zu großen Teilen, blendet das hintere ruhig aus und erscheint wieder, sobald es frei steht.
+ * anderes zu großen Teilen, blendet das hintere ruhig aus und erscheint wieder, sobald es frei steht –
+ * außer in den Trenches (TRENCH_GROUPS): Dort bleiben alle Namen stehen und dürfen sich überlappen.
  */
 export function LabelProjector({ model, registry }: { model: SceneModel; registry: RefObject<LabelRegistry> }) {
   // Ankerpunkt knapp über dem Helm – aus demselben Skelett berechnet, das auch das Modell stellt
   const anchors = useMemo<Anchor[]>(
     () => model.players.map((p) => ({
       id: p.id,
+      trench: TRENCH_GROUPS.has(p.group),
       pos: labelAnchor(buildRig({ world: p.world, rotationY: p.rotationY, stance: p.slot.stance, build: p.slot.build }, 0)),
       transform: '', hidden: false, covered: false, z: -1,
       x: 0, y: 0, s: 1, w: 0, h: 0, dist: 0, state: 'off', els: null,
@@ -255,7 +264,7 @@ export function LabelProjector({ model, registry }: { model: SceneModel; registr
     for (let i = 0; i < active.length; i++) {
       const a = active[i];
       let covered = false;
-      if (a.state !== 'featured') {
+      if (a.state !== 'featured' && !a.trench) {
         let area = 0;
         for (const b of shown) area += sharedArea(a, b);
         const ratio = area / Math.max(a.w * a.h, 1);

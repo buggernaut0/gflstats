@@ -158,9 +158,25 @@ def cards(html, base):
 IMGPROXY = re.compile(r"/fn:([^/]+)/q:\d+/rs:fill:(\d+):(\d+)")
 
 
+CONTAO_THUMB = re.compile(r"/assets/images/[^/]+/([^/]+)-[0-9a-f]{8}\.(png|jpe?g|webp)$", re.I)
+
+
+def contao_original(url, href):
+    """Dresden (Contao): Die Übersicht zeigt nur ein 60 × 80-px-Vorschaubild (assets/images/…/<name>-<hash>.png).
+    Der Bild-Link der Karte (Lightbox) führt auf das Original files/…/<name>.png – gleicher Dateiname ohne Hash."""
+    m = CONTAO_THUMB.search(url)
+    if not m or not href:
+        return None
+    name = unquote(href.split("?")[0].rsplit("/", 1)[-1])
+    return href if "/files/" in href and name == unquote(f"{m.group(1)}.{m.group(2)}") else None
+
+
 def larger(url, href):
     """Kiel (imgproxy): Die Übersicht zeigt das Porträt nur in 80 × 100 px. Die Spielerseite des Vereins enthält
     dasselbe Bild (gleicher Dateiname fn:…) in größeren Stufen – davon die Stufe 512 × 640 bzw. die nächstgrößere."""
+    original = contao_original(url, href)
+    if original:
+        return original
     m = IMGPROXY.search(url)
     if not m or not href or int(m.group(2)) >= 320:
         return url

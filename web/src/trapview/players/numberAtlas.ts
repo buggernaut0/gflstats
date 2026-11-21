@@ -23,6 +23,14 @@ export const JERSEY_NAME_FONT = '800 30px "Barlow Condensed"';
 /** Breitester Rückenname (Anteil der Kachelbreite, nach dem Entzerren) – längere Namen werden schmaler gesetzt. */
 const NAME_MAX_W = 0.27;
 
+/**
+ * Rücken: Mitte des Namens und der Nummer (Meter über der Hüftmitte). Die Anton-Ziffern reichen samt Kontur
+ * rund 0,13 m über ihre Mitte, der Name rund 0,023 m unter seine – mit 0,43 / 0,24 bleiben gut 3,5 cm Stoff
+ * zwischen Namensunterkante und Nummernoberkante (vorher 0,405 / 0,26: rund 1 cm Überlappung).
+ */
+const BACK_NAME_Y = 0.43;
+const BACK_NUMBER_Y = 0.24;
+
 type Ink = 'mask' | 'height';
 
 /**
@@ -83,7 +91,7 @@ export function createNumberAtlas(entries: { number: number | null; name: string
     };
     if (e.number != null) {
       digits(0.75, 0.15, 0.27);
-      digits(0.25, 0.19, 0.26);
+      digits(0.25, 0.19, BACK_NUMBER_Y);
       // Schulternummer: füllt ihr Rechteck, das Modell legt es auf beide Schultern (lesbar von vorn)
       const [ru0, rv0, ru1, rv1] = SHOULDER_RECT;
       const rw = (ru1 - ru0) * TILE_W;
@@ -106,7 +114,7 @@ export function createNumberAtlas(entries: { number: number | null; name: string
       // Konturfarbe der Nummern. Lange Namen werden schmaler gesetzt statt über die Schulterblätter zu laufen.
       const text = e.name.toUpperCase().split('').join(' ');
       ctx.save();
-      ctx.translate(0.25 * TILE_W, yOf(0.405));
+      ctx.translate(0.25 * TILE_W, yOf(BACK_NAME_Y));
       ctx.font = JERSEY_NAME_FONT;
       const w = ctx.measureText(text).width * squash;
       ctx.scale(squash * Math.min(1, (NAME_MAX_W * TILE_W) / Math.max(w, 1)), 1);
