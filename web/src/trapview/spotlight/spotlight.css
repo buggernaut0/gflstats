@@ -194,7 +194,7 @@
 /* Gegenspieler im Duell – direkt unter den Kennzahlen, damit das Matchup ohne Warten klar ist */
 .tv-root .tv-spot__opp {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 12px; padding: 9px 12px;
-  border-radius: 10px; background: rgba(241, 242, 240, 0.05); border: 1px solid rgba(241, 242, 240, 0.1);
+  border-radius: 0; background: rgba(241, 242, 240, 0.05); border: 1px solid rgba(241, 242, 240, 0.1);
   animation: tv-rise 0.5s ease calc(var(--in) + 0.3s) both;
 }
 .tv-root .tv-spot__opp.is-elite { background: rgba(240, 196, 88, 0.08); border-color: rgba(243, 210, 122, 0.35); }

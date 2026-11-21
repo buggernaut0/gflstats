@@ -26,6 +26,7 @@ export const shell = {
   searchFailed: "Suchindex konnte nicht geladen werden.",
   searchLoading: "Lade Suchindex …",
   searchNone: (q: string) => `Keine Treffer für „${q}“.`,
+  onThisPage: "Auf dieser Seite",
 };
 
 export const favorite = {

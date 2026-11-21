@@ -31,7 +31,7 @@ export default function DashboardBody({ data }: { data: DashboardData }) {
 
   return (
     <div className="flex flex-col gap-14">
-      <div className="sticky top-[58px] z-30 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-bg/90 px-4 py-2.5 backdrop-blur sm:top-[57px] sm:-mx-6 sm:px-6">
+      <div className="z-30 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-bg/95 px-4 py-2.5 sm:sticky sm:top-[72px] sm:-mx-8 sm:px-8">
         <p className="text-[13.5px] text-ink-2">
           {h.allValues} <span className="text-ink">{scopeText} {data.season}</span>
         </p>
@@ -72,24 +72,24 @@ export default function DashboardBody({ data }: { data: DashboardData }) {
         <SectionHead id="perf-h" title={h.perfTitle} note={h.perfNote}>
           <SourceTag kind="original" />
         </SectionHead>
-        <div className="overflow-x-auto rounded-xl border border-line bg-surface">
-          <table className="w-full min-w-[640px] border-collapse text-[14px]">
+        <div className="overflow-x-auto border border-line bg-bg">
+          <table className="data-table w-full min-w-[640px] border-collapse text-[14px]">
             <caption className="sr-only">{h.perfCaption}</caption>
             <thead>
-              <tr className="border-b border-line text-left text-[12px] text-ink-3">
-                <th scope="col" className="py-2.5 pl-4 font-medium">{h.colCategory}</th>
-                <th scope="col" className="py-2.5 text-right font-medium">{f.m.common.value}</th>
-                <th scope="col" className="py-2.5 pl-6 font-medium">{f.m.common.player}</th>
-                <th scope="col" className="py-2.5 font-medium">{f.m.common.opponent}</th>
-                <th scope="col" className="py-2.5 font-medium">{f.m.common.date}</th>
-                <th scope="col" className="py-2.5 pr-4 font-medium">{h.colExtra}</th>
+              <tr className="text-left">
+                <th scope="col" className="py-2.5 pl-4">{h.colCategory}</th>
+                <th scope="col" className="py-2.5 text-right">{f.m.common.value}</th>
+                <th scope="col" className="py-2.5 pl-6">{f.m.common.player}</th>
+                <th scope="col" className="py-2.5">{f.m.common.opponent}</th>
+                <th scope="col" className="py-2.5">{f.m.common.date}</th>
+                <th scope="col" className="py-2.5 pr-4">{h.colExtra}</th>
               </tr>
             </thead>
             <tbody>
               {data.performances[scope].map((p) => (
-                <tr key={p.field} {...teamsAttr(p.team)} className="border-b border-line last:border-0">
+                <tr key={p.field} {...teamsAttr(p.team)}>
                   <td className="py-2.5 pl-4 text-ink-2">{h.categories[p.field] ?? p.title}</td>
-                  <td className="num display py-2.5 text-right text-[18px] font-semibold text-ink">{f.fmt(p.value)}</td>
+                  <td className="num display py-2.5 text-right text-[20px] font-bold text-ink">{f.fmt(p.value)}</td>
                   <td className="py-2.5 pl-6">
                     <span className="flex items-center gap-2">
                       <Link href={`/spieler/${p.player}/`} className="text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4">
@@ -124,7 +124,7 @@ function SectionHead({ id, title, note, children }: { id: string; title: string;
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
       <div className="max-w-[72ch]">
-        <h2 id={id} className="display text-[28px] font-bold leading-none tracking-tight text-ink">
+        <h2 id={id} className="display text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">
           {title}
         </h2>
         <p className="mt-2 text-[13.5px] text-ink-2">{note}</p>

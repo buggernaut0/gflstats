@@ -1,70 +1,72 @@
 @import "tailwindcss";
 
 /*
- * Design-Tokens. Dunkel ist Standard ("Stadion bei Nacht"), hell per Umschalter.
- * Einzige Akzentfarbe: das Gelb der First-Down-Linie.
+ * Design-Tokens (Redesign 2026): Weiss und Blau, eckig, Inter. Hell ist Standard, dunkel per Umschalter.
+ * Einzige Akzentfarbe: Blau. --line-strong ist die kraeftige Linie unter Tabellenkoepfen und um Filterbloecke.
  * Siegfarbe/Niederlagefarbe sind Statusfarben und werden nie fuer anderes genutzt.
  */
-:root,
-[data-theme="dark"] {
-  --bg: #0c1420;
-  --surface: #121c2b;
-  --surface-2: #192536;
-  --line: #233148;
-  --line-strong: #31415c;
-  --ink: #e9eef5;
-  --ink-2: #a3b0c2;
-  --ink-3: #74839a;
-  --accent: #f5c63c;
-  --accent-ink: #0c1420;
-  --accent-text: #f5c63c;
-  --accent-soft: rgb(245 198 60 / 0.13);
-  --bar: rgb(245 198 60 / 0.55);
-  --bar-track: rgb(163 176 194 / 0.12);
+:root[data-theme="dark"] {
+  --bg: #0b1220;
+  --surface: #121c2e;
+  --surface-2: #16233a;
+  --line: #24344f;
+  --line-strong: #6a7fa6;
+  --ink: #f1f5fb;
+  --ink-2: #c3cedf;
+  --ink-3: #a3b0c6;
+  --accent: #3d73ff;
+  --accent-ink: #ffffff;
+  --accent-text: #8fb0ff;
+  --accent-soft: rgb(61 115 255 / 0.18);
+  --bar: #3d73ff;
+  --bar-track: #22314b;
   --win: #45c486;
   --loss: #ef6b66;
-  --focus: #f5c63c;
-  /* Radar-Serien (validiert gegen --surface, siehe components/Radar.tsx) */
-  --series-1: #1fa86a;
-  --series-2: #e05a59;
-  --series-3: #3987e5;
+  --focus: #8fb0ff;
+  --navy: #1a2846;
+  /* Radar-Serien: Blau, Orange, Navy/Hell – unterscheidbar auch bei Rot-Gruen-Schwaeche (components/Radar.tsx) */
+  --series-1: #5b8bff;
+  --series-2: #f0a050;
+  --series-3: #e8eef7;
   /* Lieblingsteam: Violett, bewusst abseits von Akzent (Gelb) und Radar-Reihen (Gruen/Rot/Blau) */
-  --radar-floor-in: #17243a;
-  --radar-floor-out: #0f1a2b;
+  --radar-floor-in: #121c2e;
+  --radar-floor-out: #121c2e;
   --radar-band: rgba(255, 255, 255, 0.028);
-  --radar-edge: #070d17;
-  --radar-shadow: rgba(0, 0, 0, 0.5);
+  --radar-edge: transparent;
+  --radar-shadow: transparent;
   --fav: #a78bfa;
   --fav-tint: rgba(167, 139, 250, 0.1);
   color-scheme: dark;
 }
 
+:root,
 [data-theme="light"] {
-  --bg: #f3f5f8;
-  --surface: #ffffff;
-  --surface-2: #eceff4;
-  --line: #d8dee7;
-  --line-strong: #bcc5d2;
-  --ink: #0f1826;
-  --ink-2: #47546a;
-  --ink-3: #6d7a8f;
-  --accent: #e8b31d;
-  --accent-ink: #0f1826;
-  --accent-text: #8a6300;
-  --accent-soft: rgb(232 179 29 / 0.16);
-  --bar: rgb(214 160 10 / 0.6);
-  --bar-track: rgb(15 24 38 / 0.07);
+  --bg: #ffffff;
+  --surface: #f7f9fc;
+  --surface-2: #eef1f6;
+  --line: #e4e9f1;
+  --line-strong: #0b1a33;
+  --ink: #0b1a33;
+  --ink-2: #4a5872;
+  --ink-3: #5d6b85;
+  --accent: #1747c9;
+  --accent-ink: #ffffff;
+  --accent-text: #1747c9;
+  --accent-soft: #eef3fe;
+  --bar: #1747c9;
+  --bar-track: #eef1f6;
   --win: #1d8a55;
   --loss: #c4403b;
-  --focus: #8a6300;
-  --series-1: #14895a;
-  --series-2: #d24a49;
-  --series-3: #2a78d6;
+  --focus: #1747c9;
+  --navy: #0b1a33;
+  --series-1: #1747c9;
+  --series-2: #d9731a;
+  --series-3: #0b1a33;
   --radar-floor-in: #ffffff;
-  --radar-floor-out: #eef1f6;
+  --radar-floor-out: #ffffff;
   --radar-band: rgba(20, 40, 80, 0.035);
-  --radar-edge: #d3dae5;
-  --radar-shadow: rgba(30, 45, 80, 0.22);
+  --radar-edge: transparent;
+  --radar-shadow: transparent;
   --fav: #7c3aed;
   --fav-tint: rgba(124, 58, 237, 0.07);
   color-scheme: light;
@@ -85,8 +87,18 @@
   --color-accent-soft: var(--accent-soft);
   --color-win: var(--win);
   --color-loss: var(--loss);
-  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Barlow Condensed", "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --color-navy: var(--navy);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Eckig: keine abgerundeten Kaesten (rounded-full bleibt fuer echte Kreise) */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 }
 
 html {
@@ -110,13 +122,72 @@ body {
 
 .display {
   font-family: var(--font-display);
-  letter-spacing: -0.005em;
+  letter-spacing: -0.025em;
+}
+
+/* Abschnittsueberschriften: blauer Balken darueber (Erkennungszeichen des Redesigns) */
+h2.display::before {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 6px;
+  margin-bottom: 14px;
+  background: var(--accent);
 }
 
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 3px;
+}
+
+/* Sprungziele: nicht unter Kopfzeile und Abschnittsreitern verschwinden */
+h2[id] {
+  scroll-margin-top: 8.5rem;
+}
+
+/* Kleine Grossbuchstaben-Beschriftung (Tabellenkoepfe, Kartenkoepfe, Filterlabels) */
+.label-caps {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Alle Tabellen im Inhalt: Kopf in kleinen Grossbuchstaben ueber der kraeftigen Linie (wie .data-table) */
+main table thead tr {
+  border-bottom: 2px solid var(--line-strong) !important;
+}
+main table thead th {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink) !important;
+}
+main table thead th button {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* Datentabellen: kraeftige Linie unter dem Kopf, feine Linien zwischen Zeilen */
+.data-table thead tr {
+  border-bottom: 2px solid var(--line-strong);
+}
+.data-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.data-table tbody tr {
+  border-bottom: 1px solid var(--line);
+}
+.data-table tbody tr:last-child {
+  border-bottom: 0;
+}
+.data-table tbody tr:hover {
+  background: var(--surface);
 }
 
 /* Yard-Linien: dezentes Raster hinter der Kopfzeile der Startseite */
@@ -190,7 +261,7 @@ body {
 /* Trap View (/trap-view/): füllt den Bildschirm unter der Kopfzeile, eigene dunkle Inszenierung. */
 .trapview-host {
   position: relative;
-  height: calc(100dvh - var(--site-header-h, 57px));
+  height: calc(100dvh - var(--site-header-h, 73px));
   min-height: 480px;
   background: #050608;
   overflow: hidden;

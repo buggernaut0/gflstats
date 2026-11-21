@@ -95,7 +95,7 @@ export default function TeamView({ seasons, teams }: { seasons: TeamSeasonView[]
         <section aria-labelledby="ta-h">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 id="ta-h" className="display text-[28px] font-bold leading-none tracking-tight text-ink">
+              <h2 id="ta-h" className="display text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">
                 {tx.team.analyticsTitle(season)}
               </h2>
               <p className="mt-2 text-[13.5px] text-ink-2">
@@ -126,7 +126,7 @@ export default function TeamView({ seasons, teams }: { seasons: TeamSeasonView[]
 
       <section aria-labelledby="kader-h" className="mt-14">
         <div className="mb-4">
-          <h2 id="kader-h" className="display text-[28px] font-bold leading-none tracking-tight text-ink">
+          <h2 id="kader-h" className="display text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">
             {tx.team.rosterTitle(season)}
           </h2>
           <p className="mt-2 text-[13.5px] text-ink-2">{tx.team.rosterNote}</p>
@@ -211,7 +211,7 @@ export default function TeamView({ seasons, teams }: { seasons: TeamSeasonView[]
       </section>
 
       <section aria-labelledby="plan-h" className="mt-14">
-        <h2 id="plan-h" className="display mb-4 text-[28px] font-bold leading-none tracking-tight text-ink">
+        <h2 id="plan-h" className="display mb-4 text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">
           {tx.team.scheduleTitle(season)}
         </h2>
         <div className="overflow-x-auto rounded-xl border border-line bg-surface">

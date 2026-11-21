@@ -2,6 +2,12 @@ import type { Widen } from "../messages";
 import type * as de from "../de/games";
 
 export const games: Widen<typeof de.games> = {
+  h2hTitle: "Head-to-head",
+  h2hNote: (n, first) => `All ${n} meetings since ${first}, Regular Season and Playoffs.`,
+  h2hWins: (team) => `${team} wins`,
+  h2hPoints: (n) => `${n} points`,
+  h2hNone: "The two teams have not otherwise met in the recorded seasons.",
+  h2hThis: "this game",
   title: "Games",
   intro: (n, videos) =>
     `All ${n} games with a stat sheet, away team on the left, home team on the right. ${videos} games have a highlight video (icon on the right). For individual performances across all games, use the`,

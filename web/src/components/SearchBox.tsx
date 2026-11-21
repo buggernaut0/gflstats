@@ -107,7 +107,7 @@ export default function SearchBox() {
         aria-expanded={open && results.length > 0}
         aria-controls="search-results"
         aria-activedescendant={results[active] ? `sr-${results[active][1]}` : undefined}
-        className="h-9 w-full rounded-md border border-line bg-surface pl-8 pr-3 text-[14px] text-ink placeholder:text-ink-3 focus:border-line-strong focus:outline-none"
+        className="h-[38px] w-full border border-line bg-bg pl-8 pr-3 text-[14px] text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none"
       />
       {open && q.trim().length >= 2 && (
         <ul

@@ -34,8 +34,8 @@ export default function MethodView(p: {
   const t = f.m.method;
   const quote = (s: string) => (f.lang === "de" ? `„${s}“` : `“${s}”`);
   return (
-    <main className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6">
-      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink">{t.title}</h1>
+    <main className="mx-auto max-w-[1280px] px-4 py-12 sm:px-8">
+      <h1 className="display text-[40px] font-extrabold leading-[0.98] tracking-[-0.035em] text-ink sm:text-[64px]">{t.title}</h1>
       <p className="mt-4 max-w-[68ch] text-[15px] text-ink-2">
         {t.intro1} <code className="rounded bg-surface-2 px-1 text-[13px]">curation/</code>{t.intro2.startsWith(".") ? "" : " "}{t.intro2}
         {t.curationNote && <> {t.curationNote}</>}
@@ -259,7 +259,7 @@ export default function MethodView(p: {
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-h`} className="mt-14 scroll-mt-24">
-      <h2 id={`${id}-h`} className="display mb-4 text-[28px] font-bold leading-none tracking-tight text-ink">
+      <h2 id={`${id}-h`} className="display mb-4 text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">
         {title}
       </h2>
       {children}

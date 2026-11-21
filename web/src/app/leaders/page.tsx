@@ -7,9 +7,9 @@ export const metadata = { title: "League Leaders" };
 
 export default function LeadersPage() {
   return (
-    <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
+    <main className="mx-auto max-w-[1280px] px-4 pb-24 pt-10 sm:px-8">
       <AnalyticsCrumb current="analytics.leadersPage" />
-      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink">League Leaders</h1>
+      <h1 className="display text-[40px] font-extrabold leading-[0.98] tracking-[-0.035em] text-ink sm:text-[64px]">League Leaders</h1>
       <p className="mb-8 mt-3 max-w-[70ch] text-[14px] text-ink-2">
         <T k="analytics.leadersIntro" />
       </p>

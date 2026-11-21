@@ -20,27 +20,28 @@ function pickerTeams(): PickerTeam[] {
     .sort((a, b) => a.name.localeCompare(b.name, "de"));
 }
 
+/** Kopfzeile: blaue Oberkante, Wortmarke "GFL" im blauen Quadrat + "Analytics", Navigation mit Unterstrich. */
 export default function SiteHeader() {
   const teams = pickerTeams();
   return (
     <>
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur supports-[backdrop-filter]:bg-bg/75">
-      <div className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-x-5 gap-y-2 xl:gap-x-6 px-4 py-2.5 sm:px-6">
+    <header className="sticky top-0 z-40 border-t-[5px] border-b border-t-accent border-b-line bg-bg">
+      <div className="mx-auto flex max-w-[1280px] flex-wrap items-center gap-x-7 gap-y-2 px-4 py-3 sm:px-8">
         <HomeLink>
-          <Mark />
-          <span className="display text-[21px] font-bold leading-none tracking-tight text-ink">
-            GFL<span className="ml-1 font-semibold text-ink-2">Analytics</span>
+          <span className="grid h-9 w-9 place-items-center bg-accent text-[15px] font-extrabold tracking-tight text-accent-ink" aria-hidden="true">
+            GFL
           </span>
+          <span className="text-[16px] font-bold tracking-tight text-ink">Analytics</span>
         </HomeLink>
         <div className="order-3 w-full sm:order-none sm:w-auto sm:flex-1">
           <NavLinks />
         </div>
-        <div className="ml-auto flex items-center gap-1.5 sm:ml-0">
+        <div className="ml-auto flex items-center gap-2 sm:ml-0">
           <div className="hidden md:block">
             <SearchBox />
           </div>
           <FavoriteTeamPicker teams={teams} />
-          <LanguageSwitcher className="mx-0.5" />
+          <LanguageSwitcher />
           <ThemeToggle />
         </div>
         <div className="order-4 w-full md:hidden">
@@ -50,16 +51,5 @@ export default function SiteHeader() {
     </header>
     <FavoriteWelcome teams={teams.filter((t) => t.current)} />
     </>
-  );
-}
-
-/** Bildmarke: Yard-Linien mit gelber First-Down-Linie. */
-function Mark() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-      <rect x="0.5" y="0.5" width="25" height="25" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)" />
-      <path d="M7 5v16M12 5v16M19 5v16" stroke="var(--ink-3)" strokeWidth="1.4" />
-      <path d="M15.5 4v18" stroke="var(--accent)" strokeWidth="2.6" strokeLinecap="round" />
-    </svg>
   );
 }

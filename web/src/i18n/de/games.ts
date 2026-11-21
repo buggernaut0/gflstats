@@ -1,5 +1,11 @@
 /** Spielplan, Box Score, Startseite / Saison-Dashboard, Teamtabelle, Rollen-Index und Breakouts. */
 export const games = {
+  h2hTitle: "Direkter Vergleich",
+  h2hNote: (n: number, first: number) => `Alle ${n} Duelle seit ${first}, Regular Season und Playoffs.`,
+  h2hWins: (team: string) => `Siege ${team}`,
+  h2hPoints: (n: number) => `${n} Punkte`,
+  h2hNone: "Die beiden Teams sind in den erfassten Saisons sonst nicht aufeinandergetroffen.",
+  h2hThis: "dieses Spiel",
   title: "Spiele",
   intro: (n: number, videos: number) =>
     `Alle ${n} Spiele mit Statistikbogen, Gastteam links, Heimteam rechts. Zu ${videos} Spielen gibt es ein Highlight-Video (Symbol rechts). Einzelleistungen über alle Spiele hinweg findet die`,

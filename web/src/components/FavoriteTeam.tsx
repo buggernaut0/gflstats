@@ -69,7 +69,7 @@ export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
         aria-haspopup="dialog"
         aria-expanded={open}
         title={selected ? f.current(selected.name) : f.title}
-        className="flex h-9 items-center gap-2 rounded-md px-2 text-[14px] text-ink-2 hover:bg-surface-2 hover:text-ink"
+        className="flex h-[38px] items-center gap-2 border border-line px-2.5 text-[14px] text-ink-2 hover:border-line-strong hover:text-ink"
       >
         {selected ? (
           <>
@@ -153,7 +153,7 @@ export default function FavoriteTeamPicker({ teams }: { teams: PickerTeam[] }) {
 export function FavBadge({ className = "" }: { className?: string }) {
   const { m } = useI18n();
   return (
-    <span className={`fav-badge items-center gap-1 rounded-full border border-[var(--fav)] px-2 py-[1px] text-[11.5px] font-medium text-[var(--fav)] ${className}`}>
+    <span className={`fav-badge items-center gap-1 border border-[var(--fav)] px-2 py-[2px] text-[11px] font-bold uppercase tracking-[0.07em] text-[var(--fav)] ${className}`}>
       <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
       </svg>

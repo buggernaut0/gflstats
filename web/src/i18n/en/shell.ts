@@ -37,6 +37,7 @@ export const shell: Widen<typeof de.shell> = {
   searchFailed: "The search index could not be loaded.",
   searchLoading: "Loading search index …",
   searchNone: (q) => `No results for “${q}”.`,
+  onThisPage: "On this page",
 };
 
 export const favorite: Widen<typeof de.favorite> = {

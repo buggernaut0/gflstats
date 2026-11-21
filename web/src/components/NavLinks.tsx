@@ -17,12 +17,12 @@ export default function NavLinks() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`relative shrink-0 rounded-md px-2.5 py-2 text-[15px] xl:px-3 font-medium transition-colors ${
-              active ? "text-ink" : "text-ink-2 hover:text-ink"
+            className={`relative shrink-0 px-3 py-2.5 text-[15px] font-medium transition-colors ${
+              active ? "text-ink" : "text-ink-2 hover:bg-surface hover:text-ink"
             }`}
           >
             {m.nav[item.key]}
-            {active && <span className="absolute inset-x-2.5 bottom-0 xl:inset-x-3 h-[3px] sm:-bottom-[13px] rounded-full bg-accent" aria-hidden="true" />}
+            {active && <span className="absolute inset-x-0 bottom-0 h-[3px] bg-accent" aria-hidden="true" />}
           </Link>
         );
       })}

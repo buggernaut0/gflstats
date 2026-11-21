@@ -51,7 +51,7 @@ export default function LineupSection({ team, season }: { team: Team; season: nu
     <section className="mb-12" aria-labelledby="lineup-h">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div className="max-w-[78ch]">
-          <h2 id="lineup-h" className="display text-[28px] font-bold leading-none tracking-tight text-ink"><T k="team.lineupTitle" a={[season]} /></h2>
+          <h2 id="lineup-h" className="display text-[34px] font-bold leading-none tracking-[-0.03em] text-ink"><T k="team.lineupTitle" a={[season]} /></h2>
           <p className="mt-2 text-[13.5px] text-ink-2">
             {provisional ? (
               <T k="team.lineupProvisional" />

@@ -1,5 +1,9 @@
 /** Spielerprofil, Saisontabellen, Spielprotokoll, Radar, Videos, Herkunft der Zahlen, Elite. */
 export const player = {
+  tabs: { overview: "Überblick", profile: "Profil", development: "Entwicklung", stats: "Statistiken", log: "Game Log", videos: "Highlights" },
+  sparkLabel: (label: string, season: number) => `${label} Spiel für Spiel, Saison ${season}`,
+  sparkNote: (season: number) => `Linien: Spiel für Spiel in der Saison ${season}, gestrichelt = Saisonschnitt.`,
+  numberBlock: (n: number) => `Rückennummer ${n}`,
   derivedRole: "(aus Statistik abgeleitet)",
   roleUnclear: "Rolle nicht eindeutig",
   officialRoster: (season: number) => `(offizieller Kader ${season})`,

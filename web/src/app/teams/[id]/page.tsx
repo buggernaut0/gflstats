@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { FavBadge } from "@/components/FavoriteTeam";
 import LineupSection from "@/components/lineup/LineupSection";
 import TeamLogo from "@/components/TeamLogo";
+import SectionTabs from "@/components/SectionTabs";
+import { contrast, luminance } from "@/lib/teamColors";
 import { teamsAttr } from "@/lib/favorite";
 import TeamView, { type RosterRow, type TeamSeasonView } from "@/components/TeamView";
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
@@ -85,49 +87,76 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
   const formerNames = Object.entries(team.namesBySeason).filter(([, n]) => n !== team.name);
   const record = (s: number) => metrics.find((m) => m.team === id && m.season === s && m.scope === "regular");
 
+  // Kopf in den Teamfarben – nur mit belegten Farben aus curation/teams.json, sonst neutral (Navy)
+  const primary = team.colors?.primary ?? null;
+  const secondary = team.colors?.secondary ?? null;
+  const band = primary ?? "var(--navy)";
+  const onLight = primary ? luminance(primary) > 0.45 : false;
+  const ink = onLight ? "#0b1a33" : "#ffffff";
+  const soft = onLight ? "rgba(11,26,51,0.72)" : "rgba(255,255,255,0.78)";
+  // Streifen unten: Zweitfarbe, sofern sie sich vom Band abhebt
+  const stripe = secondary && primary && contrast(secondary, primary) >= 1.6 ? secondary : null;
+
   return (
-    <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
+    <>
       <section
-        className="team-hero -mx-4 mb-6 flex flex-wrap items-end justify-between gap-6 rounded-2xl px-4 py-5 sm:-mx-6 sm:px-6"
-        style={team.colors?.primary ? ({ "--team-1": team.colors.primary, "--team-2": team.colors.secondary ?? team.colors.primary } as React.CSSProperties) : undefined}
+        className="border-b-[6px]"
+        style={{ background: band, color: ink, borderBottomColor: stripe ?? "transparent" }}
+        aria-labelledby="team-h"
       >
-        <div className="flex items-center gap-5">
-          <TeamLogo team={team} size={88} />
-          <div>
-            <h1 className="display text-[44px] font-bold leading-none tracking-tight text-ink sm:text-[56px]">{team.name}</h1>
-            <span {...teamsAttr(team.id)} className="fav-plain block">
-              <FavBadge className="mt-2.5" />
-            </span>
-            <p className="mt-2 text-[14px] text-ink-2">
-              <T k="team.seasonsInData" a={[[...seasonsOf].reverse().join(", ")]} />
-              {formerNames.length > 0 && <T k="team.formerName" a={[formerNames[formerNames.length - 1][0], formerNames[0][1]]} />}
-            </p>
-            {team.logoPage && (
-              <p className="mt-1 text-[12.5px] text-ink-3">
-                <T k="team.logoLine" />{" "}
-                <a href={team.logoPage} className="underline-offset-4 hover:text-ink hover:underline" rel="noopener">
-                  <T k="team.logoOfficial" />
-                </a>
+        <div className="mx-auto flex max-w-[1280px] flex-wrap items-end justify-between gap-8 px-4 pb-11 pt-10 sm:px-8">
+          <div className="flex items-center gap-5 sm:gap-7">
+            <TeamLogo team={team} size={120} className="max-sm:hidden" />
+            <TeamLogo team={team} size={72} className="sm:hidden" />
+            <div className="min-w-0">
+              <span {...teamsAttr(team.id)} className="fav-plain block" style={{ "--fav": ink } as React.CSSProperties}>
+                <FavBadge className="mb-2.5" />
+              </span>
+              <h1 id="team-h" className="display text-[36px] font-extrabold leading-[0.98] tracking-[-0.035em] sm:text-[72px]">{team.name}</h1>
+              <p className="mt-3 text-[14px]" style={{ color: soft }}>
+                <T k="team.seasonsInData" a={[[...seasonsOf].reverse().join(", ")]} />
+                {formerNames.length > 0 && <T k="team.formerName" a={[formerNames[formerNames.length - 1][0], formerNames[0][1]]} />}
               </p>
-            )}
+              {team.logoPage && (
+                <p className="mt-1 text-[12.5px]" style={{ color: soft }}>
+                  <T k="team.logoLine" />{" "}
+                  <a href={team.logoPage} className="underline underline-offset-4" style={{ color: ink }} rel="noopener">
+                    <T k="team.logoOfficial" />
+                  </a>
+                </p>
+              )}
+            </div>
           </div>
+          <dl className="flex gap-7 text-[13.5px]">
+            {[...seasonsOf].reverse().map((s) => {
+              const r = record(s);
+              return (
+                <div key={s}>
+                  <dt className="num text-[12px]" style={{ color: soft }}><Titled k="team.recordRegular">{s}</Titled></dt>
+                  <dd className="num display text-[24px] font-bold">{r ? `${r.wins}–${r.losses}${r.ties ? `–${r.ties}` : ""}` : "–"}</dd>
+                </div>
+              );
+            })}
+          </dl>
         </div>
-        <dl className="flex gap-6 text-[13.5px]">
-          {[...seasonsOf].reverse().map((s) => {
-            const r = record(s);
-            return (
-              <div key={s}>
-                <dt className="num text-[12px] text-ink-3"><Titled k="team.recordRegular">{s}</Titled></dt>
-                <dd className="num display text-[20px] font-semibold text-ink">{r ? `${r.wins}–${r.losses}${r.ties ? `–${r.ties}` : ""}` : "–"}</dd>
-              </div>
-            );
-          })}
-        </dl>
       </section>
-      {team.note && <p className="mb-6 max-w-[70ch] text-[13px] text-ink-3">{team.note}</p>}
-      <SeasonNotice current={getMeta().currentSeason} latest={latest} subject="team" />
-      <LineupSection team={team} season={latest} />
-      <TeamView seasons={views} teams={teams} />
-    </main>
+      <main className="mx-auto max-w-[1280px] px-4 pb-24 sm:px-8">
+        <SectionTabs
+          accent={primary && !onLight ? primary : undefined}
+          items={[
+            { id: "lineup-h", label: <T k="team.tabs.lineup" /> },
+            { id: "ta-h", label: <T k="team.tabs.overview" /> },
+            { id: "kader-h", label: <T k="team.tabs.roster" /> },
+            { id: "plan-h", label: <T k="team.tabs.results" /> },
+          ]}
+        />
+        <div className="pt-10">
+          {team.note && <p className="mb-6 max-w-[70ch] text-[13px] text-ink-3">{team.note}</p>}
+          <SeasonNotice current={getMeta().currentSeason} latest={latest} subject="team" />
+          <LineupSection team={team} season={latest} />
+          <TeamView seasons={views} teams={teams} />
+        </div>
+      </main>
+    </>
   );
 }

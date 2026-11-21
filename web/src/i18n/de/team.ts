@@ -2,6 +2,7 @@
 type MetricDef = { key: string; label: string; abbr: string; formula: string };
 
 export const team = {
+  tabs: { overview: "Überblick", results: "Ergebnisse", roster: "Kader", lineup: "Starting Lineup", videos: "Highlights" },
   listTitle: "Teams",
   listIntro: "Bilanz in der Regular Season je Saison (Siege–Niederlagen). Leere Felder: Team war in dieser Saison nicht in der GFL vertreten.",
   listCaption: "Alle Teams mit Bilanz je Saison",

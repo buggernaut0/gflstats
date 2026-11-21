@@ -113,7 +113,7 @@ export default function Radar3D({ axes, series, median, onFail }: Props) {
     const markerGeo = [keep(new THREE.SphereGeometry(0.34, 20, 14)), keep(new THREE.BoxGeometry(0.54, 0.54, 0.54)), keep(new THREE.TetrahedronGeometry(0.46))];
     series.forEach((s, si) => {
       if (s.hidden) return;
-      const color = col(`--series-${si + 1}`, ["#1fa86a", "#e05a59", "#3987e5"][si]);
+      const color = col(`--series-${si + 1}`, ["#1747c9", "#d9731a", "#0b1a33"][si]);
       const top = s.pct.map((p, i) => at(i, p ?? 0, ((p ?? 0) / 100) * H));
       const g = new THREE.Group();
       const topPos: number[] = [];

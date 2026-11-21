@@ -19,7 +19,7 @@ export function RoleIndexSection({ rows, names, teams, season, perRole = 3, role
     <section aria-labelledby={`ri-${season}`}>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div className="max-w-[78ch]">
-          <h2 id={`ri-${season}`} className="display text-[28px] font-bold leading-none tracking-tight text-ink">{h.roleIndexTitle}</h2>
+          <h2 id={`ri-${season}`} className="display text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">{h.roleIndexTitle}</h2>
           <p className="mt-2 text-[13.5px] text-ink-2">
             {h.roleIndexNote(season)}{" "}
             <Link href="/methodik/#modelle" className="text-accent-text underline-offset-4 hover:underline">{h.howCalculated}</Link>
@@ -32,7 +32,7 @@ export function RoleIndexSection({ rows, names, teams, season, perRole = 3, role
           const top = rows.filter((r) => r.role === role).slice(0, perRole);
           return (
             <div key={role} className="rounded-xl border border-line bg-surface">
-              <h3 className="display border-b border-line px-4 pb-2 pt-3 text-[18px] font-semibold text-ink">{f.m.stats.roles[role] ?? role}</h3>
+              <h3 className="label-caps border-b-2 border-line-strong px-4 pb-2.5 pt-3.5 text-ink">{f.m.stats.roles[role] ?? role}</h3>
               <ol className="py-1">
                 {top.map((r, i) => {
                   const best = [...r.axes].filter((a) => a.pct !== null).sort((a, b) => b.pct! - a.pct!).slice(0, 2);
@@ -69,7 +69,7 @@ export function BreakoutSection({ items, names, teams, season, limit = 6 }: { it
     <section aria-labelledby={`bo-${season}`}>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div className="max-w-[78ch]">
-          <h2 id={`bo-${season}`} className="display text-[28px] font-bold leading-none tracking-tight text-ink">{h.breakoutsTitle(season)}</h2>
+          <h2 id={`bo-${season}`} className="display text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">{h.breakoutsTitle(season)}</h2>
           <p className="mt-2 text-[13.5px] text-ink-2">
             {h.breakoutsNote(BREAKOUT_RULES.minDelta, season - 1, BREAKOUT_RULES.minIndex)}
           </p>

@@ -14,9 +14,9 @@ export default function BreakoutsPage() {
   const teams: Record<string, TeamLite> = Object.fromEntries(getTeams().map((t) => [t.id, toTeamLite(t)]));
   const seasons = [...meta.seasons].reverse();
   return (
-    <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
+    <main className="mx-auto max-w-[1280px] px-4 pb-24 pt-10 sm:px-8">
       <AnalyticsCrumb current="analytics.breakoutsPage" />
-      <h1 className="display text-[48px] font-bold leading-none tracking-tight text-ink"><T k="analytics.breakoutsPage" /></h1>
+      <h1 className="display text-[40px] font-extrabold leading-[0.98] tracking-[-0.035em] text-ink sm:text-[64px]"><T k="analytics.breakoutsPage" /></h1>
       <p className="mb-10 mt-3 max-w-[74ch] text-[14px] text-ink-2">
         <T k="analytics.breakoutsPageIntro" />
       </p>

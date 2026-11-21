@@ -126,7 +126,7 @@ export default function GameSearch() {
     <div>
       <div className="mb-4 flex flex-wrap gap-2">
         {PRESETS.map((p) => (
-          <button key={p.label} type="button" onClick={() => { setConds(p.conds); setLogic(p.logic ?? "and"); setRole(p.role ?? ""); }} className="rounded-full border border-line px-3 py-1 text-[13px] text-ink-2 hover:border-line-strong hover:text-ink">
+          <button key={p.label} type="button" onClick={() => { setConds(p.conds); setLogic(p.logic ?? "and"); setRole(p.role ?? ""); }} className="border border-line px-3 py-1.5 text-[13px] text-ink hover:border-accent hover:text-accent-text">
             {a.gamePresets[PRESETS.indexOf(p)] ?? p.label}
           </button>
         ))}

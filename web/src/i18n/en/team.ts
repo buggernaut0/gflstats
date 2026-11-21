@@ -26,6 +26,7 @@ const METRICS: Record<string, { label: string; abbr: string; formula: string }> 
 };
 
 export const team: Widen<typeof de> = {
+  tabs: { overview: "Overview", results: "Results", roster: "Roster", lineup: "Starting lineup", videos: "Highlights" },
   listTitle: "Teams",
   listIntro: "Regular Season record per season (wins–losses). Empty cells: the team was not in the GFL that season.",
   listCaption: "All teams with their record per season",

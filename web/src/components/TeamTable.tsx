@@ -7,6 +7,7 @@ import { fmt, fmtDec, fmtSigned } from "@/lib/format";
 import { useI18n } from "@/i18n/react";
 import type { Lang } from "@/i18n/config";
 import { teamsAttr } from "@/lib/favorite";
+import TeamLogo from "./TeamLogo";
 
 type Col = {
   key: keyof TeamRow;
@@ -47,13 +48,13 @@ export default function TeamTable({ rows, teams }: { rows: TeamRow[]; teams: Rec
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-line bg-surface">
-      <table className="w-full min-w-[820px] border-collapse text-[14px]">
+    <div className="overflow-x-auto border border-line bg-bg">
+      <table className="data-table w-full min-w-[820px] border-collapse text-[14px]">
         <caption className="sr-only">{f.m.home.tableCaption}</caption>
         <thead>
-          <tr className="border-b border-line text-ink-3">
-            <th scope="col" className="w-10 py-2.5 pl-4 text-left text-[12px] font-medium">#</th>
-            <th scope="col" className="py-2.5 pr-3 text-left text-[12px] font-medium">{f.m.common.team}</th>
+          <tr>
+            <th scope="col" className="w-10 py-2.5 pl-4 text-left">#</th>
+            <th scope="col" className="py-2.5 pr-3 text-left">{f.m.common.team}</th>
             {COLS.map((c) => {
               const active = sort.key === c.key;
               return (
@@ -61,9 +62,9 @@ export default function TeamTable({ rows, teams }: { rows: TeamRow[]; teams: Rec
                   key={c.key}
                   scope="col"
                   aria-sort={active ? (sort.desc ? "descending" : "ascending") : "none"}
-                  className={`px-2 py-1.5 text-right text-[12px] font-medium ${active ? "bg-accent-soft text-ink" : ""}`}
+                  className={`px-2 py-1.5 text-right ${active ? "bg-accent-soft" : ""}`}
                 >
-                  <button type="button" onClick={() => click(c)} title={f.m.home.cols[c.key]?.[1] ?? c.title} className="inline-flex items-center gap-1 rounded px-1 py-1 hover:text-ink">
+                  <button type="button" onClick={() => click(c)} title={f.m.home.cols[c.key]?.[1] ?? c.title} className="inline-flex items-center gap-1 px-1 py-1 uppercase tracking-[0.07em] hover:text-accent-text">
                     {f.m.home.cols[c.key]?.[0] ?? c.label}
                     <span aria-hidden="true" className={active ? "text-accent-text" : "opacity-0"}>
                       {sort.desc ? "▼" : "▲"}
@@ -78,17 +79,18 @@ export default function TeamTable({ rows, teams }: { rows: TeamRow[]; teams: Rec
           {sorted.map((r, i) => {
             const t = teams[r.team];
             return (
-              <tr key={r.team} {...teamsAttr(r.team)} className="border-b border-line last:border-0 hover:bg-surface-2/60">
-                <td className="num py-2 pl-4 text-ink-3">{i + 1}</td>
-                <td className="py-2 pr-3">
-                  <Link href={`/teams/${r.team}/`} className="font-medium text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4">
+              <tr key={r.team} {...teamsAttr(r.team)}>
+                <td className="num py-2.5 pl-4 text-ink-3">{i + 1}</td>
+                <td className="py-2.5 pr-3">
+                  <Link href={`/teams/${r.team}/`} className="flex items-center gap-2.5 font-medium text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4">
+                    <TeamLogo team={t} size={24} />
                     {t?.name ?? r.team}
                   </Link>
                 </td>
                 {COLS.map((c) => (
                   <td
                     key={c.key}
-                    className={`num px-3 py-2 text-right ${sort.key === c.key ? "bg-accent-soft font-semibold text-ink" : "text-ink-2"} ${
+                    className={`num px-3 py-2.5 text-right ${sort.key === c.key ? "bg-accent-soft font-semibold text-ink" : "text-ink-2"} ${
                       c.key === "diff" ? (r.diff > 0 ? "!text-win" : r.diff < 0 ? "!text-loss" : "") : ""
                     }`}
                   >

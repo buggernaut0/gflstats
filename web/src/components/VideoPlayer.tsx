@@ -41,7 +41,7 @@ export default function VideoPlayer({
         ) : (
           <button type="button" onClick={() => setPlaying(true)} className="group absolute inset-0 block h-full w-full text-left" aria-label={m.player.playVideo(title)}>
             {children ?? <span className="video-poster absolute inset-0" aria-hidden="true" />}
-            <span className="absolute left-1/2 top-1/2 grid h-[58px] w-[58px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-accent text-accent-ink shadow-lg shadow-black/40 group-hover:scale-105 group-focus-visible:scale-105" aria-hidden="true">
+            <span className="absolute left-1/2 top-1/2 grid h-[58px] w-[58px] -translate-x-1/2 -translate-y-1/2 place-items-center bg-accent text-accent-ink shadow-lg shadow-black/40 group-hover:scale-105 group-focus-visible:scale-105" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M8 5.5v13l11-6.5z" />
               </svg>

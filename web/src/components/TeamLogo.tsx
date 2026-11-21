@@ -17,11 +17,10 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export default function TeamLogo({ team, size = 32, className = "" }: { team: LogoTeam | undefined; size?: number; className?: string }) {
   if (!team) return null;
-  const radius = Math.max(4, Math.round(size * 0.18));
   return (
     <span
       className={`logo-plate relative inline-grid shrink-0 place-items-center overflow-hidden ${className}`}
-      style={{ width: size, height: size, borderRadius: radius }}
+      style={{ width: size, height: size }}
       title={team.name}
     >
       {team.logo ? (

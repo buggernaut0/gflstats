@@ -142,7 +142,7 @@ function useTitleSync(lang: Lang) {
 export function LanguageSwitcher({ className = "" }: { className?: string }) {
   const { lang, m } = useI18n();
   return (
-    <div role="group" aria-label={m.common.language} className={`flex items-center rounded-md border border-line p-0.5 ${className}`}>
+    <div role="group" aria-label={m.common.language} className={`flex items-center border border-line-strong ${className}`}>
       {LANGS.map((l) => (
         <button
           key={l}
@@ -151,8 +151,8 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
           onClick={() => setLang(l)}
           aria-pressed={l === lang}
           title={LANG_NAME[l]}
-          className={`h-7 min-w-[32px] rounded px-1.5 text-[12.5px] font-semibold uppercase tracking-wide transition-colors ${
-            l === lang ? "bg-surface-2 text-ink shadow-[inset_0_-2px_0_var(--accent)]" : "text-ink-3 hover:text-ink"
+          className={`h-9 min-w-[38px] px-2 text-[12.5px] font-semibold uppercase tracking-wide transition-colors [&+button]:border-l [&+button]:border-line-strong ${
+            l === lang ? "bg-accent text-accent-ink" : "text-ink-2 hover:text-ink"
           }`}
         >
           {l}

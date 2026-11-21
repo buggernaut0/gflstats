@@ -5,13 +5,13 @@ import { useI18n } from "@/i18n/react";
 
 type Theme = "dark" | "light";
 
-/** Wechselt zwischen dunklem (Standard) und hellem Design; merkt sich die Wahl im Browser. */
+/** Wechselt zwischen hellem (Standard) und dunklem Design; merkt sich die Wahl im Browser. */
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
   const { m } = useI18n();
 
   useEffect(() => {
-    setTheme((document.documentElement.dataset.theme as Theme) || "dark");
+    setTheme((document.documentElement.dataset.theme as Theme) || "light");
   }, []);
 
   function toggle() {
@@ -29,7 +29,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="grid h-9 w-9 place-items-center rounded-md text-ink-2 hover:bg-surface-2 hover:text-ink"
+      className="grid h-[38px] w-[38px] place-items-center border border-line text-ink hover:border-line-strong"
       aria-label={theme === "dark" ? m.shell.themeToLight : m.shell.themeToDark}
       title={theme === "dark" ? m.shell.themeLight : m.shell.themeDark}
     >

@@ -18,7 +18,7 @@ export default function GamesPage() {
   const videos = games.filter((g) => g.video).length;
   return (
     <main className="mx-auto max-w-[1000px] px-4 pb-24 pt-10 sm:px-6">
-      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink"><T k="games.title" /></h1>
+      <h1 className="display text-[40px] font-extrabold leading-[0.98] tracking-[-0.035em] text-ink sm:text-[64px]"><T k="games.title" /></h1>
       <p className="mb-8 mt-3 max-w-[68ch] text-[14px] text-ink-2">
         <T k="games.intro" a={[games.length, videos]} />{" "}
         <Link href="/analytics/spiele/" className="text-accent-text underline-offset-4 hover:underline"><T k="games.gameSearch" /></Link>.

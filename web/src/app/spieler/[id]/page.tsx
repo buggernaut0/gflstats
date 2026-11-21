@@ -9,6 +9,9 @@ import SourceTag from "@/components/SourceTag";
 import TeamLogo from "@/components/TeamLogo";
 import TeamTag from "@/components/TeamTag";
 import Videos from "@/components/Videos";
+import Sparkline from "@/components/Sparkline";
+import SectionTabs from "@/components/SectionTabs";
+import { luminance } from "@/lib/teamColors";
 import EliteBadge from "@/components/EliteBadge";
 import { eliteSeason } from "@/lib/elite";
 import { toTeamLite, type TeamLite } from "@/lib/dashboard";
@@ -92,14 +95,24 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
     .map((season) => ({ season, entries: eliteSeason(season).get(p.id) ?? [] }))
     .find((x) => x.entries.length > 0);
   const span = p.seasons.length > 1 ? `${p.seasons[0].season}–${lastSeason.season}` : String(lastSeason.season);
+  // Teamfarbe fuer Nummernblock und Reiter: Hauptfarbe aus curation/teams.json, sonst neutrales Blau
+  const teamColor = (mainTeam && teams[mainTeam]?.colors?.primary) || null;
+  // Spiel fuer Spiel in der juengsten Saison (fuer die Verlaufslinien der Karriere-Kacheln)
+  const seasonLog = log.filter((l) => l.season === lastSeason.season).sort((a, b) => a.date.localeCompare(b.date));
 
   return (
-    <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
-      <section className="grid gap-8 border-b border-line pb-10 lg:grid-cols-[1fr_auto]">
-        <div className="flex items-start gap-5">
-          {mainTeam && teams[mainTeam]?.logo ? <TeamLogo team={teams[mainTeam]} size={88} /> : <Avatar name={p.name} />}
-          <div>
-            <h1 className="display text-[44px] font-bold leading-none tracking-tight text-ink sm:text-[56px]">{p.name}</h1>
+    <main className="mx-auto max-w-[1280px] px-4 pb-24 pt-10 sm:px-8">
+      <section className="grid gap-8 pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div className="flex items-start gap-5 sm:items-stretch sm:gap-6">
+          {lastSeason.number !== undefined ? (
+            <NumberBlock n={lastSeason.number} color={teamColor} />
+          ) : mainTeam && teams[mainTeam]?.logo ? (
+            <TeamLogo team={teams[mainTeam]} size={96} />
+          ) : (
+            <Avatar name={p.name} />
+          )}
+          <div className="min-w-0">
+            <h1 className="display text-[44px] font-extrabold leading-[0.98] tracking-[-0.035em] text-ink sm:text-[72px]">{p.name}</h1>
             <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] text-ink-2">
               {lastSeason.position && (
                 <span title={lastSeason.positionDetail}>
@@ -117,9 +130,9 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                 <FavBadge />
               </span>
               {currentTeams.map((t) => (
-                <span key={t} className="flex items-center gap-1.5">
-                  <TeamTag team={teams[t]} />
-                  <Link href={`/teams/${t}/`} className="text-ink hover:underline hover:underline-offset-4">
+                <span key={t} className="flex items-center gap-2">
+                  <TeamLogo team={teams[t]} size={24} />
+                  <Link href={`/teams/${t}/`} className="font-semibold text-accent-text hover:underline hover:underline-offset-4">
                     {teams[t]?.name}
                   </Link>
                 </span>
@@ -154,6 +167,18 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         </dl>
       </section>
 
+      <SectionTabs
+        accent={teamColor ?? undefined}
+        items={[
+          { id: "karriere-h", label: <T k="player.tabs.overview" /> },
+          ...(role && profileEntry && axes.length > 0 ? [{ id: "profil-h", label: <T k="player.tabs.profile" /> }] : []),
+          ...(role && p.seasons.length > 1 ? [{ id: "dev-h", label: <T k="player.tabs.development" /> }] : []),
+          { id: "stats-h", label: <T k="player.tabs.stats" /> },
+          { id: "log-h", label: <T k="player.tabs.log" /> },
+          { id: "video-h", label: <T k="player.tabs.videos" /> },
+        ]}
+      />
+
       {lastSeason.season < meta.currentSeason && (
         <div className="mt-8">
           <SeasonNotice current={meta.currentSeason} latest={lastSeason.season} subject="player" />
@@ -165,20 +190,28 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
           <SourceTag kind="original" />
           <SourceTag kind="rank" />
         </Head>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 border-l border-t border-line sm:grid-cols-3 lg:grid-cols-5">
           {headline.map((k) => {
             const d = stat(k);
             const anyAvail = p.seasons.some((s) => statAvailable(d, s.season, meta.availability));
             const rank = d.kind === "original" ? leagueRank(k, lastSeason.season, id) : null;
+            const seasonAvail = statAvailable(d, lastSeason.season, meta.availability);
+            const trend = seasonAvail ? seasonLog.map((g) => value(d, g.stats, 1)) : [];
             return (
-              <Titled key={k} as="div" stat={k} className="rounded-xl border border-line bg-surface px-4 py-3">
+              <Titled key={k} as="div" stat={k} className="flex flex-col gap-1 border-b border-r border-line px-4 pb-3.5 pt-4">
                 <p className="text-[12.5px] text-ink-3"><StatLabel k={k} /></p>
-                <p className="num display mt-0.5 text-[30px] font-semibold leading-tight text-ink">{anyAvail ? <StatValue k={k} v={value(d, career, careerGames)} /> : <T k="common.notRecorded" />}</p>
-                <p className="text-[12px] text-ink-3">{rank ? <T k="player.seasonRank" a={[lastSeason.season, rank.rank, rank.of]} /> : d.kind === "derived" ? <T k="common.derivedMark" /> : " "}</p>
+                <p className="num display text-[36px] font-extrabold leading-tight text-ink">{anyAvail ? <StatValue k={k} v={value(d, career, careerGames)} /> : <T k="common.notRecorded" />}</p>
+                {trend.length >= 3 && (
+                  <div className="mt-1.5">
+                    <Sparkline values={trend} label={`${k}, ${lastSeason.season}`} />
+                  </div>
+                )}
+                <p className={`text-[12px] ${rank && rank.rank <= 3 ? "font-semibold text-accent-text" : "text-ink-3"}`}>{rank ? <T k="player.seasonRank" a={[lastSeason.season, rank.rank, rank.of]} /> : d.kind === "derived" ? <T k="common.derivedMark" /> : " "}</p>
               </Titled>
             );
           })}
         </div>
+        {seasonLog.length >= 3 && <p className="mt-2.5 text-[12.5px] text-ink-3"><T k="player.sparkNote" a={[lastSeason.season]} /></p>}
       </section>
 
       {role && profileEntry && axes.length > 0 && (
@@ -198,9 +231,9 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
           <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,560px)_1fr]">
             <ProfileRadar name={p.name} axes={axes.map((a) => ({ key: a.key, pct: a.pct, value: a.available ? a.value : null }))} />
             <div>
-              <table className="w-full border-collapse text-[14px]">
+              <table className="data-table w-full border-collapse text-[14px]">
                 <thead>
-                  <tr className="border-b border-line text-[12px] text-ink-3">
+                  <tr>
                     <th scope="col" className="py-2 text-left font-medium"><T k="player.colStat" /></th>
                     <th scope="col" className="py-2 text-right font-medium"><T k="player.colValue" /></th>
                     <th scope="col" className="py-2 text-right font-medium"><T k="player.colMedian" /></th>
@@ -209,7 +242,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                 </thead>
                 <tbody>
                   {axes.map((a) => (
-                    <tr key={a.key} className="border-b border-line last:border-0">
+                    <tr key={a.key}>
                       <Titled as="td" stat={a.key} className="py-2 text-ink">
                         <StatLabel k={a.key} />
                         {a.lowerIsBetter && <span className="ml-1 text-[12px] text-ink-3"><T k="player.lowerBetter" /></span>}
@@ -221,7 +254,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                   ))}
                 </tbody>
               </table>
-              <Link href={`/vergleich/?p=${id}:${profileEntry.season}`} className="mt-4 inline-block rounded-md border border-line px-3 py-1.5 text-[14px] text-ink hover:border-line-strong">
+              <Link href={`/vergleich/?p=${id}:${profileEntry.season}`} className="mt-4 inline-flex h-10 items-center border border-line-strong px-4 text-[14px] font-semibold text-ink hover:bg-accent hover:text-accent-ink">
                 <T k="player.compareLink" />
               </Link>
             </div>
@@ -271,12 +304,12 @@ function Development({ role, seasons, availability }: { role: string; seasons: E
       <Head id="dev-h" title={<T k="player.devTitle" />} note={<StatFormula k={key} kind="dev" />}>
         <SourceTag kind="derived" />
       </Head>
-      <div className="flex max-w-[640px] items-end gap-4 rounded-xl border border-line bg-surface px-5 pb-4 pt-6" role="img">
+      <div className="flex max-w-[640px] items-end gap-4 border border-line px-5 pb-4 pt-6" role="img">
         {pts.map((x) => (
           <div key={x.season} className="flex flex-1 flex-col items-center gap-1.5">
             <span className="num display text-[17px] font-semibold text-ink"><StatValue k={key} v={x.v} /></span>
             <div className="flex h-[120px] w-full max-w-[64px] items-end">
-              <div className="w-full rounded-t-[4px]" style={{ height: `${((x.v ?? 0) / max) * 100}%`, background: "var(--bar)" }} />
+              <div className="w-full" style={{ height: `${((x.v ?? 0) / max) * 100}%`, background: "var(--bar)" }} />
             </div>
             <span className="num text-[13px] text-ink-2">{x.season}</span>
             <span className="text-[11.5px] text-ink-3"><T k="player.gamesShort" a={[x.games]} /></span>
@@ -291,7 +324,7 @@ function Head({ id, title, note, children }: { id: string; title: React.ReactNod
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
       <div className="max-w-[78ch]">
-        <h2 id={id} className="display text-[28px] font-bold leading-none tracking-tight text-ink">
+        <h2 id={id} className="display scroll-mt-32 text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">
           {title}
         </h2>
         {note && <p className="mt-2 text-[13.5px] text-ink-2">{note}</p>}
@@ -310,6 +343,20 @@ function Info({ label, value, hint, hintArgs, muted }: { label: React.ReactNode;
   );
 }
 
+/** Rueckennummer im Teamfarben-Block (statt Foto): "No."-Zeile oben, Nummer unten links buendig. */
+function NumberBlock({ n, color }: { n: number; color: string | null }) {
+  const bg = color ?? "var(--accent)";
+  const light = color ? luminance(color) > 0.45 : false;
+  return (
+    <div className="w-[104px] shrink-0 sm:w-[132px]" style={{ background: bg, color: light ? "#0b1a33" : "#fff" }}>
+      <Titled as="div" k="player.numberBlock" a={[n]} className="flex h-full min-h-[120px] flex-col justify-between px-3.5 pb-3.5 pt-3">
+        <span className="label-caps opacity-75">No.</span>
+        <span className="num text-[58px] font-extrabold leading-[0.75] tracking-[-0.045em] sm:text-[76px]">{n}</span>
+      </Titled>
+    </div>
+  );
+}
+
 /** Neutraler Platzhalter statt Spielerfoto: Initialen auf Trikot-Silhouette. */
 function Avatar({ name }: { name: string }) {
   const initials = name
@@ -320,9 +367,9 @@ function Avatar({ name }: { name: string }) {
     .join("");
   return (
     <svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true" className="shrink-0">
-      <rect width="88" height="88" rx="16" fill="var(--surface-2)" stroke="var(--line)" />
+      <rect width="88" height="88" fill="var(--surface-2)" stroke="var(--line)" />
       <path d="M26 30l10-8h16l10 8 8 10-9 6-5-5v31H32V41l-5 5-9-6z" fill="var(--surface)" stroke="var(--line-strong)" strokeWidth="1.2" strokeLinejoin="round" />
-      <text x="44" y="64" textAnchor="middle" fontSize="17" fontWeight="700" fill="var(--ink-2)" fontFamily="Barlow Condensed, sans-serif">
+      <text x="44" y="64" textAnchor="middle" fontSize="17" fontWeight="700" fill="var(--ink-2)" fontFamily="Inter, sans-serif">
         {initials}
       </text>
     </svg>

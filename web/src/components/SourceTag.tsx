@@ -13,7 +13,7 @@ export default function SourceTag({ kind, detail }: { kind: Kind; detail?: Messa
   return (
     <span
       title={detail ? `${hint}. ${t(detail as MessagePath)}` : hint}
-      className="inline-flex cursor-help items-center rounded-full border border-line px-2 py-[1px] text-[11px] font-medium text-ink-3"
+      className="inline-flex cursor-help items-center border border-line px-2 py-[2px] text-[11px] font-medium text-ink-3"
     >
       {label}
     </span>

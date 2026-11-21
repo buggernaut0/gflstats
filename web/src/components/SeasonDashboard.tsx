@@ -17,6 +17,7 @@ import { PlayoffRound, SourceLine } from "./I18nBits";
 import type { Game, Scope } from "@/lib/types";
 import DashboardBody, { type DashboardData } from "./DashboardBody";
 import GamePoster from "./GamePoster";
+import TeamLogo from "./TeamLogo";
 import { BreakoutSection, RoleIndexSection } from "./ModelSections";
 import { VideoMark } from "./VideoPlayer";
 import { breakouts, roleIndexRows } from "@/lib/insights";
@@ -55,29 +56,29 @@ export default function SeasonDashboard({ season }: { season: number }) {
   };
 
   return (
-    <main className="mx-auto max-w-[1240px] px-4 pb-24 sm:px-6">
-      <section className="relative -mx-4 overflow-hidden border-b border-line px-4 pb-10 pt-8 sm:-mx-6 sm:px-6 sm:pt-12" aria-labelledby="season-h">
-        <div className="yardlines pointer-events-none absolute inset-0 opacity-[0.35]" aria-hidden="true" />
-        <div className="relative grid gap-10 lg:grid-cols-[1fr_minmax(0,460px)] lg:items-end">
+    <main className="mx-auto max-w-[1280px] px-4 pb-24 sm:px-8">
+      <section className="-mx-4 border-b border-line px-4 pb-11 pt-9 sm:-mx-8 sm:px-8 sm:pt-11" aria-labelledby="season-h">
+        <div className="grid gap-10 lg:grid-cols-[1fr_minmax(0,480px)] lg:items-end">
           <div>
-            <nav className="mb-5 flex flex-wrap gap-1">
+            <nav className="mb-6 flex flex-wrap gap-1">
               {meta.seasons.map((y) => (
                 <Link
                   key={y}
                   href={y === meta.currentSeason ? "/" : `/saison/${y}/`}
                   aria-current={y === season ? "page" : undefined}
-                  className={`num rounded-md px-2.5 py-1 text-[14px] font-medium ${
-                    y === season ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                  className={`num px-3 py-1.5 text-[14px] font-medium ${
+                    y === season ? "bg-accent font-semibold text-accent-ink" : "text-ink-2 hover:bg-surface hover:text-ink"
                   }`}
                 >
                   {y}
                 </Link>
               ))}
             </nav>
-            <h1 id="season-h" className="display text-[56px] font-bold leading-[0.9] tracking-tight text-ink sm:text-[84px]">
-              GFL {season}
+            <p className="mb-1.5 text-[14px] font-semibold text-accent-text">German Football League</p>
+            <h1 id="season-h" className="display text-[56px] font-extrabold leading-[0.95] tracking-[-0.035em] text-ink sm:text-[80px]">
+              GFL <span className="text-accent-text">{season}</span>
             </h1>
-            <dl className="mt-6 grid max-w-[560px] grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
+            <dl className="mt-7 grid max-w-[580px] grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
               <Fact label={<T k="home.factGames" />} value={<Num v={facts.games} />} hint="home.factGamesHint" hintArgs={[facts.regular, facts.playoff]} />
               <Fact label={<T k="home.factTeams" />} value={<Num v={facts.teams} />} />
               <Fact label={<T k="home.factPlayers" />} value={<Num v={facts.players} />} hint="home.factPlayersHint" />
@@ -118,11 +119,11 @@ function SeasonVideos({ games, teams, season }: { games: Game[]; teams: Record<s
     <section className="mt-14" aria-labelledby="sv-h">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="sv-h" className="display text-[28px] font-bold leading-none tracking-tight text-ink"><T k="home.highlightsTitle" a={[season]} /></h2>
+          <h2 id="sv-h" className="display text-[34px] font-bold leading-none tracking-[-0.03em] text-ink"><T k="home.highlightsTitle" a={[season]} /></h2>
           <p className="mt-2 text-[13.5px] text-ink-2"><T k="home.highlightsNote" /></p>
         </div>
-        <Link href={`/spiele/?saison=${season}&highlights=1`} className="rounded-md border border-line px-3 py-1.5 text-[13.5px] font-medium text-ink-2 hover:border-line-strong hover:text-ink">
-          <T k="home.allHighlights" />
+        <Link href={`/spiele/?saison=${season}&highlights=1`} className="text-[14px] font-semibold text-accent-text hover:underline hover:underline-offset-4">
+          <T k="home.allHighlights" /> <span aria-hidden="true">→</span>
         </Link>
       </div>
       <ul className="grid gap-4 md:grid-cols-3">
@@ -156,7 +157,7 @@ function Fact({ label, value, hint, hintArgs }: { label: React.ReactNode; value:
   return (
     <Titled as="div" k={hint} a={hintArgs}>
       <dt className="text-[12.5px] text-ink-3">{label}</dt>
-      <dd className="num display text-[26px] font-semibold leading-tight text-ink">{value}</dd>
+      <dd className="num display mt-0.5 text-[32px] font-bold leading-tight text-ink">{value}</dd>
     </Titled>
   );
 }
@@ -168,21 +169,21 @@ function Scorebug({ final, teams }: { final: NonNullable<ReturnType<typeof seaso
     { ...final.loser, won: false },
   ];
   return (
-    <figure className="rounded-xl border border-line-strong bg-surface shadow-[0_1px_0_var(--line)]">
-      <figcaption className="flex items-center justify-between border-b border-line px-4 py-2.5 text-[13px]">
-        <Link href={`/spiele/${final.id}/`} className="font-semibold text-ink hover:underline hover:underline-offset-4"><PlayoffRound name={final.label} /></Link>
-        <span className="text-ink-3"><DateText iso={final.date} /></span>
+    <figure className="overflow-hidden border-2 border-accent bg-bg">
+      <figcaption className="flex items-center justify-between bg-accent px-[18px] py-3 text-[12.5px] uppercase tracking-[0.06em] text-accent-ink">
+        <Link href={`/spiele/${final.id}/`} className="font-semibold hover:underline hover:underline-offset-4"><PlayoffRound name={final.label} /></Link>
+        <span className="opacity-85"><DateText iso={final.date} /></span>
       </figcaption>
       {rows.map((r) => (
-        <div key={r.team} className="relative flex items-center justify-between gap-4 border-b border-line px-4 py-3 last:border-0">
-          {r.won && <span className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-accent" aria-hidden="true" />}
-          <Link href={`/teams/${r.team}/`} className={`display truncate text-[24px] leading-tight hover:underline hover:underline-offset-4 ${r.won ? "font-semibold text-ink" : "font-medium text-ink-2"}`}>
+        <div key={r.team} className="flex items-center gap-3.5 border-b border-line px-[18px] py-4 last:border-0">
+          <TeamLogo team={teams[r.team]} size={44} />
+          <Link href={`/teams/${r.team}/`} className={`display min-w-0 flex-1 text-[21px] leading-[1.1] hover:underline hover:underline-offset-4 sm:text-[26px] ${r.won ? "font-bold text-ink" : "font-semibold text-ink-2"}`}>
             {teams[r.team]?.name ?? r.team}
           </Link>
-          <span className={`num display text-[40px] font-bold leading-none ${r.won ? "text-ink" : "text-ink-3"}`}>{r.score}</span>
+          <span className={`num display text-[38px] leading-none sm:text-[46px] ${r.won ? "font-extrabold text-accent-text" : "font-bold text-ink-3"}`}>{r.score}</span>
         </div>
       ))}
-      <p className="px-4 py-2 text-[12.5px] text-ink-3"><T k="home.champion" a={[final.date.slice(0, 4), teams[final.winner.team]?.name ?? final.winner.team]} /></p>
+      <p className="bg-navy px-[18px] py-2.5 text-[13px] font-semibold text-white"><T k="home.champion" a={[final.date.slice(0, 4), teams[final.winner.team]?.name ?? final.winner.team]} /></p>
     </figure>
   );
 }

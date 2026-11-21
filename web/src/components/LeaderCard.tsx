@@ -21,9 +21,9 @@ export default function LeaderCard({
   const f = useI18n();
   const h = f.m.home;
   return (
-    <section className="flex flex-col rounded-xl border border-line bg-surface" aria-labelledby={`lc-${category.key}`}>
-      <header className="flex items-baseline justify-between gap-2 border-b border-line px-4 pb-2.5 pt-3">
-        <h3 id={`lc-${category.key}`} className="display text-[18px] font-semibold leading-tight text-ink">
+    <section className="flex flex-col border border-line bg-bg" aria-labelledby={`lc-${category.key}`}>
+      <header className="flex items-baseline justify-between gap-2 border-b-2 border-line-strong px-4 pb-2.5 pt-3.5">
+        <h3 id={`lc-${category.key}`} className="label-caps text-ink">
           {h.categories[category.key] ?? category.title}
         </h3>
         <Link
@@ -51,13 +51,13 @@ export default function LeaderCard({
                 <span className="xl:hidden">{r.name}</span>
                 <span className="hidden xl:inline">{shortName(r.name)}</span>
               </Link>
-              <span className="num display text-right text-[17px] font-semibold text-ink">{f.fmt(r.value)}</span>
+              <span className="num display text-right text-[18px] font-bold text-ink">{f.fmt(r.value)}</span>
               <span className="col-start-2 col-end-4 mt-1 flex items-center gap-2">
                 {r.teams.map((t) => (
                   <TeamTag key={t} team={teams[t]} />
                 ))}
-                <span className="block h-[3px] flex-1 overflow-hidden rounded-full bg-[var(--bar-track)]" aria-hidden="true">
-                  <span className="block h-full rounded-full" style={{ width: `${max ? (r.value / max) * 100 : 0}%`, background: i === 0 ? "var(--accent)" : "var(--bar)" }} />
+                <span className="block h-[4px] flex-1 overflow-hidden bg-[var(--bar-track)]" aria-hidden="true">
+                  <span className="block h-full" style={{ width: `${max ? (r.value / max) * 100 : 0}%`, background: i === 0 ? "var(--accent)" : "var(--ink-3)" }} />
                 </span>
               </span>
             </li>

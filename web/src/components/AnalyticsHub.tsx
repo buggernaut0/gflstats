@@ -58,8 +58,8 @@ export default function AnalyticsHub({ season, firstSeason, leaders, records, br
   const f = useI18n();
   const a = f.m.analytics;
   return (
-    <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-10 sm:px-6">
-      <h1 className="display text-[52px] font-bold leading-none tracking-tight text-ink">{a.title}</h1>
+    <main className="mx-auto max-w-[1280px] px-4 pb-24 pt-10 sm:px-8">
+      <h1 className="display text-[40px] font-extrabold leading-[0.98] tracking-[-0.035em] text-ink sm:text-[64px]">{a.title}</h1>
       <p className="mt-3 max-w-[70ch] text-[14px] text-ink-2">{a.intro}</p>
 
       <section className="mt-12" aria-labelledby="h-rank">
@@ -161,7 +161,7 @@ function HubHead({ id, title, text, href, cta }: { id: string; title: string; te
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
       <div className="max-w-[70ch]">
-        <h2 id={id} className="display text-[28px] font-bold leading-none tracking-tight text-ink">{title}</h2>
+        <h2 id={id} className="display text-[34px] font-bold leading-none tracking-[-0.03em] text-ink">{title}</h2>
         <p className="mt-2 text-[13.5px] text-ink-2">{text}</p>
       </div>
       {href && cta && (
