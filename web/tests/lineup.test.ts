@@ -63,7 +63,7 @@ test("Offensive Line: jeder belegte Einsatz zaehlt, Rangfolge nach Einsaetzen, o
     ...Array.from({ length: 10 }, (_, i) => row(i, "qb", { pass: 20 })),
     ...Array.from({ length: 6 }, (_, i) => row(i, "ol-a", { tackletotal: 1 })),
     row(0, "ol-b", { penalty: 1 }),
-    row(1, "ol-c", { fumblerecovered: 1 }), row(2, "ol-c", {}),
+    row(1, "ol-c", { fumbledandrecovered: 1 }), row(2, "ol-c", {}),
     ...Array.from({ length: 3 }, (_, i) => row(i, "dl", { tackletotal: 2 })), // kein OL laut Kader
   ];
   const l = startingLineup(rows, "a", roster([["qb", 1, "QB"], ["ol-a", 70, "OL"], ["ol-b", 71, "OL"], ["ol-c", 74, "OL"], [null, 72, "OL"], ["dl", 90, "DL"]]))!;

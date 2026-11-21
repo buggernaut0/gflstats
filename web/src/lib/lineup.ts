@@ -72,7 +72,7 @@ export const SLOTS: SlotDef[] = [
   { position: "RB", unit: "offense", count: 2, basis: "Ballkontakte (Carries + Receptions)", score: (s) => v(s, "run") + v(s, "catched"), min: (s) => v(s, "run") + v(s, "catched") >= 25, minLabel: "mind. 25 Ballkontakte", show: ["runyards", "touchdownrun"] },
   { position: "WR", unit: "offense", count: 3, basis: "Receiving Yards", score: (s) => v(s, "receivingyards"), min: (s) => v(s, "catched") >= 10, minLabel: "mind. 10 Receptions", show: ["receivingyards", "catched"] },
   { position: "TE", unit: "offense", count: 1, basis: "Receiving Yards", score: (s) => v(s, "receivingyards"), min: (s) => v(s, "catched") >= 5, minLabel: "mind. 5 Receptions", show: ["receivingyards", "catched"] },
-  { position: "OL", unit: "offense", count: 5, basis: "Einsätze im Statistikbogen (keine Leistungswerte vorhanden)", score: () => 0, min: () => true, minLabel: "mind. 1 belegter Einsatz", show: ["tackletotal", "fumblerecovered"] },
+  { position: "OL", unit: "offense", count: 5, basis: "Einsätze im Statistikbogen (keine Leistungswerte vorhanden)", score: () => 0, min: () => true, minLabel: "mind. 1 belegter Einsatz", show: ["tackletotal", "fumbledandrecovered"] },
   { position: "DL", unit: "defense", count: 4, basis: "Tackles + 2 × Sacks + Tackles for Loss", score: (s) => v(s, "tackletotal") + 2 * v(s, "sacktotal") + v(s, "tackleforloss"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "sacktotal"] },
   { position: "LB", unit: "defense", count: 3, basis: "Tackles + Tackles for Loss + Sacks", score: (s) => v(s, "tackletotal") + v(s, "tackleforloss") + v(s, "sacktotal"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "tackleforloss"] },
   { position: "DB", unit: "defense", count: 4, basis: "Tackles + 3 × Interceptions + 1,5 × abgewehrte Pässe", score: (s) => v(s, "tackletotal") + 3 * v(s, "intercepted") + 1.5 * v(s, "brokenuppass"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "intercepted"] },
@@ -205,7 +205,7 @@ export const PROVISIONAL_SLOTS: { position: LineupPosition; unit: "offense" | "d
   { position: "QB", unit: "offense", count: 1, basis: SLOTS[0].basis, minLabel: SLOTS[0].minLabel, show: SLOTS[0].show },
   { position: "RB", unit: "offense", count: 2, basis: SLOTS[1].basis, minLabel: SLOTS[1].minLabel, show: SLOTS[1].show },
   { position: "REC", unit: "offense", count: 4, basis: "Receiving Yards (WR und TE gemeinsam)", minLabel: "mind. 10 Receptions", show: ["receivingyards", "catched"] },
-  { position: "OL", unit: "offense", count: 5, basis: "ohne Kader nicht belegbar", minLabel: "bleibt frei", show: ["tackletotal", "fumblerecovered"] },
+  { position: "OL", unit: "offense", count: 5, basis: "ohne Kader nicht belegbar", minLabel: "bleibt frei", show: ["tackletotal", "fumbledandrecovered"] },
   { position: "DEF", unit: "defense", count: 11, basis: "Tackles + 2 × Sacks + Tackles for Loss + 3 × Interceptions + 1,5 × abgewehrte Pässe", minLabel: "mind. 8 Tackles", show: ["tackletotal", "sacktotal"] },
 ];
 
