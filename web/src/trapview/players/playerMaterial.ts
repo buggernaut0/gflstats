@@ -12,6 +12,33 @@ const ELITE_GLOW = /* glsl */ `
   totalEmissiveRadiance += vElite * vec3(1.0, 0.72, 0.3) * 0.55 * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.0);`;
 
 /**
+ * Matchup-Highlighting (siehe matchup/Highlight.tsx): bis zu zwei hervorgehobene Spieler als (x, z, Stärke, –).
+ * Ein gemeinsames Uniform für alle Spielermaterialien – der Highlight-Code schreibt nur diese Werte, ohne
+ * Material, Farbe oder Licht der Spieler anzufassen. Stärke 0 = aus (Standard, z. B. auf der Teamseite).
+ */
+export const playerHighlight = {
+  uHi: { value: [new THREE.Vector4(0, 0, 0, 0), new THREE.Vector4(0, 0, 0, 0)] },
+};
+
+/** Radius um die Spielerposition (Yards), in dem Körperteile zum hervorgehobenen Spieler zählen */
+const HI_VERTEX = /* glsl */ `
+  #ifdef USE_INSTANCING
+    vec2 tvRoot = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
+    vHi = max(uHi[0].z * (1.0 - smoothstep(0.55, 0.85, distance(tvRoot, uHi[0].xy))),
+              uHi[1].z * (1.0 - smoothstep(0.55, 0.85, distance(tvRoot, uHi[1].xy))));
+  #else
+    vHi = 0.0;
+  #endif`;
+
+/**
+ * Hervorhebung als feine Kontur: kühles Fresnel-Licht nur an der Silhouette (streifender Blickwinkel).
+ * Flächen, die zur Kamera zeigen – Rückennummer, Name, Trikotbrust –, bekommen praktisch nichts ab,
+ * Teamfarben und Beschriftung bleiben unverändert.
+ */
+const HI_RIM = /* glsl */ `
+  totalEmissiveRadiance += vHi * vec3(0.56, 0.69, 1.0) * 0.42 * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 4.0);`;
+
+/**
  * Material des Spielermodells: ein Standard-Material, das Farbe, Rauheit und Metall je Vertex liest
  * (siehe parts.ts) und die Teamfarben je Instanz (iA, iB, iC). So reichen drei Materialien
  * (Körper, Rumpf mit Nummern, Helm) für alle Spieler beider Teams. iElite (0/1) gibt Elite-Spielern einen
@@ -85,6 +112,7 @@ export function createPlayerMaterial(o: Options = {}): THREE.MeshStandardMateria
     diffuseColor.rgb = mix(diffuseColor.rgb, vNumCol, tvNum.r);`;
 
   m.onBeforeCompile = (shader) => {
+    shader.uniforms.uHi = playerHighlight.uHi;
     if (num) {
       shader.uniforms.uNumbers = { value: num.texture };
       shader.uniforms.uTileScale = { value: new THREE.Vector2(...num.tileScale) };
@@ -98,19 +126,23 @@ export function createPlayerMaterial(o: Options = {}): THREE.MeshStandardMateria
         attribute vec3 iB;
         attribute vec3 iC;
         ${num ? '' : 'attribute float iElite;'}
+        uniform vec4 uHi[2];
         varying vec2 vSurf;
         varying float vElite;
+        varying float vHi;
         ${num ? numVertexPars : ''}
         #include <common>`)
       .replace('#include <color_vertex>', /* glsl */ `
         #include <color_vertex>
         if (aMat.x > 0.5) vColor.rgb = aMat.x < 1.5 ? iA : (aMat.x < 2.5 ? iB : iC);
         vSurf = aMat.yz;
+        ${HI_VERTEX}
         ${num ? numVertex : 'vElite = iElite;'}`);
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', /* glsl */ `
         varying vec2 vSurf;
         varying float vElite;
+        varying float vHi;
         ${num ? numFragmentPars : ''}
         #include <common>`)
       .replace('#include <color_fragment>', /* glsl */ `
@@ -120,11 +152,12 @@ export function createPlayerMaterial(o: Options = {}): THREE.MeshStandardMateria
         roughnessFactor *= vSurf.x;
         ${num ? 'roughnessFactor *= mix(1.0, 0.72, tvInk); // Twill-Buchstaben glänzen etwas mehr als der Trikotstoff' : ''}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-        ${o.gloss ? ELITE_GLOW : ''}`)
+        ${o.gloss ? ELITE_GLOW : ''}
+        ${HI_RIM}`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         ${num ? 'normal = tvLetterNormal(-vViewPosition, normal, faceDirection, tvRelief);' : ''}`)
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\n metalnessFactor *= vSurf.y;');
   };
-  m.customProgramCacheKey = () => `tv-player:${num ? 'n' : ''}${o.gloss ? 'g' : ''}`;
+  m.customProgramCacheKey = () => `tv-player-hi:${num ? 'n' : ''}${o.gloss ? 'g' : ''}`;
   return m;
 }
