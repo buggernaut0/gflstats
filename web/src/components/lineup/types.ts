@@ -9,9 +9,12 @@ export interface FieldPlayer {
   position: string;
   positionLabel: string;
   unit: Unit;
-  /** Spieler-ID der Website; null = Platz unbesetzt */
+  /** Spieler-ID der Website (Profil-Link); null = keine ID (Platz unbesetzt oder Spieler nur im Kader) */
   id: string | null;
+  /** null = Platz unbesetzt */
   name: string | null;
+  /** aus dem Kader aufgefuellt (siehe fillFromRoster in lib/lineup.ts); null = regulaer ermittelt */
+  fill: "stats" | "roster" | null;
   /** Rueckennummer laut offiziellem Kader */
   number: number | null;
   /** Spielerfoto aus der zentralen Zuordnung (players.json → photo), null = Platzhalter */

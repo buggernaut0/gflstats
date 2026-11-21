@@ -29,7 +29,7 @@ export interface TrapViewProps {
 }
 
 /** Lieder der Trap View (public/trapview/audio/). Bei jedem „Enter Trap View“ wird eines zufällig gewählt. */
-export const TRACKS = ['track.mp3', 'track-2.mp3', 'track-3.mp3', 'track-4.mp3'].map((f) => `${ASSET_BASE}/audio/${f}`);
+export const TRACKS = ['track.mp3', 'track-2.mp3', 'track-3.mp3', 'track-4.mp3', 'track-5.mp3', 'track-6.mp3', 'track-7.mp3'].map((f) => `${ASSET_BASE}/audio/${f}`);
 
 /** Zufälliges Lied, möglichst nicht dasselbe wie zuletzt. */
 function pickTrack(list: string[], last: string | null): string {

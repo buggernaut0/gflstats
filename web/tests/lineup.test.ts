@@ -22,15 +22,17 @@ test("Einsatzschwelle: Ein starkes Einzelspiel macht niemanden zum Starter", () 
   assert.match(l.next.QB!.reason, /nur 1 von 10 Spielen/);
 });
 
-test("Mindestvolumen und leere Plaetze: lieber unbesetzt als mit Randspielern gefuellt", () => {
+test("Mindestvolumen: Randspieler nur ueber das Auffuellen aus dem Kader, nie vor Spielern mit Volumen", () => {
   // wr-b: ueber der Einsatzschwelle (5 von 10), aber weder Volumen noch regelmaessig genug fuer die Kulanzregel
   const rows = Array.from({ length: 10 }, (_, i) => [row(i, "wr-a", { catched: 5, receivingyards: 80 }), ...(i < 5 ? [row(i, "wr-b", { catched: 1, receivingyards: 3 })] : [])]).flat();
   const l = startingLineup(rows, "a", roster([["wr-a", 80, "WR"], ["wr-b", 81, "WR"]]))!;
   const wr = l.offense.filter((x) => x.position === "WR");
-  assert.deepEqual(wr.map((x) => x.player), ["wr-a", null, null]);
+  // wr-b fuellt WR2 aus dem Kader (Kriterien nicht erfuellt); WR3 bleibt leer, weil der Kader keinen dritten WR fuehrt
+  assert.deepEqual(wr.map((x) => x.player), ["wr-a", "wr-b", null]);
+  assert.deepEqual(wr.map((x) => x.fill), [undefined, "stats", undefined]);
   assert.deepEqual(wr.map((x) => x.slot), ["WR1", "WR2", "WR3"]);
   assert.equal(wr[0].number, 80);
-  assert.match(l.next.WR!.reason, /Mindestvolumen nicht erreicht/);
+  assert.equal(wr[1].number, 81);
 });
 
 test("Kulanzregel: Stammkraft unter dem Mindestvolumen fuellt einen freien Platz, aber nie vor Spielern mit Volumen", () => {
@@ -42,6 +44,7 @@ test("Kulanzregel: Stammkraft unter dem Mindestvolumen fuellt einen freien Platz
   ]).flat();
   const l = startingLineup(rows, "a", roster([["rb-stamm", 20, "RB"], ["rb-volumen", 21, "RB"], ["rb-rand", 22, "RB"]]))!;
   assert.deepEqual(l.offense.filter((x) => x.position === "RB").map((x) => x.player), ["rb-volumen", "rb-stamm"]);
+  assert.ok(l.offense.filter((x) => x.position === "RB").every((x) => !x.fill));
   assert.equal(l.next.RB!.player, "rb-rand");
 });
 
@@ -58,7 +61,7 @@ test("Nur Spieler der Positionsgruppe laut Kader; Spiele anderer Teams zaehlen n
   assert.equal(l.defense.find((x) => x.slot === "DB1")!.player, "db");
 });
 
-test("Offensive Line: jeder belegte Einsatz zaehlt, Rangfolge nach Einsaetzen, ohne Durchnummerierung", () => {
+test("Offensive Line: jeder belegte Einsatz zaehlt, Rangfolge nach Einsaetzen, Rest aus dem Kader", () => {
   const rows = [
     ...Array.from({ length: 10 }, (_, i) => row(i, "qb", { pass: 20 })),
     ...Array.from({ length: 6 }, (_, i) => row(i, "ol-a", { tackletotal: 1 })),
@@ -69,9 +72,12 @@ test("Offensive Line: jeder belegte Einsatz zaehlt, Rangfolge nach Einsaetzen, o
   const l = startingLineup(rows, "a", roster([["qb", 1, "QB"], ["ol-a", 70, "OL"], ["ol-b", 71, "OL"], ["ol-c", 74, "OL"], [null, 72, "OL"], ["dl", 90, "DL"]]))!;
   const ol = l.offense.filter((x) => x.position === "OL");
   assert.equal(ol.length, 5);
-  // ol-a 6 Spiele, ol-c 2, ol-b 1; der Lineman ohne Einsatz im Bogen (null) wird nicht aufgestellt
+  // ol-a 6 Spiele, ol-c 2, ol-b 1; der Lineman ohne Einsatz im Bogen (#72) kommt aus dem Kader dazu;
+  // der fuenfte Platz bleibt leer, weil der Kader nur vier O-Liner fuehrt (kein DL rueckt nach)
   assert.deepEqual(ol.map((x) => x.player), ["ol-a", "ol-c", "ol-b", null, null]);
-  assert.deepEqual(ol.map((x) => x.number), [70, 74, 71, null, null]);
+  assert.deepEqual(ol.map((x) => x.number), [70, 74, 71, 72, null]);
+  assert.deepEqual(ol.map((x) => x.fill), [undefined, undefined, undefined, "roster", undefined]);
+  assert.equal(ol[3].rosterName, "ohne Statistik");
   assert.ok(ol.every((x) => x.slot === "OL"));
 });
 
@@ -136,15 +142,17 @@ test("Echte Daten Ravensburg 2026: jeder Starter steht im Kader, erfuellt die Sc
   assert.equal(l.offense.length, 11);
   assert.equal(l.defense.length, 11);
   assert.ok(["RB2", "WR3"].includes(l.flex.winner));
-  const filled = all.filter((x) => x.player);
-  assert.equal(new Set(filled.map((x) => x.player)).size, filled.length, "kein Spieler doppelt");
-  for (const x of filled) {
-    const e = r.players.find((p) => p.player === x.player)!;
+  assert.ok(all.every((x) => x.rosterName), "jeder Platz besetzt");
+  assert.equal(new Set(all.map((x) => x.rosterName)).size, all.length, "kein Spieler doppelt");
+  for (const x of all) {
+    const e = r.players.find((p) => p.name === x.rosterName && p.number === x.number)!;
+    assert.ok(e, `${x.rosterName} steht im Kader`);
     assert.equal(e.position, x.position);
-    assert.equal(e.number, x.number);
-    // Offensive Line: jeder belegte Einsatz zaehlt (OL_MIN_GAMES), sonst die Einsatzschwelle
-    assert.ok(x.games >= (x.position === "OL" ? OL_MIN_GAMES : l.minGames), `${x.player}: ${x.games} Spiele`);
+    assert.equal(e.player, x.player);
+    // regulaer ermittelt: Offensive Line jeder belegte Einsatz (OL_MIN_GAMES), sonst die Einsatzschwelle
+    if (!x.fill) assert.ok(x.games >= (x.position === "OL" ? OL_MIN_GAMES : l.minGames), `${x.player}: ${x.games} Spiele`);
   }
+  assert.equal(l.offense.filter((x) => x.position === "OL").length, 5);
   assert.equal(l.offense.find((x) => x.slot === "QB1")!.player, "broghean-mcgovern");
 });
 
@@ -154,15 +162,30 @@ test("Echte Daten 2026: alle Kader-Teams – Nummern/Positionen aus dem Kader, O
   assert.ok(Object.keys(rosters).length >= 14);
   for (const [team, r] of Object.entries(rosters)) {
     const l = startingLineup(rows, team, r)!;
-    const filled = [...l.offense, ...l.defense].filter((x) => x.player);
-    assert.equal(new Set(filled.map((x) => x.player)).size, filled.length, `${team}: kein Spieler doppelt`);
-    for (const x of filled) {
-      const e = r.players.find((p) => p.player === x.player)!;
-      assert.ok(e, `${team}: ${x.player} steht im Kader`);
-      assert.equal(e.position, x.position);
-      assert.equal(e.number, x.number);
+    const all = [...l.offense, ...l.defense];
+    assert.equal(l.offense.length, 11);
+    assert.equal(l.defense.length, 11);
+    // jeder Platz besetzt - auch O-Line und D-Line -, keiner doppelt, Position und Nummer laut Kader
+    assert.deepEqual(all.filter((x) => !x.rosterName).map((x) => x.slot), [], `${team}: freie Plaetze`);
+    assert.equal(new Set(all.map((x) => `${x.rosterName}#${x.number}`)).size, all.length, `${team}: kein Spieler doppelt`);
+    for (const x of all) {
+      const e = r.players.find((p) => p.name === x.rosterName && p.number === x.number)!;
+      assert.ok(e, `${team}: ${x.rosterName} steht im Kader`);
+      assert.equal(e.position, x.position, `${team}: ${x.rosterName}`);
+      assert.equal(e.player, x.player);
+      // nur wenn der Kader gar keinen Tight End fuehrt, steht ein Wide Receiver auf dem TE-Platz
+      if (x.spot[0] !== x.position) assert.ok(x.spot[0] === "TE" && x.position === "WR" && !r.players.some((p) => p.position === "TE"), `${team}: ${x.slot}`);
     }
-    // jedes Team hat O-Liner mit belegtem Einsatz im Kader -> mindestens vier OL-Plaetze mit Name und Nummer
-    assert.ok(l.offense.filter((x) => x.position === "OL" && x.player && x.number !== null).length >= 4, `${team}: OL`);
   }
+});
+
+test("Kader ohne Tight End: der TE-Platz geht an einen weiteren Wide Receiver, nie an eine andere Gruppe", () => {
+  const rows = Array.from({ length: 4 }, (_, i) => [row(i, "wr-a", { catched: 5, receivingyards: 80 }), row(i, "ol", { tackletotal: 1 })]).flat();
+  const l = startingLineup(rows, "a", roster([["wr-a", 80, "WR"], [null, 81, "WR"], [null, 82, "WR"], [null, 83, "WR"], ["ol", 70, "OL"]]))!;
+  const te = l.offense.find((x) => x.spot[0] === "TE")!;
+  assert.equal(te.position, "WR");
+  assert.equal(te.slot, "WR4");
+  assert.equal(te.number, 83);
+  assert.equal(te.fill, "roster");
+  assert.equal(new Set(l.offense.filter((x) => x.rosterName).map((x) => x.number)).size, l.offense.filter((x) => x.rosterName).length);
 });

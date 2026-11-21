@@ -131,7 +131,7 @@ interface TubeOpts {
    * Ausschnitt auf ein Rechteck des Nummern-Atlas legen (Schulternummern): Atlas-u läuft entlang der Höhe des
    * Ausschnitts, Atlas-v entlang des Umfangs; `flipU`/`flipV` drehen die jeweilige Richtung um (je Körperseite verschieden).
    */
-  rect?: { at: [number, number, number, number]; flipU: boolean; flipV: boolean };
+  rect?: { at: [number, number, number, number]; flipU: boolean; flipV: boolean; ref?: [number, number] };
 }
 
 /**
@@ -187,7 +187,9 @@ function tube(keys: Key[], o: TubeOpts = {}): THREE.BufferGeometry {
       if (o.rect) {
         const [ru0, rv0, ru1, rv1] = o.rect.at;
         const a = o.rect.flipU ? 1 - v : v;
-        const b = o.rect.flipV ? 1 - frac : frac;
+        // ref: Umfangsbereich des ganzen Rechtecks, wenn es auf mehrere Abschnitte verteilt ist
+        const f = o.rect.ref ? (u - o.rect.ref[0]) / (o.rect.ref[1] - o.rect.ref[0]) : frac;
+        const b = o.rect.flipV ? 1 - f : f;
         uv.push(ru0 + (ru1 - ru0) * a, rv0 + (rv1 - rv0) * b);
       }
       else uv.push(u, 0);
@@ -406,6 +408,11 @@ function foot() {
 export const NUM_PER_U = 1.4;
 /** Rechteck der Kachel für die Schulternummer – liegt in dem Streifen, den Brust und Rücken frei lassen. */
 export const SHOULDER_RECT: [number, number, number, number] = [0.44, 0.04, 0.56, 0.46];
+/** Höhenbereich der Schulternummer am Rumpf und ihre halbe Breite als Anteil des Umfangs (Vielfaches von 0,025). */
+const SHOULDER_Y: [number, number] = [0.485, 0.514];
+const SH_ARC = 0.075;
+/** Unterkante des Kragens. */
+const COLLAR_Y = 0.538;
 
 /**
  * Rumpf: Trikot über Shoulder Pads. Die Pads sind kein aufgesetztes Teil, sondern die Form des Trikots selbst:
@@ -422,17 +429,41 @@ function torso() {
     [0.54, 0.082, 0.07, 0.074, 2.3], [0.556, 0.07, 0.064, 0.066, 2.2],
   ];
   const jersey = { slot: 1 as Slot, ...CLOTH, numbers: true };
+  const collar = { slot: 2 as Slot, ...CLOTH };
+  // Alles ist EINE geschlossene Fläche aus Abschnitten desselben Profils (skin): gleiches Raster (u-Schritt 0,025),
+  // gemeinsame Kanten und Normalen. Schulternummern und Kragen liegen also nicht als dünne Schicht auf dem Trikot –
+  // solche Schichten (1–3 mm) flackern aus der Entfernung gegen die Fläche darunter (Z-Fighting), und an der offenen
+  // Halsöffnung schaute man von oben ins Innere des Rumpfs (Rückseiten werden nicht gezeichnet → durchsichtig).
+  const S = 0.025; // Umfang je Segment
+  const segs = (a: [number, number]) => Math.round((a[1] - a[0]) / S);
+  const [NY0, NY1] = SHOULDER_Y;
+  const back = (arc: [number, number]) => ({ arc, segs: segs(arc), num: { center: 0.25, perU: NUM_PER_U } });
+  const front = (arc: [number, number]) => ({ arc, segs: segs(arc), num: { center: 0.75, perU: NUM_PER_U } });
   // Von vorn lesbar: Ziffern laufen zur +X-Seite, die Oberkante zeigt nach hinten
-  const shoulderNumber = (arc: [number, number], flipU: boolean, flipV: boolean) =>
-    layer(keys, { y0: 0.485, y1: 0.514, rows: 5, segs: 6, arc, inflate: 0.0012, rect: { at: SHOULDER_RECT, flipU, flipV } }, jersey);
+  const shoulder = (arc: [number, number], ref: [number, number], flipU: boolean, flipV: boolean) =>
+    ({ arc, segs: segs(arc), rect: { at: SHOULDER_RECT, flipU, flipV, ref } });
+  const R1: [number, number] = [-SH_ARC, SH_ARC];
+  const R2: [number, number] = [0.5 - SH_ARC, 0.5 + SH_ARC];
+  const mid = { y0: NY0, y1: NY1, rows: 5 };
   return merge([
     ...skin(keys, 20, [
-      { arc: [0, 0.5], num: { center: 0.25, perU: NUM_PER_U }, paint: jersey },
-      { arc: [0.5, 1], num: { center: 0.75, perU: NUM_PER_U }, paint: jersey },
+      // Taille bis unter die Schulternummer
+      { y1: NY0, ...back([0, 0.5]), paint: jersey },
+      { y1: NY0, ...front([0.5, 1]), paint: jersey },
+      // Höhe der Schulternummer: Rücken, Brust und die beiden Nummernfelder
+      { ...mid, ...shoulder([0, SH_ARC], R1, true, false), paint: jersey },
+      { ...mid, ...back([SH_ARC, 0.5 - SH_ARC]), paint: jersey },
+      { ...mid, ...shoulder([0.5 - SH_ARC, 0.5], R2, false, true), paint: jersey },
+      { ...mid, ...shoulder([0.5, 0.5 + SH_ARC], R2, false, true), paint: jersey },
+      { ...mid, ...front([0.5 + SH_ARC, 1 - SH_ARC]), paint: jersey },
+      { ...mid, ...shoulder([-SH_ARC, 0], R1, true, false), paint: jersey },
+      // über der Schulternummer bis zum Kragen
+      { y0: NY1, y1: COLLAR_Y, ...back([0, 0.5]), paint: jersey },
+      { y0: NY1, y1: COLLAR_Y, ...front([0.5, 1]), paint: jersey },
+      // Kragen: schließt den Rumpf oben zum Hals hin (flache Kappe, der Hals tritt durch sie hindurch)
+      { y0: COLLAR_Y, arc: [0, 0.5], segs: 20, capTop: 0.012, capRows: 4, paint: collar },
+      { y0: COLLAR_Y, arc: [0.5, 1], segs: 20, capTop: 0.012, capRows: 4, paint: collar },
     ]),
-    shoulderNumber([-0.07, 0.07], true, false),
-    shoulderNumber([0.43, 0.57], false, true),
-    layer(keys, { y0: 0.538, y1: 0.556, rows: 1, segs: 24, inflate: 0.003 }, { slot: 2, ...CLOTH }),
     paint(new THREE.CylinderGeometry(0.055, 0.06, 0.08, 16, 1, true).translate(0, 0.585, -0.004), { slot: 3, ...SKIN }),
   ]);
 }

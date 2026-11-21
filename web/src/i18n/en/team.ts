@@ -74,6 +74,8 @@ export const team: Widen<typeof de> = {
   defByProfile: ", spot by stat profile",
   gamesOf: (n, of) => `${n} of ${of} games`,
   profile: "Profile",
+  fillStats: "Filled from the roster: does not meet the group’s criteria",
+  fillRoster: "Filled from the roster: no entry in the stat sheet",
   emptyHint: "No one meets the criteria for this spot",
   empty: "vacant",
   emptySlot: (slot) => `${slot}: vacant`,
@@ -120,7 +122,7 @@ export const team: Widen<typeof de> = {
   provisionalNote:
     "Without a roster, the site only knows the role derived from the stats (quarterback, running back, receiver, defense). Receivers are therefore not split into wide receivers and tight ends, and all eleven defenders are labeled “DEF”. Their alignment on the field follows the stat profile (many sacks and tackles for loss up front, many interceptions and passes defended in the back) and is not a position.",
   schematic:
-    "The base formation and the alignment on the field are schematic and say nothing about the team’s scheme. There are no performance stats for the offensive line: the offensive linemen on the roster with the most recorded appearances in the stat sheet (at least one) are shown. This is not a starter list; without a recorded appearance a spot stays empty.",
+    "The base formation and the alignment on the field are schematic and say nothing about the team’s scheme. There are no performance stats for the offensive line: the offensive linemen on the roster with the most recorded appearances in the stat sheet (at least one) are shown. This is not a starter list. Spots that no one fills under the criteria are filled from the official roster of the same position group: first with players who appear in the stat sheet (most appearances first), then with players who are only on the roster (by jersey number). If the roster lists no tight end, another wide receiver takes that spot.",
   colorsKnown: "Uniform colors based on the club colors and the team’s uniform photos (source: bottom of the team page), simplified.",
   colorsNeutral: "The uniform is kept neutral because no verified club colors are on file for this team yet.",
   methodLink: "Methodology",

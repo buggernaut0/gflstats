@@ -257,7 +257,16 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
     if (!lineup) continue;
 
     const playerOut = (lp: LineupPlayer) => {
-      if (!lp.player) return { group: lp.position, spot: lp.spot, player: null };
+      if (!lp.player && !lp.rosterName) return { group: lp.position, spot: lp.spot, player: null };
+      // Aus dem Kader aufgefuellt, ohne Spieler-ID (kein Eintrag im Statistikbogen): Name und Nummer laut Kader,
+      // keine Werte, keine Platzierungen. Die ID ist nur ein eindeutiger Schluessel innerhalb der Szene.
+      if (!lp.player) {
+        return {
+          group: lp.position,
+          spot: lp.spot,
+          player: { id: `kader-${t.id}-${lp.number ?? lp.rosterName}`, name: lp.rosterName!, number: lp.number ?? null, games: 0, volume: null, score: 0, stats: {}, ranks: {}, vs: {}, elite: [], photo: null },
+        };
+      }
       const wp = playerById.get(lp.player);
       const e = byPT.get(`${lp.player}|${t.id}`);
       const games = e?.games.size ?? lp.games;

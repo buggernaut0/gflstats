@@ -110,12 +110,15 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
                 </span>
                 <span className="display block truncate text-[22px] font-semibold leading-tight">{shown.name}</span>
                 <span className="num mt-0.5 block text-[12.5px] text-white/80">
-                  {shown.stats.map((s) => `${f.fmtStat(stat(s.key), s.value)} ${f.statAbbr(s.key)}`).join(", ")}, {t.gamesOf(shown.games, teamGames)}
+                  {[...shown.stats.map((s) => `${f.fmtStat(stat(s.key), s.value)} ${f.statAbbr(s.key)}`), t.gamesOf(shown.games, teamGames)].join(", ")}
                 </span>
+                {shown.fill && <span className="mt-0.5 block text-[11.5px] text-white/60">{shown.fill === "roster" ? t.fillRoster : t.fillStats}</span>}
               </span>
-              <Link href={`/spieler/${shown.id}/`} className="grid place-items-center border-l border-white/15 px-3.5 text-[13px] font-medium text-[#f5c63c] hover:bg-white/5">
-                {t.profile}
-              </Link>
+              {shown.id && (
+                <Link href={`/spieler/${shown.id}/`} className="grid place-items-center border-l border-white/15 px-3.5 text-[13px] font-medium text-[#f5c63c] hover:bg-white/5">
+                  {t.profile}
+                </Link>
+              )}
             </div>
           )}
         </div>
@@ -125,7 +128,21 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
       <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={t.asList(unit === "offense" ? t.startingOffense : t.startingDefense)}>
         {list.map(({ p, i }) => (
           <li key={i}>
-            {p.id ? (
+            {p.name && !p.id ? (
+              <span
+                tabIndex={0}
+                onMouseEnter={() => setActive(i)}
+                onMouseLeave={() => setActive(null)}
+                onFocus={() => setActive(i)}
+                onBlur={() => setActive(null)}
+                title={p.fill === "roster" ? t.fillRoster : t.fillStats}
+                className={`flex items-center gap-2 rounded-md border px-2.5 py-1 text-[13px] ${active === i ? "border-accent bg-accent-soft text-ink" : "border-line text-ink-2"}`}
+              >
+                <span className="text-[11.5px] font-semibold text-ink-3">{p.slot}</span>
+                {p.number !== null && <span className="num font-semibold text-ink">{p.number}</span>}
+                <span>{p.name}</span>
+              </span>
+            ) : p.id ? (
               <Link
                 href={`/spieler/${p.id}/`}
                 onMouseEnter={() => setActive(i)}
@@ -169,13 +186,17 @@ function FlatField({ list, unit, active, onActive }: { list: { p: FieldPlayer; i
         const left = 50 + (p.x * sign * 100) / 36;
         const top = (unit === "offense" ? 34 : 66) + (p.z * sign * 100) / 22;
         const cls = `absolute grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border text-[13px] font-semibold sm:h-10 sm:w-10 ${
-          p.id ? `border-white/70 text-[var(--lineup-ink)] ${active === i ? "ring-2 ring-[#f5c63c]" : ""}` : "border-dashed border-white/35 text-white/45"
+          p.name ? `border-white/70 text-[var(--lineup-ink)] ${active === i ? "ring-2 ring-[#f5c63c]" : ""}` : "border-dashed border-white/35 text-white/45"
         }`;
-        const style = { left: `${left}%`, top: `${top}%`, background: p.id ? "var(--lineup-jersey)" : "transparent" };
+        const style = { left: `${left}%`, top: `${top}%`, background: p.name ? "var(--lineup-jersey)" : "transparent" };
         return p.id ? (
           <Link key={i} href={`/spieler/${p.id}/`} className={cls} style={style} title={`${p.slot} ${p.name}`} onMouseEnter={() => onActive(i)} onMouseLeave={() => onActive(null)} onFocus={() => onActive(i)} onBlur={() => onActive(null)} tabIndex={-1}>
             <span className={p.number !== null ? "num" : "text-[10.5px]"}>{p.number ?? p.slot}</span>
           </Link>
+        ) : p.name ? (
+          <span key={i} className={cls} style={style} title={`${p.slot} ${p.name}`} onMouseEnter={() => onActive(i)} onMouseLeave={() => onActive(null)}>
+            <span className={p.number !== null ? "num" : "text-[10.5px]"}>{p.number ?? p.slot}</span>
+          </span>
         ) : (
           <span key={i} className={cls} style={style} title={m.team.emptySlot(p.slot)}>
             <span className="text-[10.5px]">{p.slot}</span>

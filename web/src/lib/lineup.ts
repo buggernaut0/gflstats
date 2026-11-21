@@ -19,8 +19,11 @@
  *     (Linemen stehen dort nur mit Tackles nach Ballverlust, Fumble-Recoveries oder Strafen). Die
  *     Einsatzschwelle gilt hier nicht (sie erreicht praktisch kein Lineman); es zaehlt jeder belegte Einsatz
  *     (OL_MIN_GAMES), Rangfolge nach Zahl der belegten Spiele. Das ist keine Starter-Angabe. Linemen ohne
- *     Einsatz im Bogen bleiben weg; fehlen Kandidaten, bleibt der Platz unbesetzt (player = null).
- *   - Plaetze, fuer die niemand die Kriterien erfuellt, bleiben leer statt mit Randspielern gefuellt.
+ *     Einsatz im Bogen kommen erst ueber das Auffuellen (naechster Punkt) zum Zug.
+ *   - Plaetze, fuer die niemand die Kriterien erfuellt, werden aus dem offiziellen Kader derselben
+ *     Positionsgruppe aufgefuellt (fillFromRoster, Kennzeichen fill): zuerst Spieler mit Eintraegen im Bogen,
+ *     dann Spieler, die nur im Kader stehen. Leer bleibt ein Platz nur, wenn der Kader nicht genug Spieler der
+ *     Gruppe fuehrt. Fuehrt der Kader keinen Tight End, geht der Platz an einen weiteren Wide Receiver.
  *
  * Grundformation: elf Offense-Plaetze (1 QB, 1 RB, 2 WR, 1 TE, 5 OL und ein elfter Platz, der nach Statistik
  * an den zweiten RB oder den dritten WR geht - siehe applyFlex) und elf Defense-Plaetze (4 DL, 3 LB, 4 DB).
@@ -93,6 +96,11 @@ export interface LineupPlayer {
   stats: Stats;
   /** true = Mindestvolumen der Gruppe erreicht; false = nur ueber die Kulanzregel (Stammkraft) */
   volume?: boolean;
+  /**
+   * Aus dem Kader aufgefuellt (Kriterien nicht erfuellt, siehe fillFromRoster): "stats" = mit Eintraegen im
+   * Statistikbogen, "roster" = nur im Kader (player ist dann null, wenn der Spieler keine Spieler-ID hat).
+   */
+  fill?: "stats" | "roster";
 }
 
 export interface Lineup {
@@ -129,6 +137,8 @@ export function startingLineup(rows: PlayerGame[], team: string, roster: TeamRos
   }
 
   const out: Lineup = { basis: "roster", teamGames, minGames, offense: [], defense: [], flex: { winner: "", loser: null, reason: "" }, next: {} };
+  /** schon aufgestellte Kader-Eintraege - niemand steht doppelt in der Aufstellung */
+  const taken = new Set<RosterEntry>();
   for (const def of SLOTS) {
     const candidates = roster.players
       .filter((e) => e.position === def.position && e.player && agg.has(e.player))
@@ -145,22 +155,65 @@ export function startingLineup(rows: PlayerGame[], team: string, roster: TeamRos
           ...candidates.filter((c) => c.games >= regularGames && !def.min(c.stats)),
         ];
     const single = def.count === 1;
+    // Auffuellen aus dem Kader (siehe fillFromRoster): erst Spieler der Gruppe mit Eintraegen im Bogen, dann ohne
+    const chosen = eligible.slice(0, def.count);
+    chosen.forEach((c) => taken.add(c.entry));
+    const fill = fillFromRoster(roster, def.position, def.count - chosen.length, taken, agg);
     for (let i = 0; i < def.count; i++) {
-      const c = eligible[i];
+      const c = chosen[i];
       const slot = def.position === "OL" ? "OL" : `${def.position}${single ? "1" : i + 1}`;
+      const f = c ? null : fill[i - chosen.length];
       out[def.unit].push(
         c
           ? { slot, position: def.position, spot: [def.position, i], player: c.entry.player, rosterName: c.entry.name, number: c.entry.number, games: c.games, score: c.score, stats: c.stats, volume: def.min(c.stats) }
-          : { slot, position: def.position, spot: [def.position, i], player: null, rosterName: null, number: null, games: 0, score: 0, stats: {} },
+          : f
+            ? { slot: f.entry.position === def.position ? slot : `${f.entry.position}${def.position === "TE" ? 4 : i + 1}`, position: f.entry.position, spot: [def.position, i], player: f.entry.player, rosterName: f.entry.name, number: f.entry.number, games: f.games, score: f.score, stats: f.stats, volume: false, fill: f.kind }
+            : { slot, position: def.position, spot: [def.position, i], player: null, rosterName: null, number: null, games: 0, score: 0, stats: {} },
       );
     }
-    const rest = candidates.filter((c) => !eligible.slice(0, def.count).includes(c))[0];
+    const rest = candidates.filter((c) => !taken.has(c.entry))[0];
     out.next[def.position] = rest
       ? { player: rest.entry.player!, games: rest.games, score: rest.score, reason: rest.games < minGames ? `nur ${rest.games} von ${teamGames} Spielen` : !def.min(rest.stats) ? `Mindestvolumen nicht erreicht (${def.minLabel}) und weniger als ${regularGames} Spiele` : "Platz bereits besetzt" }
       : null;
   }
   applyFlex(out, "RB2", "WR3");
   return out;
+}
+
+/** Kader ohne Spieler dieser Gruppe (z. B. kein Tight End gemeldet): der Platz geht an diese Gruppe. */
+const ROSTER_FALLBACK: Partial<Record<RosterPosition, RosterPosition>> = { TE: "WR" };
+
+interface RosterFill {
+  entry: RosterEntry;
+  games: number;
+  score: number;
+  stats: Stats;
+  /** "stats" = mit Eintraegen im Statistikbogen (Kriterien nicht erreicht), "roster" = nur im Kader */
+  kind: "stats" | "roster";
+}
+
+/**
+ * Plaetze, fuer die niemand die Kriterien erfuellt, werden aus dem offiziellen Kader derselben Positionsgruppe
+ * aufgefuellt - nie mit Spielern einer anderen Gruppe (Ausnahme ROSTER_FALLBACK, wenn der Kader die Gruppe gar
+ * nicht fuehrt). Rangfolge: zuerst Spieler mit Eintraegen im Statistikbogen (mehr Einsaetze, dann hoehere
+ * Produktionszahl), dann Spieler, die nur im Kader stehen (Reihenfolge des Kaders, d. h. nach Rueckennummer).
+ * Das ist keine Starter-Angabe, sondern die vollstaendige Besetzung der Grundformation aus dem Kader.
+ */
+function fillFromRoster(roster: TeamRoster, position: RosterPosition, need: number, taken: Set<RosterEntry>, agg: Map<string, { games: number; stats: Stats }>): RosterFill[] {
+  if (need <= 0) return [];
+  const group = roster.players.some((e) => e.position === position) ? position : ROSTER_FALLBACK[position];
+  const def = SLOTS.find((s) => s.position === group);
+  if (!group || !def) return [];
+  const pool = roster.players
+    .filter((e) => e.position === group && !taken.has(e))
+    .map((e, order) => {
+      const a = e.player ? agg.get(e.player) : undefined;
+      return { entry: e, order, games: a?.games ?? 0, stats: a?.stats ?? {}, score: a ? Math.round(def.score(a.stats) * 100) / 100 : 0, kind: a ? ("stats" as const) : ("roster" as const) };
+    })
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "stats" ? -1 : 1) || b.games - a.games || b.score - a.score || a.order - b.order)
+    .slice(0, need);
+  pool.forEach((f) => taken.add(f.entry));
+  return pool.map(({ order: _o, ...f }) => f);
 }
 
 const scrimmage = (s: Stats) => v(s, "runyards") + v(s, "receivingyards");
@@ -175,13 +228,15 @@ const scrimmage = (s: Stats) => v(s, "runyards") + v(s, "receivingyards");
 function applyFlex(out: Lineup, rbSlot: string, recSlot: string) {
   const rb = out.offense.find((x) => x.slot === rbSlot)!;
   const rec = out.offense.find((x) => x.slot === recSlot)!;
+  // besetzt = Spieler-ID oder Kader-Eintrag (aus dem Kader aufgefuellte Spieler haben nicht immer eine ID)
+  const has = (x: LineupPlayer) => !!(x.player || x.rosterName);
   let keepRb = false;
   let reason: string;
   let code: NonNullable<Lineup["flex"]["code"]>;
-  if (!rb.player) {
-    code = rec.player ? "noRb" : "none";
-    reason = rec.player ? "kein zweiter Running Back erfüllt die Kriterien" : "weder ein zweiter Running Back noch ein weiterer Receiver erfüllt die Kriterien";
-  } else if (!rec.player) {
+  if (!has(rb)) {
+    code = has(rec) ? "noRb" : "none";
+    reason = has(rec) ? "kein zweiter Running Back erfüllt die Kriterien" : "weder ein zweiter Running Back noch ein weiterer Receiver erfüllt die Kriterien";
+  } else if (!has(rec)) {
     keepRb = true;
     code = "noRec";
     reason = "kein weiterer Receiver erfüllt die Kriterien";

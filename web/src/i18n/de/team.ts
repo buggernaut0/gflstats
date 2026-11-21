@@ -51,6 +51,8 @@ export const team = {
   defByProfile: ", Platz nach Statistikprofil",
   gamesOf: (n: number, of: number) => `${n} von ${of} Spielen`,
   profile: "Profil",
+  fillStats: "Aus dem Kader aufgefüllt: erreicht die Kriterien der Gruppe nicht",
+  fillRoster: "Aus dem Kader aufgefüllt: ohne Eintrag im Statistikbogen",
   emptyHint: "Niemand erfüllt die Kriterien für diesen Platz",
   empty: "nicht belegt",
   emptySlot: (slot: string) => `${slot}: nicht belegt`,
@@ -97,7 +99,7 @@ export const team = {
   provisionalNote:
     "Ohne Kader kennt die Seite nur die aus der Statistik abgeleitete Rolle (Quarterback, Running Back, Receiver, Defense). Receiver sind deshalb nicht in Wide Receiver und Tight End getrennt, und die elf Verteidiger tragen alle die Bezeichnung „DEF“. Ihre Anordnung auf dem Feld folgt dem Statistikprofil (viele Sacks und Tackles for Loss vorn, viele Interceptions und abgewehrte Pässe hinten) und ist keine Positionsangabe.",
   schematic:
-    "Die Grundformation und die Anordnung auf dem Feld sind schematisch und keine Aussage über das Spielsystem. Für die Offensive Line gibt es keine Leistungswerte: Aufgestellt werden die Offensive Linemen laut Kader mit den meisten belegten Einsätzen im Statistikbogen (mindestens einer). Das ist keine Starter-Angabe; ohne belegten Einsatz bleibt ein Platz frei.",
+    "Die Grundformation und die Anordnung auf dem Feld sind schematisch und keine Aussage über das Spielsystem. Für die Offensive Line gibt es keine Leistungswerte: Aufgestellt werden die Offensive Linemen laut Kader mit den meisten belegten Einsätzen im Statistikbogen (mindestens einer). Das ist keine Starter-Angabe. Plätze, für die niemand die Kriterien erfüllt, werden aus dem offiziellen Kader derselben Positionsgruppe aufgefüllt: zuerst mit Spielern, die im Statistikbogen stehen (mehr Einsätze zuerst), dann mit Spielern, die nur im Kader stehen (nach Rückennummer). Führt der Kader keinen Tight End, steht dort ein weiterer Wide Receiver.",
   colorsKnown: "Trikotfarben nach Vereinsfarben und Trikotfotos des Teams (Quelle: Teamseite unten), vereinfacht dargestellt.",
   colorsNeutral: "Das Trikot ist neutral gehalten, weil für dieses Team noch keine belegten Vereinsfarben hinterlegt sind.",
   methodLink: "Methodik",

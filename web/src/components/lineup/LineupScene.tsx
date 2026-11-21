@@ -227,7 +227,7 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
       const look = LOOK[p.spot] ?? LOOK.DB;
       return {
         id: `${p.unit}-${index}`,
-        player: p.id ? { id: p.id, number: p.number } : null,
+        player: p.name ? { id: p.id ?? `kader-${p.unit}-${index}`, number: p.number } : null,
         shortName: p.name ? surname(p.name) : null,
         world: [p.x, 0, p.z],
         // Modell blickt nach +z: Offense spielt Richtung -z, Defense schaut zur Offense
@@ -275,7 +275,7 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
       group.add(hit);
       group.position.set(p.x, 0, p.z);
       scene.add(group);
-      return { group, rig, base: rig.root.scale.x, ring, hit, index, unit: p.unit, filled: !!p.id, lift: 0 };
+      return { group, rig, base: rig.root.scale.x, ring, hit, index, unit: p.unit, filled: !!p.name, lift: 0 };
     });
 
     // Kamera: steht hinter der gewaehlten Einheit; Wechsel als Schwenk um das Feld
@@ -385,13 +385,13 @@ export default function LineupScene({ players, unit, colors, logo, active, onAct
       const r = renderer.domElement.getBoundingClientRect();
       const v = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
       ray.setFromCamera(v, camera);
-      const hits = ray.intersectObjects(figures.filter((f) => f.hit.visible && players[f.index].id).map((f) => f.hit), false);
+      const hits = ray.intersectObjects(figures.filter((f) => f.hit.visible && players[f.index].name).map((f) => f.hit), false);
       return hits.length ? (hits[0].object.userData.index as number) : null;
     };
     const move = (ev: PointerEvent) => {
       if (ev.pointerType === "touch") return;
       const i = pick(ev);
-      renderer.domElement.style.cursor = i === null ? "default" : "pointer";
+      renderer.domElement.style.cursor = i === null || !players[i].id ? "default" : "pointer";
       if (i !== state.current.active) state.current.onActive(i);
     };
     // Touch: pointerleave folgt direkt auf das Loslassen und wuerde die Auswahl sofort wieder aufheben
