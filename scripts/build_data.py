@@ -145,6 +145,7 @@ def load_curation():
         "game_videos": load_json(CURATION / "game_videos.json")["videos"],
         "rosters": load_json(CURATION / "rosters.json")["rosters"],
         "photos": load_json(CURATION / "player_photos.json")["photos"] if (CURATION / "player_photos.json").exists() else {},
+        "ol_starters": load_json(CURATION / "ol_starters.json")["starters"] if (CURATION / "ol_starters.json").exists() else {},
     }
 
 
@@ -163,6 +164,20 @@ def player_photo(pid, photos):
 # --------------------------------------------------------------------------- official rosters
 
 ROSTER_POSITIONS = {"QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K", "P"}
+
+
+def display_name(name):
+    """Anzeigename aus dem Kader: Nachnamen in Grossbuchstaben (z. B. 'Luca NICKLAS') in normale Schreibweise.
+    Gilt nur fuer die Anzeige; Abgleich und IDs nutzen weiter die Originalangabe in curation/."""
+    def part(p):
+        if len(p) < 2 or not p.isupper():
+            return p
+        p = p[:1] + p[1:].lower()
+        return "Mc" + p[2:3].upper() + p[3:] if p.startswith("Mc") and len(p) > 2 else p
+
+    def fix(word):
+        return "-".join(part(p) for p in word.split("-"))
+    return " ".join(fix(w) for w in name.split(" "))
 
 
 def build_rosters(rosters, player_ids, team_ids):
@@ -192,7 +207,7 @@ def build_rosters(rosters, player_ids, team_ids):
                     seen.add(pid)
                 if "nameFix" in e and (pid is None or not str(e["nameFix"]).strip()):
                     raise SystemExit(f"rosters.json: nameFix ohne Spieler-ID oder Begruendung ({e['name']})")
-                players.append({"player": pid, "name": e["name"], "number": e["number"], "position": e["position"],
+                players.append({"player": pid, "name": display_name(e["name"]), "number": e["number"], "position": e["position"],
                                 **({"detail": e["detail"]} if e.get("detail") else {})})
             out.setdefault(str(season), {})[team] = {"source": r["source"], "retrieved": r.get("retrieved"),
                                                       "note": r.get("note"), "file": r.get("file"), "players": players}
@@ -227,6 +242,52 @@ def attach_rosters(out_players, rosters, report):
                     report["corrections"].append({"type": "Name nach offiziellem Kader", "id": pid,
                                                   "detail": f"{p['name']!r} -> {e['name']}", "reason": e["nameFix"]})
                     p["name"] = e["name"]
+
+
+OL_ROLES = {None, "T", "G", "C", "G/C"}
+OL_SLOTS = ["LT", "LG", "C", "RG", "RT"]
+
+
+def build_ol_starters(ol, out_players, team_ids):
+    """Prueft curation/ol_starters.json (Starting Offensive Line aus den Starterlisten der Liga, siehe
+    scripts/ol_starters.py) und gibt die Website-Fassung aus (Saison -> Team -> Linie mit Quelle).
+
+    Bricht ab bei unbekanntem Team, unbekannter Spieler-ID, einem Spieler, der in der Saison nicht fuer das Team
+    im Statistikbogen steht, mehr als fuenf O-Linern, doppelt vergebenem Slot oder Slot ohne eigene Quelle.
+    """
+    by_id = {p["id"]: p for p in out_players}
+    out = {}
+    for season, teams in ol.items():
+        for team, t in teams.items():
+            if team not in team_ids:
+                raise SystemExit(f"ol_starters.json: Team {team} gibt es nicht")
+            line = t["line"]
+            if len(line) > 5:
+                raise SystemExit(f"ol_starters.json: {team} {season} hat {len(line)} O-Liner")
+            slots = [e["slot"] for e in line if e.get("slot")]
+            if len(slots) != len(set(slots)) or any(x not in OL_SLOTS for x in slots):
+                raise SystemExit(f"ol_starters.json: ungueltige oder doppelte Slots bei {team} {season}: {slots}")
+            for e in line:
+                pid = e.get("player")
+                if pid is not None:
+                    p = by_id.get(pid)
+                    if p is None:
+                        raise SystemExit(f"ol_starters.json: Spieler {pid} gibt es nicht ({e['name']})")
+                    s = next((x for x in p["seasons"] if x["season"] == int(season)), None)
+                    if s is None or team not in s["teams"]:
+                        raise SystemExit(f"ol_starters.json: {pid} steht {season} nicht fuer {team} im Statistikbogen")
+                if e.get("role") not in OL_ROLES:
+                    raise SystemExit(f"ol_starters.json: unbekannte Rolle {e.get('role')!r} bei {e['name']}")
+                if e.get("slot") and not e.get("slotSource"):
+                    raise SystemExit(f"ol_starters.json: Slot {e['slot']} ohne Quelle (slotSource) bei {e['name']}")
+            out.setdefault(str(season), {})[team] = {
+                "game": t["game"], "date": t["date"], "gametype": t["gametype"], "opponent": t["opponent"],
+                "url": t["url"], "teamGames": t["teamGames"], "listedGames": t["listedGames"],
+                "line": [{**{k: e.get(k) for k in ("number", "player", "role", "slot", "slotSource", "starts",
+                                                     "playoffStarts", "confidence")}, "name": display_name(e["name"])}
+                         for e in line],
+            }
+    return out
 
 
 # --------------------------------------------------------------------------- game highlight videos
@@ -614,6 +675,7 @@ def build(write=True):
 
     out_rosters = build_rosters(cur["rosters"], {p["id"] for p in out_players}, {t["id"] for t in out_teams})
     attach_rosters(out_players, cur["rosters"], report)
+    out_ol = build_ol_starters(cur["ol_starters"], out_players, {t["id"] for t in out_teams})
 
     meta = {
         "builtAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -654,6 +716,7 @@ def build(write=True):
     dump("meta.json", meta)
     dump("teams.json", out_teams)
     dump("rosters.json", out_rosters)
+    dump("ol_starters.json", out_ol)
     dump("players.json", out_players)
     dump("games.json", sorted(games.values(), key=lambda g: (g["date"] or "", g["id"])))
     dump("player_seasons.json", sorted(

@@ -48,7 +48,7 @@ export default function RecordsView({ data, teams }: { data: Record<"game" | "se
             <h2 className="label-caps border-b-2 border-line-strong px-4 pb-2.5 pt-3.5 text-ink">{f.statLabel(field)}</h2>
             <ol className="py-1.5">
               {items.map((r, i) => (
-                <li key={`${r.player}-${r.note}`} {...teamsAttr(r.teams)} className="grid grid-cols-[1.75rem_1fr_auto] items-baseline gap-x-2 px-4 py-1.5">
+                <li key={`${r.player}-${r.href ?? i}`} {...teamsAttr(r.teams)} className="grid grid-cols-[1.75rem_1fr_auto] items-baseline gap-x-2 px-4 py-1.5">
                   <span className={`num display text-[15px] font-semibold ${i === 0 ? "text-accent-text" : "text-ink-3"}`}>{i + 1}</span>
                   <span className="min-w-0">
                     <Link href={`/spieler/${r.player}/`} className="block truncate text-[14px] text-ink hover:underline hover:underline-offset-4">{r.name}</Link>

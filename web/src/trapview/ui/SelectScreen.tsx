@@ -95,7 +95,7 @@ export function SelectScreen({ teams, seasons, season, offenseId, defenseId, lea
         <button className="tv-enter" onClick={onEnter} disabled={loading}>
           <span>ENTER TRAP VIEW</span>
         </button>
-        <span className="tv-select__hint">Sound on · the beat starts when you enter</span>
+        <span className="tv-select__hint">{m.trapview.enterHint}</span>
       </footer>
     </div>
   );

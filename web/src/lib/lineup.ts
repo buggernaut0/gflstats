@@ -15,12 +15,11 @@
  *     wurde, gilt als fester Bestandteil und darf einen freien Platz auch unter dem Mindestvolumen
  *     besetzen - er steht in der Rangfolge aber immer hinter den Spielern, die das Volumen erreichen.
  *   - Rangfolge nach einer Produktionszahl der Gruppe (score), bei Gleichstand mehr Einsaetze.
- *   - Offensive Line: Es gibt keine Leistungswerte. Einziger Beleg sind Einsaetze im Statistikbogen
- *     (Linemen stehen dort nur mit Tackles nach Ballverlust, Fumble-Recoveries oder Strafen). Die
- *     Einsatzschwelle gilt hier nicht (sie erreicht praktisch kein Lineman); es zaehlt jeder belegte Einsatz
- *     (OL_MIN_GAMES), Rangfolge nach Zahl der belegten Spiele. Das ist keine Starter-Angabe. Linemen ohne
- *     Einsatz im Bogen kommen erst ueber das Auffuellen (naechster Punkt) zum Zug.
- *   - Plaetze, fuer die niemand die Kriterien erfuellt, werden aus dem offiziellen Kader derselben
+ *   - Offensive Line: Statistikboegen und Kader sagen nichts darueber, wer startet. Grundlage sind deshalb die
+ *     offiziellen Starterlisten der Liga (curation/ol_starters.json, siehe scripts/ol_starters.py): die fuenf
+ *     O-Liner des letzten Spiels mit vollstaendiger Liste. Ohne diese Liste bleiben die fuenf Plaetze offen
+ *     ("ungeklaert") - sie werden nie mit irgendeinem Lineman aus dem Kader aufgefuellt (olLine).
+ *   - Plaetze (ausser OL), fuer die niemand die Kriterien erfuellt, werden aus dem offiziellen Kader derselben
  *     Positionsgruppe aufgefuellt (fillFromRoster, Kennzeichen fill): zuerst Spieler mit Eintraegen im Bogen,
  *     dann Spieler, die nur im Kader stehen. Leer bleibt ein Platz nur, wenn der Kader nicht genug Spieler der
  *     Gruppe fuehrt. Fuehrt der Kader keinen Tight End, geht der Platz an einen weiteren Wide Receiver.
@@ -49,10 +48,37 @@ export interface TeamRoster {
   players: RosterEntry[];
 }
 
+/** Ein O-Liner der Starting Five laut Starterliste der Liga (curation/ol_starters.json) */
+export interface OlStarter {
+  number: number | null;
+  name: string;
+  /** Spieler-ID der Website, null = steht in keinem Statistikbogen bzw. nicht sicher zugeordnet */
+  player: string | null;
+  /** T, G, C oder G/C - nur, wenn Starterliste oder Kader es angeben */
+  role: "T" | "G" | "C" | "G/C" | null;
+  /** LT, LG, C, RG, RT - nur mit eigener Quelle (slotSource); die Starterlisten nennen keine Seite */
+  slot: "LT" | "LG" | "C" | "RG" | "RT" | null;
+  slotSource?: string | null;
+  starts: number;
+  playoffStarts: number;
+  /** hoch = auch in mind. der Haelfte der Spiele mit Starterliste Starter; mittel = sonst */
+  confidence: "hoch" | "mittel";
+}
+
+/** Starting Offensive Line eines Teams und ihre Quelle (Spiel der Starterliste) */
+export interface TeamOl {
+  game: string;
+  date: string;
+  gametype: string;
+  opponent: string;
+  url: string;
+  teamGames: number;
+  listedGames: number;
+  line: OlStarter[];
+}
+
 export const MIN_GAME_SHARE = 0.4;
 export const REGULAR_GAME_SHARE = 0.6;
-/** Offensive Line: Mindestzahl belegter Einsaetze (siehe startingLineup) */
-export const OL_MIN_GAMES = 1;
 
 const v = (s: Stats, k: string) => s[k] ?? 0;
 
@@ -75,7 +101,7 @@ export const SLOTS: SlotDef[] = [
   { position: "RB", unit: "offense", count: 2, basis: "Ballkontakte (Carries + Receptions)", score: (s) => v(s, "run") + v(s, "catched"), min: (s) => v(s, "run") + v(s, "catched") >= 25, minLabel: "mind. 25 Ballkontakte", show: ["runyards", "touchdownrun"] },
   { position: "WR", unit: "offense", count: 3, basis: "Receiving Yards", score: (s) => v(s, "receivingyards"), min: (s) => v(s, "catched") >= 10, minLabel: "mind. 10 Receptions", show: ["receivingyards", "catched"] },
   { position: "TE", unit: "offense", count: 1, basis: "Receiving Yards", score: (s) => v(s, "receivingyards"), min: (s) => v(s, "catched") >= 5, minLabel: "mind. 5 Receptions", show: ["receivingyards", "catched"] },
-  { position: "OL", unit: "offense", count: 5, basis: "Einsätze im Statistikbogen (keine Leistungswerte vorhanden)", score: () => 0, min: () => true, minLabel: "mind. 1 belegter Einsatz", show: ["tackletotal", "fumbledandrecovered"] },
+  { position: "OL", unit: "offense", count: 5, basis: "offizielle Starterliste der Liga (letztes Spiel)", score: () => 0, min: () => true, minLabel: "Starter im letzten Spiel mit vollständiger Liste", show: ["tackletotal", "fumbledandrecovered"] },
   { position: "DL", unit: "defense", count: 4, basis: "Tackles + 2 × Sacks + Tackles for Loss", score: (s) => v(s, "tackletotal") + 2 * v(s, "sacktotal") + v(s, "tackleforloss"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "sacktotal"] },
   { position: "LB", unit: "defense", count: 3, basis: "Tackles + Tackles for Loss + Sacks", score: (s) => v(s, "tackletotal") + v(s, "tackleforloss") + v(s, "sacktotal"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "tackleforloss"] },
   { position: "DB", unit: "defense", count: 4, basis: "Tackles + 3 × Interceptions + 1,5 × abgewehrte Pässe", score: (s) => v(s, "tackletotal") + 3 * v(s, "intercepted") + 1.5 * v(s, "brokenuppass"), min: (s) => v(s, "tackletotal") >= 8, minLabel: "mind. 8 Tackles", show: ["tackletotal", "intercepted"] },
@@ -101,6 +127,8 @@ export interface LineupPlayer {
    * Statistikbogen, "roster" = nur im Kader (player ist dann null, wenn der Spieler keine Spieler-ID hat).
    */
   fill?: "stats" | "roster";
+  /** Offensive Line: Angaben aus der Starterliste (Rolle, Starts, Zuverlaessigkeit) */
+  ol?: { role: OlStarter["role"]; slot: OlStarter["slot"]; starts: number; listedGames: number; confidence: OlStarter["confidence"] };
 }
 
 export interface Lineup {
@@ -113,6 +141,8 @@ export interface Lineup {
   /** Elfter Offense-Platz: zweiter Running Back oder dritter Receiver, nach Statistik entschieden */
   /** reason: deutscher Text; code/rb/rec: dieselbe Begründung strukturiert, für die Übersetzung (src/i18n team.flex) */
   flex: { winner: string; loser: string | null; reason: string; code?: "noRb" | "none" | "noRec" | "oneMin" | "scrimmage"; rb?: number; rec?: number; rbSlot?: string; recSlot?: string };
+  /** Quelle der Offensive Line (null = keine Starterliste, Plaetze offen) */
+  olSource: Omit<TeamOl, "line"> | null;
   /** je Gruppe der naechste nicht beruecksichtigte Spieler, zur Kontrolle der Auswahl */
   next: Record<string, { player: string; games: number; score: number; reason: string } | null>;
 }
@@ -121,7 +151,7 @@ export interface Lineup {
  * @param rows Spielzeilen der Saison (alle Teams oder schon gefiltert)
  * @param maxFields Felder, die als Maximum statt Summe zaehlen ("Laengster ...")
  */
-export function startingLineup(rows: PlayerGame[], team: string, roster: TeamRoster | undefined, maxFields: Set<string> = new Set()): Lineup | null {
+export function startingLineup(rows: PlayerGame[], team: string, roster: TeamRoster | undefined, maxFields: Set<string> = new Set(), ol?: TeamOl | null): Lineup | null {
   if (!roster) return null;
   const mine = rows.filter((r) => r.t === team);
   const teamGames = new Set(mine.map((r) => r.g)).size;
@@ -136,24 +166,23 @@ export function startingLineup(rows: PlayerGame[], team: string, roster: TeamRos
     agg.set(r.p, e);
   }
 
-  const out: Lineup = { basis: "roster", teamGames, minGames, offense: [], defense: [], flex: { winner: "", loser: null, reason: "" }, next: {} };
+  const out: Lineup = { basis: "roster", teamGames, minGames, offense: [], defense: [], flex: { winner: "", loser: null, reason: "" }, olSource: olSource(ol), next: {} };
   /** schon aufgestellte Kader-Eintraege - niemand steht doppelt in der Aufstellung */
   const taken = new Set<RosterEntry>();
   for (const def of SLOTS) {
+    if (def.position === "OL") {
+      out.offense.push(...olLine(ol, agg));
+      continue;
+    }
     const candidates = roster.players
       .filter((e) => e.position === def.position && e.player && agg.has(e.player))
       .map((e) => ({ entry: e, ...agg.get(e.player!)!, score: Math.round(def.score(agg.get(e.player!)!.stats) * 100) / 100 }))
       .sort((a, b) => b.score - a.score || b.games - a.games || a.entry.name.localeCompare(b.entry.name));
     const regularGames = Math.ceil(teamGames * REGULAR_GAME_SHARE);
-    // Offensive Line: Linemen stehen nur vereinzelt im Statistikbogen (Fumble-Recovery, Tackle nach Ballverlust,
-    // Strafe) - die Einsatzschwelle der anderen Gruppen erreicht dort praktisch niemand. Deshalb zaehlt jeder
-    // belegte Einsatz; Rangfolge nach Zahl der belegten Spiele (candidates ist bei score 0 schon so sortiert).
-    const eligible = def.position === "OL"
-      ? candidates.filter((c) => c.games >= OL_MIN_GAMES)
-      : [
-          ...candidates.filter((c) => c.games >= minGames && def.min(c.stats)),
-          ...candidates.filter((c) => c.games >= regularGames && !def.min(c.stats)),
-        ];
+    const eligible = [
+      ...candidates.filter((c) => c.games >= minGames && def.min(c.stats)),
+      ...candidates.filter((c) => c.games >= regularGames && !def.min(c.stats)),
+    ];
     const single = def.count === 1;
     // Auffuellen aus dem Kader (siehe fillFromRoster): erst Spieler der Gruppe mit Eintraegen im Bogen, dann ohne
     const chosen = eligible.slice(0, def.count);
@@ -161,7 +190,7 @@ export function startingLineup(rows: PlayerGame[], team: string, roster: TeamRos
     const fill = fillFromRoster(roster, def.position, def.count - chosen.length, taken, agg);
     for (let i = 0; i < def.count; i++) {
       const c = chosen[i];
-      const slot = def.position === "OL" ? "OL" : `${def.position}${single ? "1" : i + 1}`;
+      const slot = `${def.position}${single ? "1" : i + 1}`;
       const f = c ? null : fill[i - chosen.length];
       out[def.unit].push(
         c
@@ -178,6 +207,48 @@ export function startingLineup(rows: PlayerGame[], team: string, roster: TeamRos
   }
   applyFlex(out, "RB2", "WR3");
   return out;
+}
+
+const olSource = (ol: TeamOl | null | undefined): Lineup["olSource"] => {
+  if (!ol) return null;
+  const { line: _l, ...src } = ol;
+  return src;
+};
+
+/** Platz in FORMATION.OL (0 = aussen links ... 4 = aussen rechts) je Slot */
+const SLOT_SPOT: Record<NonNullable<OlStarter["slot"]>, number> = { LT: 0, LG: 1, C: 2, RG: 3, RT: 4 };
+/** Bevorzugte Plaetze je Rolle, wenn keine Seite belegt ist (Center Mitte, Tackles aussen, Guards dazwischen) */
+const ROLE_SPOTS: Record<string, number[]> = { C: [2], "G/C": [2, 1, 3], G: [1, 3], T: [0, 4] };
+const ROLE_SLOT: Record<string, string> = { C: "C", T: "OT", G: "OG", "G/C": "OG" };
+
+/**
+ * Die fuenf O-Liner laut Starterliste (siehe TeamOl). Ohne Starterliste fuenf offene Plaetze - nie aufgefuellt.
+ * Anordnung auf dem Feld: belegter Slot (LT ... RT) hat Vorrang; sonst Rolle (Center in die Mitte, Tackles
+ * aussen, Guards dazwischen), dann die Reihenfolge der Quelle. Ohne Slot sagt der Platz nichts ueber die Seite.
+ */
+function olLine(ol: TeamOl | null | undefined, agg: Map<string, { games: number; stats: Stats }>): LineupPlayer[] {
+  const spots: (OlStarter | null)[] = [null, null, null, null, null];
+  const rest: OlStarter[] = [];
+  for (const e of (ol?.line ?? []).slice(0, 5)) {
+    if (e.slot && spots[SLOT_SPOT[e.slot]] === null) spots[SLOT_SPOT[e.slot]] = e;
+    else rest.push(e);
+  }
+  const unplaced: OlStarter[] = [];
+  for (const e of rest) {
+    const free = (ROLE_SPOTS[e.role ?? ""] ?? []).find((i) => spots[i] === null);
+    if (free !== undefined) spots[free] = e;
+    else unplaced.push(e);
+  }
+  for (const e of unplaced) spots[spots.indexOf(null)] = e;
+  return spots.map((e, i): LineupPlayer => {
+    if (!e) return { slot: "OL", position: "OL", spot: ["OL", i], player: null, rosterName: null, number: null, games: 0, score: 0, stats: {} };
+    const a = e.player ? agg.get(e.player) : undefined;
+    return {
+      slot: e.slot ?? ROLE_SLOT[e.role ?? ""] ?? "OL", position: "OL", spot: ["OL", i], player: e.player, rosterName: e.name, number: e.number,
+      games: a?.games ?? 0, score: 0, stats: a?.stats ?? {}, volume: true,
+      ol: { role: e.role, slot: e.slot, starts: e.starts, listedGames: ol!.listedGames, confidence: e.confidence },
+    };
+  });
 }
 
 /** Kader ohne Spieler dieser Gruppe (z. B. kein Tight End gemeldet): der Platz geht an diese Gruppe. */
@@ -260,7 +331,7 @@ export const PROVISIONAL_SLOTS: { position: LineupPosition; unit: "offense" | "d
   { position: "QB", unit: "offense", count: 1, basis: SLOTS[0].basis, minLabel: SLOTS[0].minLabel, show: SLOTS[0].show },
   { position: "RB", unit: "offense", count: 2, basis: SLOTS[1].basis, minLabel: SLOTS[1].minLabel, show: SLOTS[1].show },
   { position: "REC", unit: "offense", count: 4, basis: "Receiving Yards (WR und TE gemeinsam)", minLabel: "mind. 10 Receptions", show: ["receivingyards", "catched"] },
-  { position: "OL", unit: "offense", count: 5, basis: "ohne Kader nicht belegbar", minLabel: "bleibt frei", show: ["tackletotal", "fumbledandrecovered"] },
+  { position: "OL", unit: "offense", count: 5, basis: "offizielle Starterliste der Liga (letztes Spiel)", minLabel: "ohne Starterliste offen", show: ["tackletotal", "fumbledandrecovered"] },
   { position: "DEF", unit: "defense", count: 11, basis: "Tackles + 2 × Sacks + Tackles for Loss + 3 × Interceptions + 1,5 × abgewehrte Pässe", minLabel: "mind. 8 Tackles", show: ["tackletotal", "sacktotal"] },
 ];
 
@@ -274,9 +345,9 @@ const DEF_SPOTS: [RosterPosition, number][] = [["DL", 0], ["DL", 1], ["DL", 2], 
  * Defense: die elf produktivsten Verteidiger; auf dem Feld stehen sie nach Statistikprofil (viele Sacks und
  * Tackles for Loss vorn, viele Interceptions und abgewehrte Paesse hinten). Das ist eine Anordnung fuer die
  * Darstellung, keine Positionsangabe - der Platz heisst deshalb fuer alle nur "DEF".
- * Offensive Line: ohne Kader nicht belegbar, bleibt frei.
+ * Offensive Line: wie bei startingLineup aus der Starterliste der Liga (olLine), sonst offen.
  */
-export function provisionalLineup(rows: PlayerGame[], team: string, roleOf: (player: string) => string | null | undefined, maxFields: Set<string> = new Set()): Lineup | null {
+export function provisionalLineup(rows: PlayerGame[], team: string, roleOf: (player: string) => string | null | undefined, maxFields: Set<string> = new Set(), ol?: TeamOl | null): Lineup | null {
   const mine = rows.filter((r) => r.t === team);
   const teamGames = new Set(mine.map((r) => r.g)).size;
   if (!teamGames) return null;
@@ -297,7 +368,7 @@ export function provisionalLineup(rows: PlayerGame[], team: string, roleOf: (pla
     { position: "REC", role: "WR/TE", count: 4, unit: "offense", score: (s) => v(s, "receivingyards"), min: (s) => v(s, "catched") >= 10, spots: REC_SPOTS },
     { position: "DEF", role: "DEF", count: 11, unit: "defense", score: (s) => v(s, "tackletotal") + front(s) + back(s), min: (s) => v(s, "tackletotal") >= 8, spots: DEF_SPOTS },
   ];
-  const out: Lineup = { basis: "provisional", teamGames, minGames, offense: [], defense: [], flex: { winner: "", loser: null, reason: "" }, next: {} };
+  const out: Lineup = { basis: "provisional", teamGames, minGames, offense: [], defense: [], flex: { winner: "", loser: null, reason: "" }, olSource: olSource(ol), next: {} };
   const empty = (slot: string, position: LineupPosition, spot: [RosterPosition, number]): LineupPlayer => ({ slot, position, spot, player: null, rosterName: null, number: null, games: 0, score: 0, stats: {} });
   for (const g of groups) {
     const candidates = [...agg.entries()]
@@ -314,7 +385,7 @@ export function provisionalLineup(rows: PlayerGame[], team: string, roleOf: (pla
       const slot = g.position === "DEF" ? "DEF" : `${g.position}${g.count === 1 ? "1" : i + 1}`;
       out[g.unit].push(c ? { slot, position: g.position, spot: g.spots[i], player: c.id, rosterName: null, number: null, games: c.games, score: c.score, stats: c.stats, volume: g.min(c.stats) } : empty(slot, g.position, g.spots[i]));
     }
-    if (g.position === "REC") for (let i = 0; i < 5; i++) out.offense.push(empty("OL", "OL", ["OL", i]));
+    if (g.position === "REC") out.offense.push(...olLine(ol, agg));
   }
   applyFlex(out, "RB2", "REC4");
   return out;

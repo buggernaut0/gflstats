@@ -1,5 +1,5 @@
 import SourceTag from "@/components/SourceTag";
-import { getPlayerGames, getRosters, playerMap } from "@/lib/data";
+import { getOlStarters, getPlayerGames, getRosters, getTeams, playerMap } from "@/lib/data";
 import { FORMATION, MIN_GAME_SHARE, PROVISIONAL_SLOTS, REGULAR_GAME_SHARE, SLOTS, provisionalLineup, startingLineup } from "@/lib/lineup";
 import { MAX_FIELDS } from "@/lib/stats";
 import { T } from "@/i18n/react";
@@ -26,7 +26,9 @@ export default function LineupSection({ team, season }: { team: Team; season: nu
   const names = playerMap();
   const rows = getPlayerGames(season);
   const roleOf = (id: string) => names.get(id)?.seasons.find((s) => s.season === season)?.role;
-  const lineup = roster ? startingLineup(rows, team.id, roster, MAX_FIELDS) : provisionalLineup(rows, team.id, roleOf, MAX_FIELDS);
+  const teamName = (id: string) => getTeams().find((x) => x.id === id)?.name ?? id;
+  const ol = getOlStarters()[String(season)]?.[team.id] ?? null;
+  const lineup = roster ? startingLineup(rows, team.id, roster, MAX_FIELDS, ol) : provisionalLineup(rows, team.id, roleOf, MAX_FIELDS, ol);
   if (!lineup) return null;
   const provisional = lineup.basis === "provisional";
   const slots = provisional ? PROVISIONAL_SLOTS : SLOTS;
@@ -39,7 +41,8 @@ export default function LineupSection({ team, season }: { team: Team; season: nu
     return {
       slot: p.slot, position: p.position, positionLabel: POSITION_LABELS[p.position] ?? p.position, unit,
       id: p.player, name: p.player ? (names.get(p.player)?.name ?? p.rosterName) : p.rosterName, fill: p.fill ?? null, number: p.number, photo: p.player ? names.get(p.player)?.photo ?? null : null, games: p.games,
-      stats: p.player && p.games ? def.show.map((key) => ({ key, value: p.stats[key] ?? 0 })) : [],
+      stats: p.player && p.games && p.position !== "OL" ? def.show.map((key) => ({ key, value: p.stats[key] ?? 0 })) : [],
+      ol: p.ol ? { starts: p.ol.starts, listedGames: p.ol.listedGames, confidence: p.ol.confidence } : null,
       spot: p.spot[0],
       down: p.spot[0] === "OL" || p.spot[0] === "DL",
       x, z,
@@ -77,6 +80,7 @@ export default function LineupSection({ team, season }: { team: Team; season: nu
         flex={lineup.flex}
         hasColors={!!team.colors?.primary}
         rosterNote={roster?.note ?? null}
+        olSource={lineup.olSource ? { ...lineup.olSource, opponentName: teamName(lineup.olSource.opponent) } : null}
       />
     </section>
   );

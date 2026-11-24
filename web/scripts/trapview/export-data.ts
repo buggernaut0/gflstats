@@ -30,6 +30,7 @@ import {
   startingLineup,
   type Lineup,
   type LineupPlayer,
+  type TeamOl,
   type TeamRoster,
 } from '../../src/lib/lineup.ts';
 import { buildPools, describeMethod, pickSpotlight, type SpotlightPick } from '../../src/trapview/spotlight/scoring.ts';
@@ -74,6 +75,8 @@ const teams = read<WebTeam[]>(join(WEB_DATA, 'teams.json'));
 const players = read<WebPlayer[]>(join(WEB_DATA, 'players.json'));
 const games = read<WebGame[]>(join(WEB_DATA, 'games.json'));
 const rosters = read<Record<string, Record<string, TeamRoster>>>(join(WEB_DATA, 'rosters.json'));
+// Starting Offensive Line laut Starterlisten der Liga (curation/ol_starters.json, scripts/ol_starters.py)
+const olStarters = existsSync(join(WEB_DATA, 'ol_starters.json')) ? read<Record<string, Record<string, TeamOl>>>(join(WEB_DATA, 'ol_starters.json')) : {};
 const fields = read<{ fields: Field[] }>(FIELDS).fields;
 const MAX_FIELDS = new Set(fields.filter((f) => f.agg === 'max').map((f) => f.key));
 
@@ -252,8 +255,8 @@ for (const season of [...meta.seasons].sort((a, b) => b - a)) {
   for (const t of seasonTeams) {
     const roster = rosters[String(season)]?.[t.id];
     const lineup: Lineup | null = roster
-      ? startingLineup(rows, t.id, roster, MAX_FIELDS)
-      : provisionalLineup(rows, t.id, roleOf, MAX_FIELDS);
+      ? startingLineup(rows, t.id, roster, MAX_FIELDS, olStarters[String(season)]?.[t.id])
+      : provisionalLineup(rows, t.id, roleOf, MAX_FIELDS, olStarters[String(season)]?.[t.id]);
     if (!lineup) continue;
 
     const playerOut = (lp: LineupPlayer) => {

@@ -26,6 +26,8 @@ export interface FieldPlayer {
   spot: string;
   /** Lineman-Platz der Formation (tiefe Haltung) */
   down: boolean;
+  /** Offensive Line: Starts laut Starterliste der Liga und Zuverlaessigkeit (siehe lib/lineup.ts olLine) */
+  ol?: { starts: number; listedGames: number; confidence: string } | null;
   /** Schematische Lage in Yards (x quer, z in Spielrichtung) */
   x: number;
   z: number;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import { FAVORITE_EVENT, FAVORITE_KEY, applyFavorite, favoriteAsked, markFavoriteAsked, readFavorite, writeFavorite } from "@/lib/favorite";
 import TeamLogo, { type LogoTeam } from "./TeamLogo";
 import { useI18n } from "@/i18n/react";
@@ -163,7 +164,7 @@ export function FavBadge({ className = "" }: { className?: string }) {
 }
 
 /**
- * Begrüßung beim ersten Besuch: fragt einmal nach dem Lieblingsteam. Erscheint nur, solange weder ein
+ * Begrüßung beim ersten Besuch der Startseite: fragt einmal nach dem Lieblingsteam. Erscheint nur, solange weder ein
  * Team gewählt noch die Frage übersprungen wurde (lib/favorite.ts favoriteAsked); ändern oder entfernen
  * lässt sich die Auswahl danach jederzeit oben rechts (FavoriteTeamPicker).
  */
@@ -174,12 +175,16 @@ export function FavoriteWelcome({ teams }: { teams: PickerTeam[] }) {
   const f = m.favorite;
   const dialog = useRef<HTMLDivElement>(null);
 
+  // Nur auf der Startseite: Wer über einen geteilten Link direkt auf eine Spieler- oder Teamseite kommt, soll
+  // den Inhalt sehen und nicht von einem verzögert erscheinenden Dialog unterbrochen werden.
+  const home = usePathname() === "/";
+
   useEffect(() => {
-    if (favoriteAsked()) return;
+    if (!home || favoriteAsked()) return;
     // Kurz nach dem Laden, damit die Seite zuerst steht und der Dialog nicht beim ersten Zeichnen aufblitzt
     const t = window.setTimeout(() => setOpen(true), 600);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [home]);
 
   useEffect(() => {
     if (!open) return;

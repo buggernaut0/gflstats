@@ -16,6 +16,7 @@ Alle angewendeten Korrekturen erscheinen auf der Website unter „Methodik und K
 | `videos.json` | Highlight-Videos je Spieler |
 | `rosters.json` | Offizieller Kader je Saison und Team (Rückennummer, Positionsgruppe, Quelle) für das Starting Lineup |
 | `game_videos.json` | Highlight-Videos je Spiel (Game-ID → YouTube-Video), nur geprüfte Zuordnungen |
+| `ol_starters.json` | Starting Offensive Line je Saison und Team laut offizieller Starterlisten der Liga (erzeugt mit `scripts/ol_starters.py`) |
 
 ## Automatische Namensbereinigung
 
@@ -76,9 +77,17 @@ Saisoneintrag des Spielers in `players.json` (`seasons[].number`, `.position`, `
 nur für genau diese Saison. Spielerprofil, Team-Kader (inkl. Kader-Spieler ohne Statistik), Suche,
 Starting Lineup und Trap View lesen von dort bzw. aus `rosters.json`; nirgends werden Nummern separat gepflegt.
 
-**Offensive Line in der Aufstellung:** Linemen stehen nur vereinzelt im Statistikbogen (Fumble-Recovery, Strafe).
-Aufgestellt werden die OL laut Kader mit den meisten belegten Einsätzen (mind. einer, `OL_MIN_GAMES` in
-`web/src/lib/lineup.ts`) – das ist keine Starter-Angabe. Ohne belegten Einsatz bleibt ein Platz frei.
+**Offensive Line in der Aufstellung (`ol_starters.json`):** Statistikbogen und Kader sagen nicht, wer startet.
+Grundlage sind die offiziellen Starterlisten der Liga auf statsnscore.online (Spielseite, Abschnitt „Offense Starters“,
+von der Statistik-Crew je Spiel erfasst). `python scripts/ol_starters.py fetch 2026` lädt die Listen aller Spiele nach
+`data/raw/statsnscore/starters/`, `python scripts/ol_starters.py build 2026` erzeugt daraus `ol_starters.json`:
+die fünf O-Liner des letzten Spiels mit vollständiger Liste, je Spieler Starts in der Saison und Zuverlässigkeit
+(`hoch` = auch in mind. der Hälfte der Spiele mit Liste Starter, `mittel` = sonst). Zuordnung zur Spieler-ID nur
+über Team + Name (Nachname, dazu Vorname oder Nummer); Rückennummer laut Kader (abweichende Listen-Nummer in
+`sourceNumber`). `role` (T/G/C) nur, wenn Starterliste oder Kader sie nennen. **Seiten (LT/LG/C/RG/RT) nennt die
+Quelle nicht** – `slot` nur von Hand mit eigener Quelle in `slotSource` eintragen und den Team-Eintrag mit
+`"manual": true` vor dem Neuerzeugen schützen. Ohne Starterliste bleiben die fünf Plätze offen; sie werden nie mit
+beliebigen Linemen aus dem Kader aufgefüllt. Bericht mit Quellen und Gegenüberstellung: `OL_STARTER_ABGLEICH_2026.md`.
 
 Stand Kader 2026 (abgerufen 20.11.2026): 14 von 15 Teams. Für die Saarland Hurricanes liegt kein Kader vor
 (vorläufige Aufstellung ohne Nummern). Krefeld Ravens spielen nicht in der GFL-Datenbank und sind nicht enthalten.

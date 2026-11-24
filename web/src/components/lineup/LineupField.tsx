@@ -112,6 +112,7 @@ export default function LineupField({ players, colors, teamGames, logo, provisio
                 <span className="num mt-0.5 block text-[12.5px] text-white/80">
                   {[...shown.stats.map((s) => `${f.fmtStat(stat(s.key), s.value)} ${f.statAbbr(s.key)}`), t.gamesOf(shown.games, teamGames)].join(", ")}
                 </span>
+                {shown.ol && <span className="num mt-0.5 block text-[12.5px] text-white/80">{t.olStarts(shown.ol.starts, shown.ol.listedGames)} · {t.olConfidence[shown.ol.confidence] ?? shown.ol.confidence}</span>}
                 {shown.fill && <span className="mt-0.5 block text-[11.5px] text-white/60">{shown.fill === "roster" ? t.fillRoster : t.fillStats}</span>}
               </span>
               {shown.id && (

@@ -29,7 +29,8 @@ export const trapview = {
   audioMissing: "Musikdatei fehlt oder ist nicht abspielbar",
   trenches: (ol: string, dl: string) => `Offensive Line ${ol} · Defensive Line ${dl}`,
   trenchesCount: (ol: number, olOf: number, dl: number, dlOf: number) => `Offensive Line ${ol === olOf ? ol : `${ol} von ${olOf}`} · Defensive Line ${dl === dlOf ? dl : `${dl} von ${dlOf}`}`,
-  trenchesNone: "Offensive & Defensive Line · ohne Kader nicht belegbar",
+  trenchesNone: "Offensive & Defensive Line · nicht belegt",
+  enterHint: "Ton an · der Beat startet beim Betreten",
   countOf: (n: number, of: number) => (n === of ? `${n}` : `${n} von ${of}`),
   // Labels
   vacant: "nicht belegt",

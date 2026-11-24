@@ -91,7 +91,7 @@ export function buildMainSequence(model: SceneModel): Shot[] {
       title: 'The Trenches',
       subtitle: olFilled || dlFilled
         ? `Offensive Line ${lineCount(olFilled, ol.length)} · Defensive Line ${lineCount(dlFilled, dl.length)}`
-        : 'Offensive & Defensive Line · ohne Kader nicht belegbar',
+        : 'Offensive & Defensive Line · nicht belegt',
       sub: olFilled || dlFilled
         ? { k: 'trapview.trenchesCount', a: [olFilled, ol.length, dlFilled, dl.length] }
         : { k: 'trapview.trenchesNone' },

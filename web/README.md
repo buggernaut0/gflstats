@@ -104,7 +104,9 @@ die Wahl wird im Browser gemerkt (`gfl-radar-view`).
 Jede Teamseite zeigt für die aktuelle Saison eine interaktive 3D-Aufstellung (Offense/Defense) mit dem Teamlogo auf dem Rasen.
 - Mit Kader in `curation/rosters.json` (derzeit: Ravensburg Razorbacks 2026): Positionen und Rückennummern aus dem offiziellen Kader (`startingLineup`).
 - Ohne Kader: vorläufige Aufstellung nur aus der abgeleiteten Rolle (`provisionalLineup`): QB, RB, 3 Receiver (WR/TE gemeinsam), 11 × „DEF“
-  (Anordnung nach Statistikprofil, keine Positionsangabe), keine Nummern, Offensive Line frei. Auf der Seite als vorläufig gekennzeichnet.
+  (Anordnung nach Statistikprofil, keine Positionsangabe), keine Nummern. Auf der Seite als vorläufig gekennzeichnet.
+- Offensive Line (beide Fälle): die fünf Starter laut offizieller Starterliste der Liga (`public/data/ol_starters.json` aus
+  `curation/ol_starters.json`, `olLine` in `src/lib/lineup.ts`); ohne Liste bleiben die Plätze offen, nie aus dem Kader aufgefüllt.
 - Elf Offense-Plätze: QB, RB, 2 WR, TE, 5 OL und ein elfter Platz, der nach Statistik an den zweiten RB oder den dritten WR geht
   (Mindestvolumen vor Kulanz, sonst Yards from Scrimmage; `applyFlex` in `src/lib/lineup.ts`).
 - Trikotfarben nur aus `curation/teams.json` (`colors` mit Quelle), sonst neutrales Trikot.

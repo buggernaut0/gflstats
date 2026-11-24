@@ -8,7 +8,7 @@ import type { Lineup } from "@/lib/lineup";
 const FLEX_COUNT: Record<string, string> = { RB: "1–2", WR: "2–3", REC: "3–4" };
 
 /** „So wird die Aufstellung ermittelt“ – Regeln der Starting Lineup in der gewählten Sprache. */
-export default function LineupMethod({ provisional, slots, minShare, regularShare, teamGames, minGames, flex, hasColors, rosterNote }: {
+export default function LineupMethod({ provisional, slots, minShare, regularShare, teamGames, minGames, flex, hasColors, rosterNote, olSource }: {
   provisional: boolean;
   slots: { position: string; count: number }[];
   minShare: number;
@@ -18,8 +18,10 @@ export default function LineupMethod({ provisional, slots, minShare, regularShar
   flex: Lineup["flex"];
   hasColors: boolean;
   rosterNote?: string | null;
+  /** Quelle der Offensive Line (Starterliste der Liga), null = keine vollstaendige Liste */
+  olSource?: { date: string; opponentName: string; url: string; listedGames: number; teamGames: number } | null;
 }) {
-  const { m } = useI18n();
+  const { m, fmtDate } = useI18n();
   const t = m.team;
   const slotKey = (pos: string) => (provisional && pos === "OL" ? "OL_provisional" : pos);
   const reason = flex.code
@@ -46,6 +48,15 @@ export default function LineupMethod({ provisional, slots, minShare, regularShar
           <span className="font-medium text-ink">{t.elevenTitle}</span>
           {t.eleven(provisional)}
           {flex.winner && t.here(flex.winner, reason)}
+        </p>
+        <p>
+          <span className="font-medium text-ink">{t.olTitle}</span>
+          {olSource ? (
+            <>
+              {t.olSource(fmtDate(olSource.date), olSource.opponentName, olSource.listedGames, olSource.teamGames)}{" "}
+              <a href={olSource.url} className="text-accent-text underline-offset-4 hover:underline" rel="noopener">{t.olSourceLink}</a>
+            </>
+          ) : t.olMissing}
         </p>
         {provisional && <p>{t.provisionalNote}</p>}
         <p>

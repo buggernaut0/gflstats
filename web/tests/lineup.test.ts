@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
-import { MIN_GAME_SHARE, OL_MIN_GAMES, REGULAR_GAME_SHARE, SLOTS, provisionalLineup, startingLineup, type TeamRoster } from "../src/lib/lineup.ts";
+import { MIN_GAME_SHARE, REGULAR_GAME_SHARE, SLOTS, provisionalLineup, startingLineup, type OlStarter, type TeamOl, type TeamRoster } from "../src/lib/lineup.ts";
 
 const row = (g: number, p: string, s: Record<string, number>, t = "a") => ({ g: `g${g}`, p, t, s });
 const roster = (players: [string | null, number, string][]): TeamRoster => ({ source: "test", retrieved: null, note: null, players: players.map(([player, number, position]) => ({ player, name: player ?? "ohne Statistik", number, position: position as never })) });
@@ -61,24 +61,56 @@ test("Nur Spieler der Positionsgruppe laut Kader; Spiele anderer Teams zaehlen n
   assert.equal(l.defense.find((x) => x.slot === "DB1")!.player, "db");
 });
 
-test("Offensive Line: jeder belegte Einsatz zaehlt, Rangfolge nach Einsaetzen, Rest aus dem Kader", () => {
+test("Offensive Line: ohne Starterliste bleiben alle fuenf Plaetze offen - nie aus dem Kader aufgefuellt", () => {
   const rows = [
     ...Array.from({ length: 10 }, (_, i) => row(i, "qb", { pass: 20 })),
     ...Array.from({ length: 6 }, (_, i) => row(i, "ol-a", { tackletotal: 1 })),
     row(0, "ol-b", { penalty: 1 }),
-    row(1, "ol-c", { fumbledandrecovered: 1 }), row(2, "ol-c", {}),
-    ...Array.from({ length: 3 }, (_, i) => row(i, "dl", { tackletotal: 2 })), // kein OL laut Kader
   ];
-  const l = startingLineup(rows, "a", roster([["qb", 1, "QB"], ["ol-a", 70, "OL"], ["ol-b", 71, "OL"], ["ol-c", 74, "OL"], [null, 72, "OL"], ["dl", 90, "DL"]]))!;
+  const l = startingLineup(rows, "a", roster([["qb", 1, "QB"], ["ol-a", 70, "OL"], ["ol-b", 71, "OL"], [null, 72, "OL"], [null, 73, "OL"], [null, 74, "OL"]]))!;
   const ol = l.offense.filter((x) => x.position === "OL");
   assert.equal(ol.length, 5);
-  // ol-a 6 Spiele, ol-c 2, ol-b 1; der Lineman ohne Einsatz im Bogen (#72) kommt aus dem Kader dazu;
-  // der fuenfte Platz bleibt leer, weil der Kader nur vier O-Liner fuehrt (kein DL rueckt nach)
-  assert.deepEqual(ol.map((x) => x.player), ["ol-a", "ol-c", "ol-b", null, null]);
-  assert.deepEqual(ol.map((x) => x.number), [70, 74, 71, 72, null]);
-  assert.deepEqual(ol.map((x) => x.fill), [undefined, undefined, undefined, "roster", undefined]);
-  assert.equal(ol[3].rosterName, "ohne Statistik");
-  assert.ok(ol.every((x) => x.slot === "OL"));
+  // Einsaetze im Statistikbogen oder Kaderreihenfolge machen niemanden zum Starter
+  assert.deepEqual(ol.map((x) => x.player ?? x.rosterName), [null, null, null, null, null]);
+  assert.equal(l.olSource, null);
+});
+
+const olList = (line: Partial<OlStarter>[]): TeamOl => ({
+  game: "g9", date: "2026-09-12", gametype: "Playoff", opponent: "b", url: "https://statsnscore.online/stats/v2/gamedata?gameid=g9", teamGames: 10, listedGames: 8,
+  line: line.map((e, i) => ({ number: 70 + i, name: `OL ${i}`, player: null, role: null, slot: null, starts: 8, playoffStarts: 1, confidence: "hoch", ...e })),
+});
+
+test("Offensive Line: die fuenf Starter laut Starterliste, auch ohne Spieler-ID (Name und Nummer)", () => {
+  const rows = [...Array.from({ length: 10 }, (_, i) => row(i, "qb", { pass: 20 })), row(0, "ol-a", { tackletotal: 1 })];
+  const l = startingLineup(rows, "a", roster([["qb", 1, "QB"], ["ol-a", 70, "OL"]]), new Set(), olList([{ player: "ol-a", name: "A" }, {}, {}, {}, { confidence: "mittel", starts: 2 }]))!;
+  const ol = l.offense.filter((x) => x.position === "OL");
+  assert.deepEqual(ol.map((x) => x.number), [70, 71, 72, 73, 74]);
+  assert.equal(ol[0].player, "ol-a");
+  assert.equal(ol[0].games, 1);
+  assert.deepEqual(ol.map((x) => x.player === null), [false, true, true, true, true]);
+  assert.ok(ol.every((x) => x.rosterName && !x.fill));
+  assert.equal(ol[4].ol!.confidence, "mittel");
+  assert.equal(ol[4].ol!.listedGames, 8);
+  assert.equal(l.olSource!.game, "g9");
+});
+
+test("Offensive Line: Center in die Mitte, Tackles aussen, belegter Slot hat Vorrang - ohne Angabe keine Seite", () => {
+  const rows = Array.from({ length: 10 }, (_, i) => row(i, "qb", { pass: 20 }));
+  const l = startingLineup(rows, "a", roster([["qb", 1, "QB"]]), new Set(), olList(([{ role: "T" }, { role: "G" }, { role: "C" }, { role: "G" }, { role: "T" }] as Partial<OlStarter>[]).reverse()))!;
+  const ol = l.offense.filter((x) => x.position === "OL").sort((a, b) => a.spot[1] - b.spot[1]);
+  assert.deepEqual(ol.map((x) => x.slot), ["OT", "OG", "C", "OG", "OT"]);
+  const s = startingLineup(rows, "a", roster([["qb", 1, "QB"]]), new Set(), olList([{ slot: "RT", slotSource: "x" }, { role: "C" }, {}, {}, {}]))!;
+  const sl = s.offense.filter((x) => x.position === "OL").sort((a, b) => a.spot[1] - b.spot[1]);
+  assert.equal(sl[4].slot, "RT");
+  assert.equal(sl[4].number, 70);
+  assert.equal(sl[2].slot, "C");
+  assert.deepEqual(sl.map((x) => x.slot).filter((x) => x === "OL").length, 3);
+});
+
+test("Vorlaeufige Aufstellung (ohne Kader): OL ebenfalls aus der Starterliste", () => {
+  const rows = Array.from({ length: 10 }, (_, i) => row(i, "qb", { pass: 80 }));
+  const l = provisionalLineup(rows, "a", () => "QB", new Set(), olList([{}, {}, {}, {}, {}]))!;
+  assert.deepEqual(l.offense.filter((x) => x.position === "OL").map((x) => x.number), [70, 71, 72, 73, 74]);
 });
 
 test("Elfter Offense-Platz: RB2 oder WR3 nach Statistik, nie beide", () => {
@@ -136,7 +168,8 @@ test("Echte Daten Ravensburg 2026: jeder Starter steht im Kader, erfuellt die Sc
   const rosters = JSON.parse(fs.readFileSync(data("rosters.json"), "utf8"));
   const rows = JSON.parse(fs.readFileSync(data("pg/2026.json"), "utf8"));
   const r: TeamRoster = rosters["2026"]["ravensburg-razorbacks"];
-  const l = startingLineup(rows, "ravensburg-razorbacks", r)!;
+  const ol: TeamOl = JSON.parse(fs.readFileSync(data("ol_starters.json"), "utf8"))["2026"]["ravensburg-razorbacks"];
+  const l = startingLineup(rows, "ravensburg-razorbacks", r, new Set(), ol)!;
   const all = [...l.offense, ...l.defense];
   assert.equal(all.length, SLOTS.reduce((n, s) => n + s.count, 0) - 1); // elfter Offense-Platz: RB2 oder WR3
   assert.equal(l.offense.length, 11);
@@ -149,10 +182,13 @@ test("Echte Daten Ravensburg 2026: jeder Starter steht im Kader, erfuellt die Sc
     assert.ok(e, `${x.rosterName} steht im Kader`);
     assert.equal(e.position, x.position);
     assert.equal(e.player, x.player);
-    // regulaer ermittelt: Offensive Line jeder belegte Einsatz (OL_MIN_GAMES), sonst die Einsatzschwelle
-    if (!x.fill) assert.ok(x.games >= (x.position === "OL" ? OL_MIN_GAMES : l.minGames), `${x.player}: ${x.games} Spiele`);
+    // regulaer ermittelt: Einsatzschwelle (Offensive Line: Starterliste der Liga, siehe unten)
+    if (!x.fill && x.position !== "OL") assert.ok(x.games >= l.minGames, `${x.player}: ${x.games} Spiele`);
   }
-  assert.equal(l.offense.filter((x) => x.position === "OL").length, 5);
+  // Offensive Line laut Starterliste des Playoff-Spiels vom 12.09.2026 (Hinweis eines Spielers: bisher falsch)
+  const line = l.offense.filter((x) => x.position === "OL").map((x) => x.number).sort();
+  assert.deepEqual(line, [54, 69, 72, 75, 78]);
+  assert.ok(!line.includes(55), "Schafheutle (#55) startete laut Starterlisten kein Spiel");
   assert.equal(l.offense.find((x) => x.slot === "QB1")!.player, "broghean-mcgovern");
 });
 
@@ -160,8 +196,9 @@ test("Echte Daten 2026: alle Kader-Teams – Nummern/Positionen aus dem Kader, O
   const rosters = JSON.parse(fs.readFileSync(data("rosters.json"), "utf8"))["2026"] as Record<string, TeamRoster>;
   const rows = JSON.parse(fs.readFileSync(data("pg/2026.json"), "utf8"));
   assert.ok(Object.keys(rosters).length >= 14);
+  const ols = JSON.parse(fs.readFileSync(data("ol_starters.json"), "utf8"))["2026"] as Record<string, TeamOl>;
   for (const [team, r] of Object.entries(rosters)) {
-    const l = startingLineup(rows, team, r)!;
+    const l = startingLineup(rows, team, r, new Set(), ols[team])!;
     const all = [...l.offense, ...l.defense];
     assert.equal(l.offense.length, 11);
     assert.equal(l.defense.length, 11);

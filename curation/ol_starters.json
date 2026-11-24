@@ -1,0 +1,1998 @@
+{
+ "_info": "Starting Offensive Line je Saison und Team. Quelle: offizielle Starterlisten der Liga auf statsnscore.online (Spielseite, Abschnitt 'Offense Starters'), erzeugt mit scripts/ol_starters.py. 'line' = die fuenf O-Liner des letzten Spiels mit vollstaendiger Liste (Reihenfolge wie in der Quelle, sagt nichts ueber die Seite). 'role' = T/G/C nur, wenn Starterliste oder Kader es angeben; 'slot' (LT/LG/C/RG/RT) nur von Hand mit Quelle ('slotSource'). 'confidence': hoch = auch in mind. der Haelfte der Spiele mit Liste Starter, mittel = sonst. 'manual': true schuetzt einen Team-Eintrag vor dem Neuerzeugen.",
+ "retrieved": "2026-11-24",
+ "starters": {
+  "2026": {
+   "allgaeu-comets": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-08-22",
+    "game": "69b6956e9227192b30414625",
+    "date": "2026-08-22",
+    "gametype": "Regular",
+    "opponent": "duesseldorf-panther",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956e9227192b30414625",
+    "teamGames": 12,
+    "listedGames": 7,
+    "line": [
+     {
+      "number": 68,
+      "name": "Daniel Schel",
+      "sourceName": "Daniel Schel",
+      "player": "daniel-schel",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 6,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 56,
+      "name": "Anton Bruckmeier",
+      "sourceName": "Anton Bruckmeier",
+      "player": "anton-bruckmeier",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 1,
+      "playoffStarts": 0,
+      "confidence": "mittel"
+     },
+     {
+      "number": 64,
+      "name": "Oliver Baumgardt",
+      "sourceName": "Oliver Baumgardt",
+      "player": "oliver-baumgardt",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 7,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 69,
+      "name": "Oscar Zuddas",
+      "sourceName": "Oscar Zuddas",
+      "player": "oscar-zuddas",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 2,
+      "playoffStarts": 0,
+      "confidence": "mittel",
+      "sourceNumber": 76,
+      "note": "Starterliste: Nr. 76, Kader: Nr. 69 (angezeigt wird die Kadernummer)"
+     },
+     {
+      "number": 59,
+      "name": "Rudolf Zingel",
+      "sourceName": "Rudolf Zingel",
+      "player": "rudolf-zingel",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 4,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 63,
+      "name": "Matteo Acquadro",
+      "player": null,
+      "starts": 6,
+      "lastStart": "2026-8-15"
+     },
+     {
+      "number": 74,
+      "name": "Dario Todisco",
+      "player": null,
+      "starts": 3,
+      "lastStart": "2026-8-15"
+     },
+     {
+      "number": 77,
+      "name": "Marco Ücker",
+      "player": null,
+      "starts": 2,
+      "lastStart": "2026-5-24"
+     },
+     {
+      "number": 58,
+      "name": "Martin Piontek",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-5-9"
+     },
+     {
+      "number": 79,
+      "name": "Jan Schnurrenberger",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-6-6"
+     },
+     {
+      "number": 77,
+      "name": "Ehren Harvey",
+      "player": "ehren-harvey",
+      "starts": 1,
+      "lastStart": "2026-6-20"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       58,
+       63,
+       64,
+       68,
+       77
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-22",
+      "numbers": [
+       56,
+       59,
+       64,
+       68,
+       76
+      ]
+     },
+     "playoffs": []
+    }
+   },
+   "berlin-rebels": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-09-06",
+    "game": "69b6956c9227192b304140d0",
+    "date": "2026-09-06",
+    "gametype": "Regular",
+    "opponent": "hildesheim-invaders",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956c9227192b304140d0",
+    "teamGames": 12,
+    "listedGames": 10,
+    "line": [
+     {
+      "number": 73,
+      "name": "Sven Skora",
+      "sourceName": "Sven Skora",
+      "player": "sven-skora",
+      "role": "G/C",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 9,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 66,
+      "name": "Robert Sövegjàrtô",
+      "sourceName": "Robert Sövegjàrtô",
+      "player": "robert-sovegjarto",
+      "role": "G/C",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 5,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 67,
+      "name": "Marcel Camenz",
+      "sourceName": "Marcel Carmenz",
+      "player": "marcel-camenz",
+      "role": "C",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 8,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 72,
+      "name": "Sven Giesewatrowski",
+      "sourceName": "Sven Giesewatrowski",
+      "player": "sven-giesewatrowski",
+      "role": "T",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 9,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 71,
+      "name": "Gideon Grabert",
+      "sourceName": "Gideon Grabert",
+      "player": "gideon-grabert",
+      "role": "G",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 4,
+      "playoffStarts": 0,
+      "confidence": "mittel"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 78,
+      "name": "Jannik Werblow",
+      "player": "jannik-werblow",
+      "starts": 5,
+      "lastStart": "2026-8-29"
+     },
+     {
+      "number": 74,
+      "name": "Matteo Lodovichi",
+      "player": "matteo-lodovichi",
+      "starts": 5,
+      "lastStart": "2026-8-29"
+     },
+     {
+      "number": 79,
+      "name": "Raphael Miranda",
+      "player": null,
+      "starts": 3,
+      "lastStart": "2026-6-6"
+     },
+     {
+      "number": 53,
+      "name": "Jakub Berezowski",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-8-1"
+     },
+     {
+      "number": 76,
+      "name": "Thierry Tchato",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-8-8"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       67,
+       71,
+       72,
+       73,
+       79
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-09-06",
+      "numbers": [
+       66,
+       67,
+       71,
+       72,
+       73
+      ]
+     },
+     "playoffs": []
+    }
+   },
+   "braunschweig-lions": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-08-29",
+    "game": "69b6956e9227192b304145d7",
+    "date": "2026-08-15",
+    "gametype": "Regular",
+    "opponent": "potsdam-royals",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956e9227192b304145d7",
+    "teamGames": 12,
+    "listedGames": 12,
+    "line": [
+     {
+      "number": 57,
+      "name": "Jan-Mattes Selle",
+      "sourceName": "Jan Selle",
+      "player": "jan-selle",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 60,
+      "name": "Dominik Bechler",
+      "sourceName": "Dominik Bechler",
+      "player": "dominik-bechler",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 10,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 69,
+      "name": "Kevin De Oliveira Diogo",
+      "sourceName": "Kevin De-Oliveira-Diogo",
+      "player": "kevin-de-oliveira-diogo",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 9,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 75,
+      "name": "Marcos Munhoz",
+      "sourceName": "Marcos Munhoz",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 6,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 79,
+      "name": "Nils Munderloh",
+      "sourceName": "Nils Munderloh",
+      "player": "nils-munderloh",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 58,
+      "name": "Lauritz Pohle",
+      "player": "lauritz-pohle",
+      "starts": 6,
+      "lastStart": "2026-8-29"
+     },
+     {
+      "number": 61,
+      "name": "Duygu Ozkor",
+      "player": null,
+      "starts": 2,
+      "lastStart": "2026-5-16"
+     },
+     {
+      "number": 73,
+      "name": "Sebastian Fischer",
+      "player": null,
+      "starts": 2,
+      "lastStart": "2026-7-5"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       57,
+       58,
+       60,
+       61,
+       79
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-29",
+      "numbers": [
+       57,
+       58,
+       69,
+       79
+      ]
+     },
+     "playoffs": []
+    }
+   },
+   "dresden-monarchs": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-10-03",
+    "game": "69b6956f9227192b304149a6",
+    "date": "2026-10-03",
+    "gametype": "Playoff",
+    "opponent": "potsdam-royals",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b304149a6",
+    "teamGames": 15,
+    "listedGames": 15,
+    "line": [
+     {
+      "number": 76,
+      "name": "Aaron Wahl",
+      "sourceName": "Aaron Wahl",
+      "player": "aaron-wahl",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 15,
+      "playoffStarts": 3,
+      "confidence": "hoch"
+     },
+     {
+      "number": 79,
+      "name": "Daniel Szabo",
+      "sourceName": "Daniel Szabo",
+      "player": "daniel-szabo",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 15,
+      "playoffStarts": 3,
+      "confidence": "hoch"
+     },
+     {
+      "number": 59,
+      "name": "Johann Bachofner",
+      "sourceName": "Johann Bachofner",
+      "player": "johann-bachofner",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 3,
+      "confidence": "hoch"
+     },
+     {
+      "number": 75,
+      "name": "Phillip Most",
+      "sourceName": "Phillip Most",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 15,
+      "playoffStarts": 3,
+      "confidence": "hoch"
+     },
+     {
+      "number": 65,
+      "name": "Timo Wieczoreck",
+      "sourceName": "Timo Wieczoreck",
+      "player": "timo-wieczoreck",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 14,
+      "playoffStarts": 3,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 53,
+      "name": "Hermann Schramm",
+      "player": null,
+      "starts": 3,
+      "lastStart": "2026-5-23"
+     },
+     {
+      "number": 70,
+      "name": "Mathew Henderson",
+      "player": "mathew-henderson",
+      "starts": 1,
+      "lastStart": "2026-8-30"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       53,
+       65,
+       75,
+       76,
+       79
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-30",
+      "numbers": [
+       59,
+       70,
+       75,
+       76,
+       79
+      ]
+     },
+     "playoffs": [
+      {
+       "date": "2026-09-12",
+       "numbers": [
+        59,
+        65,
+        75,
+        76,
+        79
+       ]
+      },
+      {
+       "date": "2026-09-19",
+       "numbers": [
+        59,
+        65,
+        75,
+        76,
+        79
+       ]
+      },
+      {
+       "date": "2026-10-03",
+       "numbers": [
+        59,
+        65,
+        75,
+        76,
+        79
+       ]
+      }
+     ]
+    }
+   },
+   "duesseldorf-panther": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-09-12",
+    "game": "69b6956f9227192b304148e3",
+    "date": "2026-09-12",
+    "gametype": "Playoff",
+    "opponent": "schwaebisch-hall-unicorns",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b304148e3",
+    "teamGames": 13,
+    "listedGames": 12,
+    "line": [
+     {
+      "number": 62,
+      "name": "Emil Hagberg",
+      "sourceName": "Emil Hagberg",
+      "player": "emil-hagberg",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 6,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 65,
+      "name": "Mikko Rajala",
+      "sourceName": "Mikko Rajala",
+      "player": "mikko-rajala",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 71,
+      "name": "Dwain Njoh Mafany",
+      "sourceName": "Dwain-Njoh Mafany",
+      "player": "dwain-njoh-mafany",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 74,
+      "name": "Julius Frenken",
+      "sourceName": "Julius Frenken",
+      "player": "julius-frenken",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 76,
+      "name": "Jakob Aaron Türk",
+      "sourceName": "Jakob-Aaron Türk",
+      "player": "jakob-aaron-turk",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 6,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 52,
+      "name": "Matej Bencek",
+      "player": null,
+      "starts": 4,
+      "lastStart": "2026-6-13"
+     },
+     {
+      "number": 77,
+      "name": "Noah Ogiku",
+      "player": "noah-ogiku",
+      "starts": 2,
+      "lastStart": "2026-6-27"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-16",
+      "numbers": [
+       52,
+       57,
+       71,
+       74
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-29",
+      "numbers": [
+       62,
+       65,
+       71,
+       74,
+       76
+      ]
+     },
+     "playoffs": [
+      {
+       "date": "2026-09-12",
+       "numbers": [
+        62,
+        65,
+        71,
+        74,
+        76
+       ]
+      }
+     ]
+    }
+   },
+   "hildesheim-invaders": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-09-12",
+    "game": "69b6956f9227192b3041486e",
+    "date": "2026-09-12",
+    "gametype": "Playoff",
+    "opponent": "pforzheim-wilddogs",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b3041486e",
+    "teamGames": 13,
+    "listedGames": 11,
+    "line": [
+     {
+      "number": 70,
+      "name": "Maximilian Lemke",
+      "sourceName": "Maxi Lemke",
+      "player": "maximilian-lemke",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 4,
+      "playoffStarts": 1,
+      "confidence": "mittel"
+     },
+     {
+      "number": 57,
+      "name": "Otavio Amorim",
+      "sourceName": "Otavio Amorim",
+      "player": "otavio-amorim",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 4,
+      "playoffStarts": 1,
+      "confidence": "mittel"
+     },
+     {
+      "number": 52,
+      "name": "Johan Sager",
+      "sourceName": "Johan Sager",
+      "player": "johan-sager",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 7,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 66,
+      "name": "Romeo Colin Amann",
+      "sourceName": "Romeo Amann",
+      "player": "romeo-amann",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 7,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 73,
+      "name": "Paul Deuster",
+      "sourceName": "Paul Deuster",
+      "player": "paul-deuster",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 4,
+      "playoffStarts": 1,
+      "confidence": "mittel"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 76,
+      "name": "Christian Wittler",
+      "player": "christian-wittler",
+      "starts": 10,
+      "lastStart": "2026-8-22"
+     },
+     {
+      "number": 74,
+      "name": "David Beale",
+      "player": "dave-beale",
+      "starts": 8,
+      "lastStart": "2026-8-22"
+     },
+     {
+      "number": 71,
+      "name": "Daniel Kane",
+      "player": null,
+      "starts": 7,
+      "lastStart": "2026-8-22"
+     },
+     {
+      "number": 55,
+      "name": "Lukas Macke",
+      "player": "lucas-macke",
+      "starts": 4,
+      "lastStart": "2026-5-30"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       52,
+       55,
+       71,
+       74,
+       76
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-22",
+      "numbers": [
+       57,
+       66,
+       71,
+       74,
+       76
+      ]
+     },
+     "playoffs": [
+      {
+       "date": "2026-09-12",
+       "numbers": [
+        52,
+        57,
+        66,
+        70,
+        73
+       ]
+      }
+     ]
+    }
+   },
+   "kiel-baltic-hurricanes": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-08-22",
+    "game": "69b6956e9227192b3041464c",
+    "date": "2026-08-22",
+    "gametype": "Regular",
+    "opponent": "potsdam-royals",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956e9227192b3041464c",
+    "teamGames": 12,
+    "listedGames": 11,
+    "line": [
+     {
+      "number": 78,
+      "name": "Clemens Wolkenhaar",
+      "sourceName": "Clemens Wolkenhaar",
+      "player": "clemens-wolkenhaar",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 10,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 76,
+      "name": "Ian Spitzke",
+      "sourceName": "Ian Spitzke",
+      "player": "ian-spitzke",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 9,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 65,
+      "name": "Johannes Kurmis",
+      "sourceName": "Johannes Kurmis",
+      "player": "johannes-kurmis",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 6,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 66,
+      "name": "Brereton Littlecott",
+      "sourceName": "Brereton Littlecott",
+      "player": "brereton-littlecott",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 8,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 71,
+      "name": "Alexandre Mathieu",
+      "sourceName": "Alexandre Mathieu",
+      "player": "alexandre-mathieu",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 5,
+      "playoffStarts": 0,
+      "confidence": "mittel"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 57,
+      "name": "Mikkel Jacobsen",
+      "player": null,
+      "starts": 9,
+      "lastStart": "2026-8-15"
+     },
+     {
+      "number": 74,
+      "name": "Felix Thomsen",
+      "player": null,
+      "starts": 3,
+      "lastStart": "2026-6-13"
+     },
+     {
+      "number": 64,
+      "name": "Kevin von Kroge",
+      "player": "kevin-vonkroge",
+      "starts": 2,
+      "lastStart": "2026-5-23"
+     },
+     {
+      "number": 72,
+      "name": "Thies Wittmann",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-6-7"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-16",
+      "numbers": [
+       57,
+       64,
+       66,
+       71,
+       78
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-22",
+      "numbers": [
+       65,
+       66,
+       71,
+       76,
+       78
+      ]
+     },
+     "playoffs": []
+    }
+   },
+   "munich-cowboys": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-09-12",
+    "game": "69b6956f9227192b30414895",
+    "date": "2026-09-12",
+    "gametype": "Playoff",
+    "opponent": "dresden-monarchs",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b30414895",
+    "teamGames": 13,
+    "listedGames": 13,
+    "line": [
+     {
+      "number": 70,
+      "name": "Christian Urban",
+      "sourceName": "Christian Urban",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 2,
+      "playoffStarts": 1,
+      "confidence": "mittel"
+     },
+     {
+      "number": 64,
+      "name": "Tobias Tüttinghoff",
+      "sourceName": "Tobias Tüttinghoff",
+      "player": "tobias-tuttinghoff",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 4,
+      "playoffStarts": 1,
+      "confidence": "mittel"
+     },
+     {
+      "number": 56,
+      "name": "Maximilian Weegen",
+      "sourceName": "Maximilian Weegen",
+      "player": "maximilian-weegen",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 62,
+      "name": "Noah Rimsky-Korsakow",
+      "sourceName": "Noah Rimsky-Korsakow",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 13,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 52,
+      "name": "Florian Wenta",
+      "sourceName": "Florian Wenta",
+      "player": "florian-wenta",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 13,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 50,
+      "name": "Kilian Feuerstein",
+      "player": "kilian-feuerstein",
+      "starts": 10,
+      "lastStart": "2026-8-22"
+     },
+     {
+      "number": 74,
+      "name": "Vincent Werfl",
+      "player": null,
+      "starts": 8,
+      "lastStart": "2026-7-25"
+     },
+     {
+      "number": 55,
+      "name": "Jonathan Vollert",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-8-1"
+     },
+     {
+      "number": 66,
+      "name": "Sandro Wohn",
+      "player": "sandro-wohn",
+      "starts": 1,
+      "lastStart": "2026-8-1"
+     },
+     {
+      "number": 68,
+      "name": "Tom Wecke",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-8-29"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       50,
+       52,
+       62,
+       64,
+       74
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-29",
+      "numbers": [
+       52,
+       56,
+       62,
+       68,
+       70
+      ]
+     },
+     "playoffs": [
+      {
+       "date": "2026-09-12",
+       "numbers": [
+        52,
+        56,
+        62,
+        64,
+        70
+       ]
+      }
+     ]
+    }
+   },
+   "pforzheim-wilddogs": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-09-19",
+    "game": "69b6956f9227192b30414931",
+    "date": "2026-09-19",
+    "gametype": "Playoff",
+    "opponent": "dresden-monarchs",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b30414931",
+    "teamGames": 14,
+    "listedGames": 13,
+    "line": [
+     {
+      "number": 73,
+      "name": "Xavier Venkataya",
+      "sourceName": "Xavier Venkataya",
+      "player": "xavier-venkataya",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 13,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     },
+     {
+      "number": 79,
+      "name": "Pascal Osyguß",
+      "sourceName": "Pascal Osyguß",
+      "player": "pascal-osygu",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 6,
+      "playoffStarts": 1,
+      "confidence": "mittel"
+     },
+     {
+      "number": 65,
+      "name": "Nico Friedrich",
+      "sourceName": "Nico Friedrich",
+      "player": "nico-friedrich",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 7,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     },
+     {
+      "number": 68,
+      "name": "Tobias Pai",
+      "sourceName": "Tobias Pai",
+      "player": "tobias-pai",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     },
+     {
+      "number": 72,
+      "name": "Joshua Sisifa",
+      "sourceName": "Joshua Sisifa",
+      "player": "joshua-sisifa",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 9,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 78,
+      "name": "Benhur Ayra",
+      "player": "benhur-ayra",
+      "starts": 12,
+      "lastStart": "2026-9-12"
+     },
+     {
+      "number": 64,
+      "name": "Jan Schmid",
+      "player": "jan-schmid",
+      "starts": 6,
+      "lastStart": "2026-8-22"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       64,
+       65,
+       72,
+       73,
+       78
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-22",
+      "numbers": [
+       64,
+       65,
+       68,
+       73,
+       78
+      ]
+     },
+     "playoffs": [
+      {
+       "date": "2026-09-12",
+       "numbers": [
+        65,
+        68,
+        72,
+        73,
+        78
+       ]
+      },
+      {
+       "date": "2026-09-19",
+       "numbers": [
+        65,
+        68,
+        72,
+        73,
+        79
+       ]
+      }
+     ]
+    }
+   },
+   "potsdam-royals": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-10-03",
+    "game": "69b6956f9227192b304149a6",
+    "date": "2026-10-03",
+    "gametype": "Playoff",
+    "opponent": "dresden-monarchs",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b304149a6",
+    "teamGames": 15,
+    "listedGames": 14,
+    "line": [
+     {
+      "number": 70,
+      "name": "Nemanja Graovac",
+      "sourceName": "Nemanja-Graovac",
+      "player": "nemanja-graovac",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 7,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 68,
+      "name": "Joshua Rietveld",
+      "sourceName": "Joshua-Rietveld",
+      "player": "joshua-rietveld",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 11,
+      "playoffStarts": 3,
+      "confidence": "hoch"
+     },
+     {
+      "number": 51,
+      "name": "William Thursland",
+      "sourceName": "Billy-Thursland",
+      "player": "billy-thursland",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 14,
+      "playoffStarts": 3,
+      "confidence": "hoch"
+     },
+     {
+      "number": 54,
+      "name": "Benjamin Burghes",
+      "sourceName": "Benjamin-Burghes",
+      "player": "benjamin-burghes",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 13,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     },
+     {
+      "number": 74,
+      "name": "Louis Burghes",
+      "sourceName": "Louis-Burghes",
+      "player": "louis-burghes",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 13,
+      "playoffStarts": 3,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 58,
+      "name": "Franz-Legel",
+      "player": "franz-legel",
+      "starts": 8,
+      "lastStart": "2026-9-12"
+     },
+     {
+      "number": 56,
+      "name": "Ludwig-Rötzscher",
+      "player": "ludwig-rotzscher",
+      "starts": 3,
+      "lastStart": "2026-9-19"
+     },
+     {
+      "number": 77,
+      "name": "Robin-Kamp",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-7-4"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       51,
+       54,
+       58,
+       68,
+       75
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-29",
+      "numbers": [
+       51,
+       54,
+       68,
+       70,
+       74
+      ]
+     },
+     "playoffs": [
+      {
+       "date": "2026-09-12",
+       "numbers": [
+        51,
+        56,
+        58,
+        68,
+        74
+       ]
+      },
+      {
+       "date": "2026-09-19",
+       "numbers": [
+        51,
+        54,
+        56,
+        68,
+        74
+       ]
+      },
+      {
+       "date": "2026-10-03",
+       "numbers": [
+        51,
+        54,
+        68,
+        70,
+        74
+       ]
+      }
+     ]
+    }
+   },
+   "ravensburg-razorbacks": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-09-12",
+    "game": "69b6956f9227192b304148bc",
+    "date": "2026-09-12",
+    "gametype": "Playoff",
+    "opponent": "potsdam-royals",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b304148bc",
+    "teamGames": 13,
+    "listedGames": 12,
+    "line": [
+     {
+      "number": 54,
+      "name": "Lorenzo Gennaio GRANATO",
+      "sourceName": "Lorenzo Gennaio-Granato",
+      "player": "lorenzo-gennaio-granato",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 69,
+      "name": "Abdullah ORBAY",
+      "sourceName": "Abdullah Orbay",
+      "player": "abdullah-orbay",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 10,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 72,
+      "name": "Clemens ÖSTERLE",
+      "sourceName": "Clemens Österle",
+      "player": "clemens-osterle",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 5,
+      "playoffStarts": 1,
+      "confidence": "mittel"
+     },
+     {
+      "number": 75,
+      "name": "Luca NICKLAS",
+      "sourceName": "Luca Nicklas",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 9,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     },
+     {
+      "number": 78,
+      "name": "Aaron WILMOT",
+      "sourceName": "Aaron Wilmot",
+      "player": "aaron-wilmot",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 1,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 52,
+      "name": "Leon Hauber",
+      "player": null,
+      "starts": 7,
+      "lastStart": "2026-7-19"
+     },
+     {
+      "number": 65,
+      "name": "Sebastian Trabold",
+      "player": null,
+      "starts": 4,
+      "lastStart": "2026-8-30"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       54,
+       65,
+       69,
+       75,
+       78
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-30",
+      "numbers": [
+       54,
+       65,
+       72,
+       75,
+       78
+      ]
+     },
+     "playoffs": [
+      {
+       "date": "2026-09-12",
+       "numbers": [
+        54,
+        69,
+        72,
+        75,
+        78
+       ]
+      }
+     ]
+    }
+   },
+   "regensburg-phoenix": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-08-29",
+    "game": "69b6956f9227192b304147ab",
+    "date": "2026-08-29",
+    "gametype": "Regular",
+    "opponent": "schwaebisch-hall-unicorns",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b304147ab",
+    "teamGames": 12,
+    "listedGames": 10,
+    "line": [
+     {
+      "number": 77,
+      "name": "Jordan Orrini Taualii",
+      "sourceName": "Jordan Taualii",
+      "player": "jordan-taualii",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 10,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 69,
+      "name": "Alexander Drexler",
+      "sourceName": "Alexander Drexler",
+      "player": "alexander-drexler",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 9,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 60,
+      "name": "Marvin Benedict Biegert",
+      "sourceName": "Marvin Biegert",
+      "player": "marvin-biegert",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 10,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 76,
+      "name": "Benjamin Fuery",
+      "sourceName": "Benjamin Fleury",
+      "player": "benjamin-fleury",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 2,
+      "playoffStarts": 0,
+      "confidence": "mittel"
+     },
+     {
+      "number": 71,
+      "name": "Ahmed Charfi",
+      "sourceName": "Ahmed Charfi",
+      "player": "ahmed-charfi",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 5,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 70,
+      "name": "Philip Weinzierl",
+      "player": null,
+      "starts": 7,
+      "lastStart": "2026-8-15"
+     },
+     {
+      "number": 65,
+      "name": "Maximilian König",
+      "player": null,
+      "starts": 4,
+      "lastStart": "2026-8-1"
+     },
+     {
+      "number": 75,
+      "name": "Enrico Bernock",
+      "player": null,
+      "starts": 2,
+      "lastStart": "2026-7-4"
+     },
+     {
+      "number": 66,
+      "name": "Johann Eimer",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-5-9"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       60,
+       66,
+       69,
+       70,
+       77
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-29",
+      "numbers": [
+       60,
+       69,
+       71,
+       76,
+       77
+      ]
+     },
+     "playoffs": []
+    }
+   },
+   "saarland-hurricanes": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-08-22",
+    "game": "69b6956d9227192b30414256",
+    "date": "2026-07-18",
+    "gametype": "Regular",
+    "opponent": "munich-cowboys",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956d9227192b30414256",
+    "teamGames": 12,
+    "listedGames": 11,
+    "line": [
+     {
+      "number": 55,
+      "name": "Francesco Runco",
+      "sourceName": "Francesco Runco",
+      "player": "francesco-runco",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 5,
+      "playoffStarts": 0,
+      "confidence": "mittel"
+     },
+     {
+      "number": 56,
+      "name": "Marek Wolf",
+      "sourceName": "Marek Wolf",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 11,
+      "playoffStarts": 0,
+      "confidence": "hoch",
+      "note": "kein Kader hinterlegt und kein Spielerprofil gefunden - Name und Nummer laut Starterliste"
+     },
+     {
+      "number": 59,
+      "name": "Leon Arend",
+      "sourceName": "Leon Arend",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 10,
+      "playoffStarts": 0,
+      "confidence": "hoch",
+      "note": "kein Kader hinterlegt und kein Spielerprofil gefunden - Name und Nummer laut Starterliste"
+     },
+     {
+      "number": 62,
+      "name": "Jeremy Berard",
+      "sourceName": "Jeremy Berard",
+      "player": "jeremy-berard",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 5,
+      "playoffStarts": 0,
+      "confidence": "mittel"
+     },
+     {
+      "number": 79,
+      "name": "Jan Leiner",
+      "sourceName": "Jan Leiner",
+      "player": "jan-leiner",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 11,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 73,
+      "name": "Ole Krebs",
+      "player": "ole-krebs",
+      "starts": 6,
+      "lastStart": "2026-7-5"
+     },
+     {
+      "number": 75,
+      "name": "Marcel Höschele",
+      "player": null,
+      "starts": 3,
+      "lastStart": "2026-5-30"
+     },
+     {
+      "number": 78,
+      "name": "Jannis Glock",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-5-30"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       56,
+       59,
+       73,
+       75,
+       79
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-22",
+      "numbers": [
+       56,
+       59,
+       62,
+       79
+      ]
+     },
+     "playoffs": []
+    }
+   },
+   "schwaebisch-hall-unicorns": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-09-19",
+    "game": "69b6956f9227192b3041490a",
+    "date": "2026-09-19",
+    "gametype": "Playoff",
+    "opponent": "potsdam-royals",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956f9227192b3041490a",
+    "teamGames": 14,
+    "listedGames": 13,
+    "line": [
+     {
+      "number": 59,
+      "name": "Nick Gröne",
+      "sourceName": "Nick Gröne",
+      "player": "nick-grone",
+      "role": "T",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     },
+     {
+      "number": 51,
+      "name": "Alper Peközer",
+      "sourceName": "Alper Peközer",
+      "player": "alper-pekozer",
+      "role": "G",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 10,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     },
+     {
+      "number": 68,
+      "name": "Iseah Camara",
+      "sourceName": "Iseah Camara",
+      "player": "iseah-camara",
+      "role": "C",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 12,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     },
+     {
+      "number": 77,
+      "name": "Jakob Dusel",
+      "sourceName": "Jakob Dusel",
+      "player": "jakob-dusel",
+      "role": "G",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 10,
+      "playoffStarts": 2,
+      "confidence": "hoch"
+     },
+     {
+      "number": 69,
+      "name": "Pascal Dürr",
+      "sourceName": "Pascal Dürr",
+      "player": "pascal-durr",
+      "role": "G",
+      "roleSource": "Starterliste",
+      "slot": null,
+      "starts": 3,
+      "playoffStarts": 2,
+      "confidence": "mittel"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 73,
+      "name": "Marco Fischer",
+      "player": "marco-fischer",
+      "starts": 9,
+      "lastStart": "2026-8-29"
+     },
+     {
+      "number": 65,
+      "name": "Manuel Jerichow",
+      "player": "manuel-jerichow",
+      "starts": 4,
+      "lastStart": "2026-7-25"
+     },
+     {
+      "number": 75,
+      "name": "Jan-Luca Jenner",
+      "player": "jan-luca-jenner",
+      "starts": 1,
+      "lastStart": "2026-7-18"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-09",
+      "numbers": [
+       51,
+       59,
+       68,
+       73,
+       77
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-29",
+      "numbers": [
+       51,
+       59,
+       68,
+       73,
+       77
+      ]
+     },
+     "playoffs": [
+      {
+       "date": "2026-09-12",
+       "numbers": [
+        51,
+        59,
+        68,
+        69,
+        77
+       ]
+      },
+      {
+       "date": "2026-09-19",
+       "numbers": [
+        51,
+        59,
+        68,
+        69,
+        77
+       ]
+      }
+     ]
+    }
+   },
+   "straubing-spiders": {
+    "basis": "letztes Spiel mit vollstaendiger Starterliste",
+    "lastListed": "2026-08-29",
+    "game": "69b6956e9227192b30414736",
+    "date": "2026-08-29",
+    "gametype": "Regular",
+    "opponent": "duesseldorf-panther",
+    "url": "https://statsnscore.online/stats/v2/gamedata?gameid=69b6956e9227192b30414736",
+    "teamGames": 12,
+    "listedGames": 9,
+    "line": [
+     {
+      "number": 52,
+      "name": "Finn Ludolph",
+      "sourceName": "Finn Ludolph",
+      "player": "finn-ludolph",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 6,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 57,
+      "name": "Kai Kopecky",
+      "sourceName": "Kai Kopecky",
+      "player": "kai-kopecky",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 7,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 58,
+      "name": "Nicolas Hofmeister",
+      "sourceName": "Nicolas Hofmeister",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 7,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 71,
+      "name": "Philipp Pleischl",
+      "sourceName": "Philipp Pleischl",
+      "player": "philipp-pleischl",
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 8,
+      "playoffStarts": 0,
+      "confidence": "hoch"
+     },
+     {
+      "number": 76,
+      "name": "Florian Brandl",
+      "sourceName": "Florian Brandl",
+      "player": null,
+      "role": null,
+      "roleSource": null,
+      "slot": null,
+      "starts": 3,
+      "playoffStarts": 0,
+      "confidence": "mittel"
+     }
+    ],
+    "otherStarters": [
+     {
+      "number": 59,
+      "name": "Jakob Wittmann",
+      "player": null,
+      "starts": 4,
+      "lastStart": "2026-8-8"
+     },
+     {
+      "number": 77,
+      "name": "Simon Eisenschink",
+      "player": "simon-eisenschink",
+      "starts": 3,
+      "lastStart": "2026-6-20"
+     },
+     {
+      "number": 70,
+      "name": "Jose-Ignacio Checa-Garcia",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-5-23"
+     },
+     {
+      "number": 66,
+      "name": "Andreas Eiglsperger",
+      "player": null,
+      "starts": 1,
+      "lastStart": "2026-7-19"
+     },
+     {
+      "number": 69,
+      "name": "Fabian Raab",
+      "player": "fabian-raab",
+      "starts": 1,
+      "lastStart": "2026-8-22"
+     }
+    ],
+    "phases": {
+     "first": {
+      "date": "2026-05-23",
+      "numbers": [
+       57,
+       58,
+       70,
+       71,
+       77
+      ]
+     },
+     "lastRegular": {
+      "date": "2026-08-29",
+      "numbers": [
+       52,
+       57,
+       58,
+       71,
+       76
+      ]
+     },
+     "playoffs": []
+    }
+   }
+  }
+ }
+}

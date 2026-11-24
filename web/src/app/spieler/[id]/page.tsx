@@ -196,7 +196,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
       )}
 
       <section aria-labelledby="karriere-h" className="mt-10">
-        <Head id="karriere-h" title={<T k="player.careerTitle" a={[meta.seasons[0]]} />} note={<T k="player.careerNote" a={[lastSeason.season]} />}>
+        <Head id="karriere-h" title={<T k="player.careerTitle" a={[p.seasons[0].season]} />} note={<T k="player.careerNote" a={[lastSeason.season]} />}>
           <SourceTag kind="original" />
           <SourceTag kind="rank" />
         </Head>
